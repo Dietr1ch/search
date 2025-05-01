@@ -1,0 +1,7 @@
+# Nix
+.direnv
+flake.lock
+
+# Rust
+/target
+Cargo.lock

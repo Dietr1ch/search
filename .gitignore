@@ -1,0 +1,12 @@
+# Unix
+.*
+
+# Git
+!.ignore
+!.gitignore
+
+# Rust
+/target
+
+# Project
+TODOs.org
