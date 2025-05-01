@@ -2,5 +2,36 @@
 name = "astar"
 version = "0.1.0"
 edition = "2024"
+default-run = "report"
+
+[features]
+# Allows inspecting data structure internals
+inspect = []
+
+# https://nnethercote.github.io/perf-book/build-configuration.html
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = 3
+
 
 [dependencies]
+chrono = "0.4.41"
+clap = { version = "4.5.37", features = ["derive", "env"] }
+derive_more = { version = "2.0.1", features = ["display"] }
+indoc = "2.0.6"
+num-traits = "0.2.19"
+rustc-hash = { version = "2.1.1", features = ["nightly"] }
+smallvec = { version = "1.15.0", features = ["const_new"] }
+thiserror = "2.0.12"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = { version = "0.6", features = ["stats"] }
+
+
+[[bin]]
+name = "main"
+
+[[bin]]
+name = "report"
+required-features = ["inspect"]

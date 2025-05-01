@@ -54,6 +54,8 @@
               rustc
               cargo
               rustup
+
+              rust-jemalloc-sys
             ];
 
             packages = with pkgs; [
