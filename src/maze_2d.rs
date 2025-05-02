@@ -66,7 +66,7 @@ impl std::convert::TryFrom<char> for Maze2DCell {
     }
 }
 
-#[cfg_attr(feature = "inspect", derive(Clone))]
+#[derive(Clone)]
 pub struct Maze2DSpace {
     pub map: Vec<Vec<Maze2DCell>>,
 }
@@ -75,9 +75,9 @@ impl Maze2DSpace {
     pub fn new_from_map(map: Vec<Vec<Maze2DCell>>) -> Self {
         Self { map }
     }
-    pub fn new_empty_with_dimensions(x: Coord, y: Coord) -> Self {
+    pub fn new_empty_with_dimensions(x: usize, y: usize) -> Self {
         Self {
-            map: vec![vec![Maze2DCell::Empty; x as usize]; y as usize],
+            map: vec![vec![Maze2DCell::Empty; x]; y],
         }
     }
 
@@ -260,7 +260,9 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
             .grayscale()
             .into_rgb8();
 
-        let mut space = Maze2DSpace::new_empty_with_dimensions(img.width(), img.height());
+        let max_x = img.width() as usize;
+        let max_y = img.height() as usize;
+        let mut space = Maze2DSpace::new_empty_with_dimensions(max_x, max_y);
 
         for y in 0..img.height() {
             for x in 0..img.width() {
@@ -296,24 +298,33 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
         &self.goals
     }
 
-    fn randomize<R: rand::Rng>(&mut self, r: &mut R, num_starts: u16, num_goals: u16) -> bool {
-        self.starts.clear();
-        self.goals.clear();
+    fn randomize<R: rand::Rng>(
+        &mut self,
+        r: &mut R,
+        num_starts: u16,
+        num_goals: u16,
+    ) -> Option<Maze2DProblem> {
+        let mut starts = vec![];
+        let mut goals = FxHashSet::<Maze2DState>::default();
         const MAX_RANDOM_STATE_TRIES: usize = 1000;
 
         for _tries in 0..MAX_RANDOM_STATE_TRIES {
             if let Some(random_state) = self.space().random_state::<R>(r) {
-                if self.starts.len() < num_starts as usize {
-                    self.starts.push(random_state);
-                } else if self.goals.len() < num_goals as usize {
-                    self.goals.insert(random_state);
+                if starts.len() < num_starts as usize {
+                    starts.push(random_state);
+                } else if goals.len() < num_goals as usize {
+                    goals.insert(random_state);
                 } else {
-                    return true;
+                    return Some(Maze2DProblem {
+                        space: self.space.clone(),
+                        starts,
+                        goals,
+                    });
                 }
             }
         }
 
-        false
+        None
     }
 }
 
@@ -383,11 +394,10 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
             return Err(Maze2DProblemParseError::EmptyInput);
         }
 
+        let max_x = lines[0].len();
+        let max_y = lines.len();
         let mut problem = Maze2DProblem {
-            space: Maze2DSpace::new_empty_with_dimensions(
-                lines[0].len() as Coord,
-                lines.len() as Coord,
-            ),
+            space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
             goals: FxHashSet::default(),
         };
@@ -440,8 +450,10 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
             .grayscale()
             .into_rgb8();
 
+        let max_x = img.width() as usize;
+        let max_y = img.height() as usize;
         let mut p = Maze2DProblem {
-            space: Maze2DSpace::new_empty_with_dimensions(img.width(), img.height()),
+            space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
             goals: FxHashSet::<Maze2DState>::default(),
         };

@@ -1,6 +1,6 @@
 use std::fmt::Debug;
-use std::ptr::NonNull;
 
+use nonmax::NonMaxUsize;
 use rustc_hash::FxHashMap;
 
 use crate::heap_primitives::index_down_left;
@@ -48,10 +48,11 @@ where
     A: Action,
     C: Cost,
 {
-    pub parent: Option<(NonNull<Self>, A)>,
+    pub parent: Option<(NonMaxUsize, A)>,
     pub state: St,
     pub g: C,
     pub h: C,
+    heap_index: usize,
 }
 
 impl<St, A, C> AStarNode<St, A, C>
@@ -60,24 +61,26 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new(s: St, g: C, h: C) -> Self {
+    pub fn new(heap_index: usize, s: St, g: C, h: C) -> Self {
         Self {
             parent: None,
             state: s,
             g,
             h,
+            heap_index,
         }
     }
-    pub fn new_from_parent(s: St, parent: (NonNull<Self>, A), g: C, h: C) -> Self {
+    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C, h: C) -> Self {
         Self {
             parent: Some(parent),
             state: s,
             g,
             h,
+            heap_index,
         }
     }
 
-    pub fn reach(&mut self, new_parent: (NonNull<Self>, A), g: C, h: C) {
+    pub fn reach(&mut self, new_parent: (NonMaxUsize, A), g: C, h: C) {
         debug_assert!(g < self.g);
         self.parent = Some(new_parent);
         self.g = g;
@@ -106,7 +109,8 @@ where
     C: Cost,
 {
     rank: AStarRank<C>,
-    index: usize,
+    /// The index of this node in the Node Arena
+    node_index: usize,
 }
 
 use std::marker::PhantomData;
@@ -162,35 +166,43 @@ where
             problem: p,
         };
 
-        for s in search.problem.starts() {
+        let starts = search.problem.starts().clone();
+        for s in starts {
+            let node_index = search.nodes.len();
+            let heap_index = search.open.len();
+
             let g = C::zero();
-            let h: C = H::h(&search.problem, s);
-            let node = AStarNode::<St, A, C>::new(*s, g, h);
+            let h: C = H::h(&search.problem, &s);
+            let node = AStarNode::<St, A, C>::new(heap_index, s, g, h);
 
             // search.push(node);
-            let i = search.nodes.len();
             search.open.push(AStarHeapNode {
                 rank: node.rank(),
-                index: i,
+                node_index,
             });
-            search.node_index.insert(*s, (i, false));
+            search.node_index.insert(s, (node_index, false));
             search.nodes.push(node);
+            // TODO: Verify open fix
+            search._unsafe_sift_up(heap_index);
+            search.verify_heap();
         }
 
         search
     }
 
-    fn build_path(&self, node: &AStarNode<St, A, C>) -> Path<St, A, C> {
-        println!("Building A* path...");
-        let mut p = Path::<St, A, C>::new_from_start(*node.state());
+    fn build_path(&self, mut node_index: usize) -> Path<St, A, C> {
+        let end = &self.nodes[node_index];
+        let mut p = Path::<St, A, C>::new_from_start(*end.state());
 
-        let mut node: NonNull<AStarNode<St, A, C>> = NonNull::from_ref(node);
-        while let Some((parent_node, a)) = unsafe { node.as_ref() }.parent {
-            let state = unsafe { *parent_node.as_ref().state() };
-            let c: C = self.problem.space().cost(&state, &a);
-            debug_assert!(c > C::zero());
-            p.append((state, a), c);
-            node = parent_node;
+        while let Some((parent_index, a)) = self.nodes[node_index].parent {
+            let n = &self.nodes[node_index];
+            let s = n.state();
+            let c: C = self.problem.space().cost(s, &a);
+            debug_assert!(c != C::zero());
+
+            p.append((*s, a), c);
+            debug_assert!(node_index != parent_index.get());
+            node_index = parent_index.get();
         }
 
         p.reverse();
@@ -198,38 +210,58 @@ where
     }
 
     pub fn find_first(&mut self) -> Option<Path<St, A, C>> {
-        while let Some(node) = self.pop() {
-            let node_ptr = NonNull::from_ref(&self.nodes[node]);
-            let node: &AStarNode<St, A, C> = unsafe { node_ptr.as_ref() };
+        while let Some(node_index) = self.pop() {
+            let state = *self.nodes[node_index].state();
+            let g: C = self.nodes[node_index].g;
+            debug_assert!(!self.is_closed(&state));
 
-            let g = node.g;
-            let state: &St = node.state();
-            debug_assert!(!self.is_closed(state));
-            println!("Popped {:?}", node);
-
-            if self.problem.is_goal(state) {
-                return Some(self.build_path(node));
+            if self.problem.is_goal(&state) {
+                return Some(self.build_path(node_index));
             }
 
             // Mark as closed
-            self.mark_closed(state);
+            self.mark_closed(&state);
             // Expand state
-            for (s, a) in self.problem.space().neighbours(state) {
+            for (s, a) in self.problem.space().neighbours(&state) {
                 let c: C = self.problem.space().cost(&s, &a);
 
-                println!("  Found: {s:?}:{a:?}");
-                if self.is_closed(&s) {
-                    // TODO: Assert new cost isn't better.
-                    continue;
+                // TODO: Cleanup print
+                // println!("  Found: {s:?}:{a:?}");
+                match self.node_index.get(&s) {
+                    Some((_, true)) => {
+                        // Closed
+                        continue;
+                    }
+                    Some((node_index, false)) => {
+                        // Existing, but unexplored node
+                        let neigh = &mut self.nodes[*node_index];
+                        let neigh_heap_index = neigh.heap_index;
+                        let new_g = g + c;
+                        if new_g < neigh.g {
+                            // Found better path to existing node
+                            // TODO: Update parent and cost
+                            // Update Node
+                            neigh.g = new_g;
+                            // Update Open
+                            self.open[neigh.heap_index].rank = neigh.rank();
+                            self._unsafe_sift_up(neigh_heap_index);
+                        }
+                    }
+                    None => {
+                        // New node
+                        // TODO: Insert new node
+                        let new_g = g + c;
+                        let new_h = H::h(&self.problem, &s);
+                        let new_heap_index = self.open.len();
+                        self.push(AStarNode::new_from_parent(
+                            new_heap_index,
+                            s,
+                            (NonMaxUsize::new(node_index).unwrap(), a),
+                            new_g,
+                            new_h,
+                        ));
+                    }
                 }
-                let new_g = g + c;
-                // TODO: Check if node is already in open
-                // if new_g >= g {
-                //     continue;
-                // }
-
-                let new_h = H::h(&self.problem, &s);
-                self.push(AStarNode::new_from_parent(s, (node_ptr, a), new_g, new_h));
             }
         }
 
@@ -283,38 +315,51 @@ where
     #[inline(always)]
     fn pop(&mut self) -> Option<Idx> {
         match self.open.len() {
-            0 | 1 => self.open.pop().map(|n| n.index),
+            0 | 1 => self.open.pop().map(|n| n.node_index),
             _ => {
                 self.verify_heap();
-                let node = self._unsafe_pop_non_trivial_heap();
+                let node_index = self._unsafe_pop_non_trivial_heap();
                 self.verify_heap();
-                Some(node)
+                Some(node_index)
             }
         }
     }
 
-    fn push(&mut self, node: AStarNode<St, A, C>) {
-        let i = self.nodes.len();
+    fn push(&mut self, mut node: AStarNode<St, A, C>) {
+        // TODO: Cleanup print
+        // println!("Verifying before push({node:?})");
+        self.verify_heap();
+        debug_assert!(!self.is_closed(&node.state));
+        let node_index = self.nodes.len();
+        let heap_index = self.open.len();
+
         self.open.push(AStarHeapNode {
             rank: node.rank(),
-            index: i,
+            node_index,
         });
-        self.node_index.insert(*node.state(), (i, false));
+        self.node_index.insert(*node.state(), (node_index, false));
+        node.heap_index = heap_index;
         self.nodes.push(node);
+        // TODO: Verify open fix
+        self._unsafe_sift_up(heap_index);
+
+        // TODO: Cleanup print
+        // println!("Verifying after push()");
+        self.verify_heap();
     }
 
     #[inline(always)]
-    #[cfg(not(feature = "inspect"))]
+    #[cfg(not(feature = "verify"))]
     pub fn verify_heap(&self) {
         // All good... (hopefully)
     }
     #[inline(always)]
-    #[cfg(feature = "inspect")]
+    #[cfg(feature = "verify")]
     pub fn verify_heap(&self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
             // - Has the right intrusive index set.
-            debug_assert!(e.index == i);
+            debug_assert!(self.nodes[e.node_index].heap_index == i);
 
             // - Goes after its parent node, if any.
             if i == 0 {
@@ -379,6 +424,8 @@ where
                 child = child_r;
             }
 
+            debug_assert!(self.open[hole].rank <= self.open[child].rank);
+
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, child);
 
@@ -398,13 +445,13 @@ where
             self._unsafe_sift_up(hole);
         }
 
-        let node = self.open.pop().unwrap();
+        let heap_node = self.open.pop().unwrap();
         debug_assert_eq!(
-            node.index, 0,
+            self.nodes[heap_node.node_index].heap_index, 0,
             "Top node half-assed swapped down should still have it's 0 index"
         );
 
-        node.index
+        heap_node.node_index
     }
 
     /// Raises a node
@@ -414,7 +461,10 @@ where
             index < self.open.len(),
             "Node is way out of sync. Index out of bounds..."
         );
-        debug_assert!(self.open[index].index == index, "Node is out of sync.");
+        debug_assert_eq!(
+            self.nodes[self.open[index].node_index].heap_index, index,
+            "Node is out of sync."
+        );
 
         // Can't improve
         if index == 0 {
@@ -452,8 +502,8 @@ where
         debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
         debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
         self.open.swap(l, r);
-        self.open[l].index = l;
-        self.open[r].index = r;
+        self.nodes[self.open[l].node_index].heap_index = l;
+        self.nodes[self.open[r].node_index].heap_index = r;
         debug_assert!(
             self.open[l].rank <= self.open[r].rank,
             "Swaps must locally restore the heap invariant."
@@ -473,13 +523,13 @@ where
         debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
         debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
         self.open.swap(l, r);
-        self.open[l].index = l;
+        self.nodes[self.open[l].node_index].heap_index = l;
         debug_assert!(
             self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
-            "Half-assed swap down must be unfairly pushing a node down."
+            "Half-assed swap down must be unfairly pushing a node down. {self:?}"
         );
         debug_assert!(
-            self.open[r].index < r,
+            self.nodes[self.open[r].node_index].heap_index < r,
             "Node half-assed swapped down should still point to it's original index."
         );
     }

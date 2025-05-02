@@ -3,23 +3,17 @@ use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
 use clap::Parser;
-use indoc::indoc;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
 use astar::heuristic_search::AStarSearch;
-use astar::heuristic_search::Heuristic;
 use astar::maze_2d::Maze2DAction;
 use astar::maze_2d::Maze2DCost;
 use astar::maze_2d::Maze2DHeuristicManhattan;
 use astar::maze_2d::Maze2DProblem;
 use astar::maze_2d::Maze2DSpace;
 use astar::maze_2d::Maze2DState;
-use astar::space::Action;
-use astar::space::Cost;
 use astar::space::Problem;
-use astar::space::Space;
-use astar::space::State;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -35,24 +29,6 @@ pub struct Args {
     pub problems: Vec<PathBuf>,
 }
 
-fn solve<P, H, Sp, St, A, C>(out: &mut BufWriter<dyn std::io::Write>, p: P) -> std::io::Result<()>
-where
-    P: Problem<Sp, St, A, C>,
-    H: Heuristic<P, Sp, St, A, C>,
-    Sp: Space<St, A, C>,
-    St: State,
-    A: Action,
-    C: Cost,
-{
-    let mut search = AStarSearch::<P, H, Sp, St, A, C>::new(p);
-    writeln!(out, "** A* data\n#+begin_src ron\n{search:?}\n#+end_src")?;
-
-    let path = search.find_first();
-    writeln!(out, "*** Path\n#+begin_src ron\n{path:?}\n#+end_src")?;
-
-    Ok(())
-}
-
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     println!("Logging to {:?}", args.output);
@@ -60,37 +36,46 @@ fn main() -> std::io::Result<()> {
     let file = File::create(&args.output)?;
     let mut out = BufWriter::new(file);
 
-    let maze_str = indoc! {"
-      ###
-      #S#
-      # #
-      #G#
-      ###
-    "};
-    writeln!(out, "** Problem")?;
-    solve::<
-        Maze2DProblem,
-        Maze2DHeuristicManhattan,
-        Maze2DSpace,
-        Maze2DState,
-        Maze2DAction,
-        Maze2DCost,
-    >(&mut out, Maze2DProblem::try_from(maze_str).unwrap())?;
-
+    writeln!(out, "* Runs")?;
     for p in &args.problems {
         let space = Maze2DSpace::try_from(p.as_path()).unwrap();
         writeln!(out, "** Space {:?} ({:?})", p, space.dimensions())?;
         writeln!(out, "*** Map")?;
         writeln!(out, "#+begin_quote\n{space}\n#+end_quote")?;
         writeln!(out, "*** Problems")?;
-        let mut problem = Maze2DProblem::try_from(p.as_path()).unwrap();
+        let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
 
         for instance in 0..10 {
+            writeln!(out, "**** Problem {instance}")?;
             let mut rng = ChaCha8Rng::seed_from_u64(instance);
             let num_starts = 3;
             let num_goals = 3;
-            if problem.randomize(&mut rng, num_starts, num_goals) {
-                writeln!(out, "#+begin_quote\n{problem}\n#+end_quote")?;
+            if let Some(random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
+                writeln!(out, "***** Instance")?;
+                writeln!(out, "- Starts:")?;
+                for start in random_problem.starts() {
+                    writeln!(out, "  - {:?}", start)?;
+                }
+                writeln!(out, "- Goals:")?;
+                for goal in random_problem.goals() {
+                    writeln!(out, "  - {:?}", goal)?;
+                }
+                writeln!(out, "***** Solution")?;
+                let mut search = AStarSearch::<
+                    Maze2DProblem,
+                    Maze2DHeuristicManhattan,
+                    Maze2DSpace,
+                    Maze2DState,
+                    Maze2DAction,
+                    Maze2DCost,
+                >::new(random_problem);
+                writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
+
+                if let Some(path) = search.find_first() {
+                    writeln!(out, "******* {path}\n#+begin_src ron\n{path:?}\n#+end_src",)?;
+                } else {
+                    writeln!(out, "******* No path found",)?;
+                }
             } else {
                 writeln!(
                     out,

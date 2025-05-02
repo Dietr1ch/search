@@ -7,12 +7,31 @@ default-run = "main"
 [features]
 # Allows inspecting data structure internals
 inspect = []
+verify = []
 
+# Profiles
+# --------
+# https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
+
+# Dev
+# https://doc.rust-lang.org/cargo/reference/profiles.html#profile-settings
+[profile.dev]
+debug-assertions = true
+overflow-checks = true
+panic = "unwind"
+strip=false
+split-debuginfo='packed'
+
+# Release
 # https://nnethercote.github.io/perf-book/build-configuration.html
 [profile.release]
 codegen-units = 1
 lto = "fat"
 opt-level = 3
+debug-assertions = false
+overflow-checks = false
+strip=true
+panic = "abort"
 
 
 [dependencies]
@@ -21,6 +40,7 @@ clap = { version = "4.5.37", features = ["derive", "env"] }
 derive_more = { version = "2.0.1", features = ["display"] }
 image = "0.25.6"
 indoc = "2.0.6"
+nonmax = "0.5.5"
 num-traits = "0.2.19"
 rand = "0.9.1"
 rand_chacha = "0.9.0"

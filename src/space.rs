@@ -105,19 +105,22 @@ where
 
         match (self.start, self.end) {
             (Some(start), Some(end)) => {
-                writeln!(
+                write!(
                     f,
-                    "Path({}, {:?}:{:?}:{:?}):",
-                    self.cost, start, self.actions, end
+                    "Path({}, {:?}:{:?}:{:?})",
+                    self.cost,
+                    start,
+                    self.actions.iter().take(20).collect::<Vec<_>>(),
+                    end
                 )
             }
-            (None, None) => writeln!(f, "Path()"),
+            (None, None) => write!(f, "Path()"),
             _ => unreachable!("Path::start and Path::end should both be Some or None"),
         }
     }
 }
 
-pub trait Space<St, A, C>: std::fmt::Debug
+pub trait Space<St, A, C>: Clone + std::fmt::Debug
 where
     St: State,
     A: Action,
@@ -166,7 +169,7 @@ where
 
 use rustc_hash::FxHashSet;
 
-pub trait Problem<Sp, St, A, C>: std::fmt::Debug
+pub trait Problem<Sp, St, A, C>: std::fmt::Debug + Sized
 where
     Sp: Space<St, A, C>,
     St: State,
@@ -181,5 +184,10 @@ where
         self.goals().contains(s)
     }
 
-    fn randomize<R: rand::Rng>(&mut self, r: &mut R, num_starts: u16, num_goals: u16) -> bool;
+    fn randomize<R: rand::Rng>(
+        &mut self,
+        r: &mut R,
+        num_starts: u16,
+        num_goals: u16,
+    ) -> Option<Self>;
 }
