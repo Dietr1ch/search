@@ -13,7 +13,7 @@ use crate::space::State;
 
 type Coord = u32;
 
-const MAX_ELEMENTS_DISPLAYED: usize = 32;
+const MAX_ELEMENTS_DISPLAYED: usize = 20;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Maze2DState {
@@ -41,7 +41,7 @@ impl Cost for Maze2DCost {}
 use derive_more::Display;
 #[derive(Copy, Clone, Debug, Display, PartialEq)]
 pub enum Maze2DCell {
-    #[display(" ")]
+    #[display("░")]
     Empty,
     #[display("█")]
     Wall,
