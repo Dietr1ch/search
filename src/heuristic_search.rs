@@ -126,11 +126,6 @@ where
     A: Action,
     C: Cost,
 {
-    // TODO: Clean PhantomData
-    phantom_heuristic: PhantomData<H>,
-    phantom_space: PhantomData<Sp>,
-    phantom_action: PhantomData<A>,
-
     nodes: Vec<AStarNode<St, A, C>>,
     open: Vec<AStarHeapNode<C>>,
     /// Amalgamation of,
@@ -139,6 +134,11 @@ where
     node_index: FxHashMap<St, (usize, bool)>,
 
     problem: P,
+
+    // TODO: Clean PhantomData
+    _phantom_heuristic: PhantomData<H>,
+    _phantom_space: PhantomData<Sp>,
+    _phantom_action: PhantomData<A>,
 }
 
 type Idx = usize;
@@ -154,16 +154,16 @@ where
 {
     pub fn new(p: P) -> Self {
         let mut search = Self {
-            // TODO: Clean PhantomData
-            phantom_heuristic: PhantomData,
-            phantom_space: PhantomData,
-            phantom_action: PhantomData,
-
             nodes: vec![],
             open: vec![],
             node_index: FxHashMap::default(),
 
             problem: p,
+
+            // TODO: Clean PhantomData
+            _phantom_heuristic: PhantomData,
+            _phantom_space: PhantomData,
+            _phantom_action: PhantomData,
         };
 
         let starts = search.problem.starts().clone();
@@ -182,7 +182,6 @@ where
             });
             search.node_index.insert(s, (node_index, false));
             search.nodes.push(node);
-            // TODO: Verify open fix
             search._unsafe_sift_up(heap_index);
             search.verify_heap();
         }
@@ -191,25 +190,25 @@ where
     }
 
     fn build_path(&self, mut node_index: usize) -> Path<St, A, C> {
-        let end = &self.nodes[node_index];
-        let mut p = Path::<St, A, C>::new_from_start(*end.state());
+        let e = &self.nodes[node_index];
+        let mut path = Path::<St, A, C>::new_from_start(*e.state());
 
-        while let Some((parent_index, action)) = self.nodes[node_index].parent {
-            let prev = &self.nodes[parent_index.get()];
-            let _next = &self.nodes[node_index];
-            let prev_state = prev.state();
-            let cost = self.problem.space().cost(prev_state, &action);
+        while let Some((parent_index, a)) = self.nodes[node_index].parent {
+            let p = &self.nodes[parent_index.get()];
+
+            let s = p.state();
+            let c = self.problem.space().cost(s, &a);
             // Action
-            debug_assert!(cost != C::zero());
+            debug_assert!(c != C::zero());
             // Start
 
-            p.append((*prev_state, action), cost);
+            path.append((*s, a), c);
             debug_assert!(node_index != parent_index.get());
             node_index = parent_index.get();
         }
 
-        p.reverse();
-        p
+        path.reverse();
+        path
     }
 
     pub fn find_first(&mut self) -> Option<Path<St, A, C>> {
@@ -228,8 +227,6 @@ where
             for (s, a) in self.problem.space().neighbours(&state) {
                 let c: C = self.problem.space().cost(&s, &a);
 
-                // TODO: Cleanup print
-                // println!("  Found: {s:?}:{a:?}");
                 match self.node_index.get(&s) {
                     Some((_, true)) => {
                         // Closed
@@ -242,17 +239,14 @@ where
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            // TODO: Update parent and cost
-                            // Update Node
+                            // TODO: Check if rank update can be improved
                             neigh.g = new_g;
-                            // Update Open
                             self.open[neigh.heap_index].rank = neigh.rank();
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
                     None => {
                         // New node
-                        // TODO: Insert new node
                         let new_g = g + c;
                         let new_h = H::h(&self.problem, &s);
                         let new_heap_index = self.open.len();
@@ -329,10 +323,9 @@ where
     }
 
     fn push(&mut self, mut node: AStarNode<St, A, C>) {
-        // TODO: Cleanup print
-        // println!("Verifying before push({node:?})");
         self.verify_heap();
         debug_assert!(!self.is_closed(&node.state));
+
         let node_index = self.nodes.len();
         let heap_index = self.open.len();
 
@@ -343,11 +336,8 @@ where
         self.node_index.insert(*node.state(), (node_index, false));
         node.heap_index = heap_index;
         self.nodes.push(node);
-        // TODO: Verify open fix
         self._unsafe_sift_up(heap_index);
 
-        // TODO: Cleanup print
-        // println!("Verifying after push()");
         self.verify_heap();
     }
 

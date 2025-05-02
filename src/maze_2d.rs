@@ -108,11 +108,8 @@ impl Maze2DSpace {
             let x: Coord = r.random::<Coord>() % max_x;
             let y: Coord = r.random::<Coord>() % max_y;
             let cell: Maze2DCell = self.map[y as usize][x as usize];
-            match cell {
-                Maze2DCell::Empty => {
-                    return Some(Maze2DState { x, y });
-                }
-                _ => {}
+            if cell == Maze2DCell::Empty {
+                return Some(Maze2DState { x, y });
             }
         }
 

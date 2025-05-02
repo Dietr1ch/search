@@ -1,3 +1,6 @@
+# Git
+.gitignore
+
 # Nix
 .direnv
 flake.lock

@@ -3,10 +3,10 @@
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
-use std::ptr::NonNull;
 
 use clap::Parser;
 use indoc::indoc;
+use nonmax::NonMaxUsize;
 
 use astar::debug::type_name;
 use astar::heuristic_search::AStarNode;
@@ -92,13 +92,13 @@ fn main() -> std::io::Result<()> {
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
     print_size(
         &mut out,
-        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(s0, 0, 100),
+        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100),
     )?;
-    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(s0, 0, 100);
+    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100);
     print_size(&mut out, h_n.rank())?;
     print_size(
         &mut out,
-        AStarNode::new_from_parent(s0, (NonNull::from_ref(&h_n), a), 1, 1),
+        AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1, 1),
     )?;
     let mut search = AStarSearch::<
         Maze2DProblem,
@@ -116,13 +116,13 @@ fn main() -> std::io::Result<()> {
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
     print_size(
         &mut out,
-        DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(s0, 0),
+        DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
     )?;
-    let h_n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(s0, 0);
-    print_size(&mut out, h_n.rank())?;
+    let n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    print_size(&mut out, n.rank())?;
     print_size(
         &mut out,
-        DijkstraNode::new_from_parent(s0, (NonNull::from_ref(&h_n), a), 1),
+        DijkstraNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
     )?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
