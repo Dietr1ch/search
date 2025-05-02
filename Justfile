@@ -9,3 +9,4 @@ test:
 
 report:
 	cargo run --bin 'report' --features 'inspect'
+	bat $ASTAR_LOGS
