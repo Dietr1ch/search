@@ -66,7 +66,7 @@ impl std::convert::TryFrom<char> for Maze2DCell {
 
 #[cfg_attr(feature = "inspect", derive(Clone))]
 pub struct Maze2DSpace {
-    map: Vec<Vec<Maze2DCell>>,
+    pub map: Vec<Vec<Maze2DCell>>,
 }
 
 impl Maze2DSpace {
@@ -185,8 +185,8 @@ impl std::fmt::Display for Maze2DSpace {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.dimensions();
         writeln!(f, "Maze2D({}x{}):", d.0, d.1)?;
-        for line in self.map.iter() {
-            for cell in line {
+        for line in self.map.iter().take(32) {
+            for cell in line.iter().take(32) {
                 write!(f, "{}", cell)?;
             }
             writeln!(f)?;
@@ -199,6 +199,58 @@ impl std::fmt::Display for Maze2DSpace {
 impl std::fmt::Debug for Maze2DSpace {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Maze2D{:?}", self.dimensions())
+    }
+}
+
+#[derive(Debug, Error)]
+pub enum Maze2DSpaceParseError {
+    #[error("Invalid image '{p}'")]
+    InvalidImage { p: std::path::PathBuf },
+    #[error("I/O error when loading '{p}': {e}")]
+    IOError {
+        p: std::path::PathBuf,
+        e: std::io::Error,
+    },
+    #[error("Image error when loading '{p}': {e}")]
+    ImageError {
+        p: std::path::PathBuf,
+        e: image::ImageError,
+    },
+}
+
+impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
+    type Error = Maze2DSpaceParseError;
+
+    fn try_from(p: &std::path::Path) -> Result<Self, Self::Error> {
+        use image::ImageReader;
+
+        let img = ImageReader::open(p)
+            .map_err(|e| Maze2DSpaceParseError::IOError {
+                p: p.to_path_buf(),
+                e,
+            })?
+            .decode()
+            .map_err(|e| Maze2DSpaceParseError::ImageError {
+                p: p.to_path_buf(),
+                e,
+            })?
+            .grayscale()
+            .into_rgb8();
+
+        let mut space = Maze2DSpace::new_empty_with_dimensions(img.width(), img.height());
+
+        for y in 0..img.height() {
+            for x in 0..img.width() {
+                let px = img.get_pixel(x, y);
+                space.map[y as usize][x as usize] = match px.0 {
+                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
+                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
+                    _ => Maze2DCell::Empty,
+                }
+            }
+        }
+
+        Ok(space)
     }
 }
 
@@ -263,6 +315,16 @@ pub enum Maze2DProblemParseError {
         x: usize,
         y: usize,
     },
+    #[error("I/O error when loading '{p}': {e}")]
+    IOError {
+        p: std::path::PathBuf,
+        e: std::io::Error,
+    },
+    #[error("Image error when loading '{p}': {e}")]
+    ImageError {
+        p: std::path::PathBuf,
+        e: image::ImageError,
+    },
 }
 
 impl std::convert::TryFrom<&str> for Maze2DProblem {
@@ -316,12 +378,62 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
     }
 }
 
+impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
+    type Error = Maze2DProblemParseError;
+
+    fn try_from(p: &std::path::Path) -> Result<Self, Self::Error> {
+        use image::ImageReader;
+
+        let img = ImageReader::open(p)
+            .map_err(|e| Maze2DProblemParseError::IOError {
+                p: p.to_path_buf(),
+                e,
+            })?
+            .decode()
+            .map_err(|e| Maze2DProblemParseError::ImageError {
+                p: p.to_path_buf(),
+                e,
+            })?
+            .grayscale()
+            .into_rgb8();
+
+        let mut p = Maze2DProblem {
+            space: Maze2DSpace::new_empty_with_dimensions(img.width(), img.height()),
+            starts: vec![],
+            goals: FxHashSet::<Maze2DState>::default(),
+        };
+
+        for y in 0..img.height() {
+            for x in 0..img.width() {
+                let px = img.get_pixel(x, y);
+                p.space.map[y as usize][x as usize] = match px.0 {
+                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
+                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
+                    [u8::MIN, u8::MAX, u8::MIN] => {
+                        // GREEN (goal)
+                        p.goals.insert(Maze2DState { x, y });
+                        Maze2DCell::Empty
+                    }
+                    [u8::MIN, u8::MIN, u8::MAX] => {
+                        // BLUE (start)
+                        p.starts.push(Maze2DState { x, y });
+                        Maze2DCell::Empty
+                    }
+                    _ => Maze2DCell::Empty,
+                }
+            }
+        }
+
+        Ok(p)
+    }
+}
+
 impl std::fmt::Display for Maze2DProblem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.space.dimensions();
         writeln!(f, "Maze2DProblem({}x{}):", d.0, d.1)?;
-        for (y, line) in self.space.map.iter().enumerate() {
-            for (x, cell) in line.iter().enumerate() {
+        for (y, line) in self.space.map.iter().enumerate().take(32) {
+            for (x, cell) in line.iter().enumerate().take(32) {
                 let is_start = self.starts.contains(&Maze2DState {
                     x: x as Coord,
                     y: y as Coord,

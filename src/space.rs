@@ -117,13 +117,13 @@ where
     }
 }
 
-pub trait Space<St, A, C>
+pub trait Space<St, A, C>: std::fmt::Debug
 where
     St: State,
     A: Action,
     C: Cost,
 {
-    fn apply(&self, _s: &St, _a: &A) -> Option<St>;
+    fn apply(&self, s: &St, a: &A) -> Option<St>;
 
     fn cost(&self, _s: &St, _a: &A) -> C {
         C::one()
@@ -158,7 +158,7 @@ where
 
 use rustc_hash::FxHashSet;
 
-pub trait Problem<Sp, St, A, C>
+pub trait Problem<Sp, St, A, C>: std::fmt::Debug
 where
     Sp: Space<St, A, C>,
     St: State,

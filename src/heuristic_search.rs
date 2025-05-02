@@ -12,7 +12,7 @@ use crate::space::Problem;
 use crate::space::Space;
 use crate::space::State;
 
-pub trait Heuristic<P, Sp, St, A, C>
+pub trait Heuristic<P, Sp, St, A, C>: std::fmt::Debug
 where
     P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,

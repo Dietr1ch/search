@@ -19,6 +19,7 @@ opt-level = 3
 chrono = "0.4.41"
 clap = { version = "4.5.37", features = ["derive", "env"] }
 derive_more = { version = "2.0.1", features = ["display"] }
+image = "0.25.6"
 indoc = "2.0.6"
 num-traits = "0.2.19"
 rustc-hash = { version = "2.1.1", features = ["nightly"] }
