@@ -13,6 +13,8 @@ use crate::space::State;
 
 type Coord = u32;
 
+const MAX_ELEMENTS_DISPLAYED: usize = 32;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Maze2DState {
     pub x: Coord,
@@ -94,6 +96,27 @@ impl Maze2DSpace {
                 .get_unchecked(state.y as usize)
                 .get_unchecked(state.x as usize)
         }
+    }
+
+    pub fn supports_random_state() -> bool {
+        true
+    }
+    pub fn random_state<R: rand::Rng>(&self, r: &mut R) -> Option<Maze2DState> {
+        let (max_x, max_y) = self.dimensions();
+
+        for _tries in 0..1000 {
+            let x: Coord = r.random::<Coord>() % max_x;
+            let y: Coord = r.random::<Coord>() % max_y;
+            let cell: Maze2DCell = self.map[y as usize][x as usize];
+            match cell {
+                Maze2DCell::Empty => {
+                    return Some(Maze2DState { x, y });
+                }
+                _ => {}
+            }
+        }
+
+        None
     }
 }
 
@@ -185,8 +208,8 @@ impl std::fmt::Display for Maze2DSpace {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.dimensions();
         writeln!(f, "Maze2D({}x{}):", d.0, d.1)?;
-        for line in self.map.iter().take(32) {
-            for cell in line.iter().take(32) {
+        for line in self.map.iter().take(MAX_ELEMENTS_DISPLAYED) {
+            for cell in line.iter().take(MAX_ELEMENTS_DISPLAYED) {
                 write!(f, "{}", cell)?;
             }
             writeln!(f)?;
@@ -271,6 +294,26 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
     }
     fn goals(&self) -> &FxHashSet<Maze2DState> {
         &self.goals
+    }
+
+    fn randomize<R: rand::Rng>(&mut self, r: &mut R, num_starts: u16, num_goals: u16) -> bool {
+        self.starts.clear();
+        self.goals.clear();
+        const MAX_RANDOM_STATE_TRIES: usize = 1000;
+
+        for _tries in 0..MAX_RANDOM_STATE_TRIES {
+            if let Some(random_state) = self.space().random_state::<R>(r) {
+                if self.starts.len() < num_starts as usize {
+                    self.starts.push(random_state);
+                } else if self.goals.len() < num_goals as usize {
+                    self.goals.insert(random_state);
+                } else {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 }
 
@@ -431,9 +474,19 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
 impl std::fmt::Display for Maze2DProblem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.space.dimensions();
-        writeln!(f, "Maze2DProblem({}x{}):", d.0, d.1)?;
-        for (y, line) in self.space.map.iter().enumerate().take(32) {
-            for (x, cell) in line.iter().enumerate().take(32) {
+        writeln!(
+            f,
+            "Maze2DProblem({}x{}) (s:{:?}, g:{:?}):",
+            d.0, d.1, self.starts, self.goals
+        )?;
+        for (y, line) in self
+            .space
+            .map
+            .iter()
+            .enumerate()
+            .take(MAX_ELEMENTS_DISPLAYED)
+        {
+            for (x, cell) in line.iter().enumerate().take(MAX_ELEMENTS_DISPLAYED) {
                 let is_start = self.starts.contains(&Maze2DState {
                     x: x as Coord,
                     y: y as Coord,

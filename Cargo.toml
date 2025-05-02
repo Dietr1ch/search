@@ -22,6 +22,8 @@ derive_more = { version = "2.0.1", features = ["display"] }
 image = "0.25.6"
 indoc = "2.0.6"
 num-traits = "0.2.19"
+rand = "0.9.1"
+rand_chacha = "0.9.0"
 rustc-hash = { version = "2.1.1", features = ["nightly"] }
 smallvec = { version = "1.15.0", features = ["const_new"] }
 thiserror = "2.0.12"

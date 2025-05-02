@@ -154,6 +154,14 @@ where
     fn size(&self) -> Option<usize> {
         None
     }
+
+    fn supports_random_state() -> bool {
+        false
+    }
+    fn random_state<R: rand::Rng>(&self, _r: &mut R) -> Option<St> {
+        debug_assert!(!Self::supports_random_state());
+        None
+    }
 }
 
 use rustc_hash::FxHashSet;
@@ -172,4 +180,6 @@ where
     fn is_goal(&self, s: &St) -> bool {
         self.goals().contains(s)
     }
+
+    fn randomize<R: rand::Rng>(&mut self, r: &mut R, num_starts: u16, num_goals: u16) -> bool;
 }

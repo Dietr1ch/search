@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use indoc::indoc;
+use rand_chacha::rand_core::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 
 use astar::heuristic_search::AStarSearch;
 use astar::heuristic_search::Heuristic;
@@ -81,8 +83,23 @@ fn main() -> std::io::Result<()> {
         writeln!(out, "*** Map")?;
         writeln!(out, "#+begin_quote\n{space}\n#+end_quote")?;
         writeln!(out, "*** Problems")?;
-        let problem = Maze2DProblem::try_from(p.as_path()).unwrap();
-        writeln!(out, "#+begin_quote\n{problem}\n#+end_quote")?;
+        let mut problem = Maze2DProblem::try_from(p.as_path()).unwrap();
+
+        for instance in 0..10 {
+            let mut rng = ChaCha8Rng::seed_from_u64(instance);
+            let num_starts = 3;
+            let num_goals = 3;
+            if problem.randomize(&mut rng, num_starts, num_goals) {
+                writeln!(out, "#+begin_quote\n{problem}\n#+end_quote")?;
+            } else {
+                writeln!(
+                    out,
+                    "FIXME Failed to generate random problem with seed
+            {} with {} starts and {} goals",
+                    instance, num_starts, num_goals,
+                )?;
+            }
+        }
     }
 
     Ok(())
