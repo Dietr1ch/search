@@ -34,10 +34,10 @@ where
     A: Action,
     C: Cost,
 {
-    start: Option<S>,
-    end: Option<S>,
-    cost: C,
-    actions: Vec<A>,
+    pub start: Option<S>,
+    pub end: Option<S>,
+    pub cost: C,
+    pub actions: Vec<A>,
 }
 
 impl<S, A, C> Path<S, A, C>

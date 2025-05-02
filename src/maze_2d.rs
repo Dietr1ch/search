@@ -268,8 +268,8 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
             for x in 0..img.width() {
                 let px = img.get_pixel(x, y);
                 space.map[y as usize][x as usize] = match px.0 {
-                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
-                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
+                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Wall,
+                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Empty,
                     _ => Maze2DCell::Empty,
                 }
             }

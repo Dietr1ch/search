@@ -53,11 +53,13 @@ fn main() -> std::io::Result<()> {
             if let Some(random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
                 writeln!(out, "***** Instance")?;
                 writeln!(out, "- Starts:")?;
-                for start in random_problem.starts() {
+                let starts = random_problem.starts().clone();
+                let goals = random_problem.goals().clone();
+                for start in &starts {
                     writeln!(out, "  - {:?}", start)?;
                 }
                 writeln!(out, "- Goals:")?;
-                for goal in random_problem.goals() {
+                for goal in &goals {
                     writeln!(out, "  - {:?}", goal)?;
                 }
                 writeln!(out, "***** Solution")?;
@@ -73,6 +75,8 @@ fn main() -> std::io::Result<()> {
 
                 if let Some(path) = search.find_first() {
                     writeln!(out, "******* {path}\n#+begin_src ron\n{path:?}\n#+end_src",)?;
+                    assert!(starts.contains(&path.start.unwrap()));
+                    assert!(goals.contains(&path.end.unwrap()));
                 } else {
                     writeln!(out, "******* No path found",)?;
                 }

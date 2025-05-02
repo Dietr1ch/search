@@ -194,13 +194,16 @@ where
         let end = &self.nodes[node_index];
         let mut p = Path::<St, A, C>::new_from_start(*end.state());
 
-        while let Some((parent_index, a)) = self.nodes[node_index].parent {
-            let n = &self.nodes[node_index];
-            let s = n.state();
-            let c: C = self.problem.space().cost(s, &a);
-            debug_assert!(c != C::zero());
+        while let Some((parent_index, action)) = self.nodes[node_index].parent {
+            let prev = &self.nodes[parent_index.get()];
+            let _next = &self.nodes[node_index];
+            let prev_state = prev.state();
+            let cost = self.problem.space().cost(prev_state, &action);
+            // Action
+            debug_assert!(cost != C::zero());
+            // Start
 
-            p.append((*s, a), c);
+            p.append((*prev_state, action), cost);
             debug_assert!(node_index != parent_index.get());
             node_index = parent_index.get();
         }
