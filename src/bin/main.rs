@@ -75,8 +75,8 @@ fn main() -> std::io::Result<()> {
 
                 if let Some(path) = search.find_first() {
                     writeln!(out, "******* {path}\n#+begin_src ron\n{path:?}\n#+end_src",)?;
-                    assert!(starts.contains(&path.start.unwrap()));
-                    assert!(goals.contains(&path.end.unwrap()));
+                    debug_assert!(starts.contains(&path.start.unwrap()));
+                    debug_assert!(goals.contains(&path.end.unwrap()));
                 } else {
                     writeln!(out, "******* No path found",)?;
                 }
