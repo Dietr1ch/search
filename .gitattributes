@@ -1,0 +1,8 @@
+# Git attributes
+# ==============
+# References,
+# - https://git-scm.com/docs/gitattributes
+
+
+# Prevent merging documents
+docs/type_report.org -merge

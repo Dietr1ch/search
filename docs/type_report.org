@@ -1,0 +1,42 @@
+:PROPERTIES:
+:END:
+#+title: Search library
+
+* Data
+** Sizes
+| Struct                                                       | Size       |
+| ~u8~                                                         |          1 |
+| ~&[u8; 128]~                                                 |          8 |
+| ~[u8; 128]~                                                  |        128 |
+** Space
+*** Maze2D
+**** Sizes
+| Struct                                                       | Size       |
+| ~Maze2DCell~                                                 |          1 |
+| ~Maze2DProblemCell~                                          |          1 |
+| ~NonMaxU32~                                                  |          4 |
+| ~(NonMaxU32, bool)~                                          |          8 |
+| ~Maze2DState~                                                |          8 |
+| ~Maze2DAction~                                               |          1 |
+| ~(Maze2DState, Maze2DAction)~                                |         12 |
+** Problem
+| ~&Maze2DSpace~                                               |          8 |
+| ~Maze2DSpace~                                                |         24 |
+| ~Maze2DProblem~                                              |         80 |
+** Algorithms
+*** A*
+**** Sizes
+| Struct                                                       | Size       |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |
+| ~AStarRank<u32>~                                             |          8 |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |
+| ~AStarSearch<Maze2DProblem, Maze2DHeuristicManhattan, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |
+| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |
+*** Dijkstra
+**** Sizes
+| Struct                                                       | Size       |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |
+| ~DijkstraRank<u32>~                                          |          4 |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |
+| ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |
+| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |

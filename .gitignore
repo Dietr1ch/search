@@ -4,6 +4,7 @@
 # Git
 !.ignore
 !.gitignore
+!.gitattributes
 
 # Rust
 /target

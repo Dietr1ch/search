@@ -35,7 +35,7 @@ pub struct Args {
         short,
         long,
         env = "TYPE_REPORT",
-        default_value = "/tmp/type_report.org"
+        default_value = "docs/type_report.org"
     )]
     pub type_report: PathBuf,
 
@@ -56,7 +56,6 @@ pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
 
 pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()> {
     writeln!(out, ":PROPERTIES:")?;
-    writeln!(out, ":DATE: {}", chrono::offset::Local::now())?;
     writeln!(out, ":END:")?;
     writeln!(out, "#+title: Search library")?;
     writeln!(out)?;
