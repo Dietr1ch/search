@@ -4,8 +4,8 @@ use std::path::PathBuf;
 
 use anstream::println;
 use clap::Parser;
-use rand_chacha::ChaCha8Rng;
 use owo_colors::OwoColorize;
+use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 
 use astar::heuristic_search::AStarSearch;
