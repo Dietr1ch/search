@@ -27,8 +27,13 @@ use astar::space::Problem;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    #[arg(short, long, env = "ASTAR_LOGS", default_value = "/tmp/astar_logs.org")]
-    pub output: PathBuf,
+    #[arg(
+        short,
+        long,
+        env = "TYPE_REPORT",
+        default_value = "/tmp/type_report.org"
+    )]
+    pub type_report: PathBuf,
 }
 
 pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
@@ -42,13 +47,7 @@ pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
     Ok(())
 }
 
-fn main() -> std::io::Result<()> {
-    let args = Args::parse();
-    println!("Logging to {:?}", args.output);
-
-    let file = File::create(&args.output)?;
-    let mut out = BufWriter::new(file);
-
+pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()> {
     writeln!(out, ":PROPERTIES:")?;
     writeln!(out, ":DATE: {}", chrono::offset::Local::now())?;
     writeln!(out, ":END:")?;
@@ -58,20 +57,25 @@ fn main() -> std::io::Result<()> {
 
     writeln!(out, "** Sizes")?;
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
-    print_size(&mut out, 1u8)?;
-    print_size(&mut out, &args)?;
-    print_size(&mut out, args)?;
+    print_size(out, 1u8)?;
+    let buffer = [0u8; 128];
+    {
+        #[allow(clippy::needless_borrows_for_generic_args)]
+        print_size(out, &buffer)?;
+    }
+    print_size(out, buffer)?;
 
     writeln!(out, "** Space")?;
     writeln!(out, "*** Maze2D")?;
     writeln!(out, "**** Sizes")?;
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
-    print_size(&mut out, Maze2DCell::try_from('#').unwrap())?;
-    print_size(&mut out, Maze2DProblemCell::try_from('G').unwrap())?;
-    let s0 = Maze2DState { x: 0, y: 0 };
-    print_size(&mut out, s0)?;
+    print_size(out, Maze2DCell::try_from('#').unwrap())?;
+    print_size(out, Maze2DProblemCell::try_from('G').unwrap())?;
+    let s0 = Maze2DState::new_from_usize(0, 0).unwrap();
+    print_size(out, s0)?;
     let a = Maze2DAction::Up;
-    print_size(&mut out, a)?;
+    print_size(out, a)?;
+    print_size(out, (s0, a))?;
     let maze_str = indoc! {"
       ###
       #S#
@@ -80,24 +84,24 @@ fn main() -> std::io::Result<()> {
       ###
     "};
 
-    println!("** Problem");
+    writeln!(out, "** Problem")?;
     let problem = Maze2DProblem::try_from(maze_str).unwrap();
-    print_size(&mut out, problem.space())?;
-    print_size(&mut out, problem.space().clone())?;
-    print_size(&mut out, problem.clone())?;
+    print_size(out, problem.space())?;
+    print_size(out, problem.space().clone())?;
+    print_size(out, problem.clone())?;
 
     writeln!(out, "** Algorithms")?;
     writeln!(out, "*** A*")?;
     writeln!(out, "**** Sizes")?;
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
     print_size(
-        &mut out,
+        out,
         AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100),
     )?;
     let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100);
-    print_size(&mut out, h_n.rank())?;
+    print_size(out, h_n.rank())?;
     print_size(
-        &mut out,
+        out,
         AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1, 1),
     )?;
     let mut search = AStarSearch::<
@@ -108,29 +112,39 @@ fn main() -> std::io::Result<()> {
         Maze2DAction,
         Maze2DCost,
     >::new(problem.clone());
-    print_size(&mut out, search.clone())?;
-    print_size(&mut out, search.find_first())?;
+    print_size(out, search.clone())?;
+    print_size(out, search.find_first())?;
 
     writeln!(out, "*** Dijkstra")?;
     writeln!(out, "**** Sizes")?;
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
     print_size(
-        &mut out,
+        out,
         DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
     )?;
     let n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
-    print_size(&mut out, n.rank())?;
+    print_size(out, n.rank())?;
     print_size(
-        &mut out,
+        out,
         DijkstraNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
     )?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
             problem.clone(),
         );
-    print_size(&mut out, search.clone())?;
-    print_size(&mut out, search.find_first())?;
+    print_size(out, search.clone())?;
+    print_size(out, search.find_first())?;
 
-    out.flush()?;
+    out.flush()
+}
+
+fn main() -> std::io::Result<()> {
+    let args = Args::parse();
+    println!("Logging to {:?}", args.type_report);
+
+    let file = File::create(&args.type_report)?;
+    let mut r = BufWriter::new(file);
+    write_report(&mut r)?;
+
     Ok(())
 }
