@@ -218,9 +218,7 @@ where
             let g: C = self.nodes[node_index].g;
             debug_assert!(!self.is_closed(&state));
 
-            if self.problem.is_goal(&state) {
-                return Some(self.build_path(node_index));
-            }
+            // NOTE: We can return here if we only need one path
 
             // Mark as closed
             self.mark_closed(&state);
@@ -260,6 +258,10 @@ where
                         ));
                     }
                 }
+            }
+
+            if self.problem.is_goal(&state) {
+                return Some(self.build_path(node_index));
             }
         }
 
@@ -516,5 +518,20 @@ where
             self.nodes[self.open[r].node_index].heap_index < r,
             "Node half-assed swapped down should still point to it's original index."
         );
+    }
+}
+
+impl<P, H, Sp, St, A, C> Iterator for AStarSearch<P, H, Sp, St, A, C>
+where
+    P: Problem<Sp, St, A, C>,
+    H: Heuristic<P, Sp, St, A, C>,
+    Sp: Space<St, A, C>,
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    type Item = Path<St, A, C>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.find_next()
     }
 }

@@ -70,7 +70,7 @@ fn main() -> std::io::Result<()> {
                     writeln!(out, "  - {:?}", goal)?;
                 }
                 writeln!(out, "***** Solution")?;
-                let mut search = AStarSearch::<
+                let search = AStarSearch::<
                     Maze2DProblem,
                     Maze2DHeuristicManhattan,
                     Maze2DSpace,
@@ -80,12 +80,13 @@ fn main() -> std::io::Result<()> {
                 >::new(random_problem);
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
-                if let Some(path) = search.find_next() {
-                    writeln!(out, "******* {path}\n#+begin_src ron\n{path:?}\n#+end_src",)?;
+                for (i, path) in search.take(3).enumerate() {
+                    writeln!(
+                        out,
+                        "******* Path {i} {path}\n#+begin_src ron\n{path:?}\n#+end_src",
+                    )?;
                     debug_assert!(starts.contains(&path.start.unwrap()));
                     debug_assert!(goals.contains(&path.end.unwrap()));
-                } else {
-                    writeln!(out, "******* No path found",)?;
                 }
             } else {
                 writeln!(

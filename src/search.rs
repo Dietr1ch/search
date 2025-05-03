@@ -487,3 +487,17 @@ where
         );
     }
 }
+
+impl<P, Sp, St, A, C> Iterator for DijkstraSearch<P, Sp, St, A, C>
+where
+    P: Problem<Sp, St, A, C>,
+    Sp: Space<St, A, C>,
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    type Item = Path<St, A, C>;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.find_next()
+    }
+}
