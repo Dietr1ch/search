@@ -185,7 +185,7 @@ where
         path
     }
 
-    pub fn find_next(&mut self) -> Option<Path<St, A, C>> {
+    pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         // Check remaining un-explored nodes
         while let Some(node_index) = self.pop() {
             let state = *self.nodes[node_index].state();
@@ -498,6 +498,6 @@ where
 {
     type Item = Path<St, A, C>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.find_next()
+        self.find_next_goal()
     }
 }

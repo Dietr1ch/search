@@ -211,14 +211,18 @@ where
         path
     }
 
-    pub fn find_next(&mut self) -> Option<Path<St, A, C>> {
+    pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         // Check remaining un-explored nodes
+        // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
         while let Some(node_index) = self.pop() {
             let state = *self.nodes[node_index].state();
             let g: C = self.nodes[node_index].g;
             debug_assert!(!self.is_closed(&state));
 
             // NOTE: We can return here if we only need one path
+            // if self.problem.is_goal(&state) {
+            //     yield Some(self.build_path(node_index));
+            // }
 
             // Mark as closed
             self.mark_closed(&state);
@@ -229,6 +233,9 @@ where
                 match self.node_index.get(&s) {
                     Some((_, true)) => {
                         // Closed
+                        // NOTE: Could be a goal we had already found through a
+                        // sub-optimal path. Currently we only search for
+                        // an optimal path to a new goal.
                         continue;
                     }
                     Some((node_index, false)) => {
@@ -532,6 +539,6 @@ where
 {
     type Item = Path<St, A, C>;
     fn next(&mut self) -> Option<Self::Item> {
-        self.find_next()
+        self.find_next_goal()
     }
 }

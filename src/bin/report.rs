@@ -145,7 +145,7 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         Maze2DCost,
     >::new(problem.clone());
     print_size(out, search.clone())?;
-    print_size(out, search.find_next())?;
+    print_size(out, search.find_next_goal())?;
 
     writeln!(out, "*** Dijkstra")?;
     writeln!(out, "**** Sizes")?;
@@ -169,7 +169,7 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
             problem.clone(),
         );
     print_size(out, search.clone())?;
-    print_size(out, search.find_next())?;
+    print_size(out, search.find_next_goal())?;
 
     out.flush()
 }
