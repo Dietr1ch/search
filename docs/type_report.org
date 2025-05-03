@@ -4,39 +4,41 @@
 
 * Data
 ** Sizes
-| Struct                                                       | Size       |
-| ~u8~                                                         |          1 |
-| ~&[u8; 128]~                                                 |          8 |
-| ~[u8; 128]~                                                  |        128 |
+| Struct                                                       | Size       | Items/64B  |
+| ~u8~                                                         |          1 |         64 |
+| ~&[u8; 128]~                                                 |          8 |          8 |
+| ~[u8; 128]~                                                  |        128 |          0 |
 ** Space
 *** Maze2D
 **** Sizes
-| Struct                                                       | Size       |
-| ~Maze2DCell~                                                 |          1 |
-| ~Maze2DProblemCell~                                          |          1 |
-| ~NonMaxU32~                                                  |          4 |
-| ~(NonMaxU32, bool)~                                          |          8 |
-| ~Maze2DState~                                                |          8 |
-| ~Maze2DAction~                                               |          1 |
-| ~(Maze2DState, Maze2DAction)~                                |         12 |
+| Struct                                                       | Size       | Items/64B  |
+| ~Maze2DCell~                                                 |          1 |         64 |
+| ~Maze2DProblemCell~                                          |          1 |         64 |
+| ~NonMaxU32~                                                  |          4 |         16 |
+| ~(NonMaxU32, bool)~                                          |          8 |          8 |
+| ~SmallVec<[(Maze2DState, Maze2DAction); 4]>~                 |         64 |          1 |
+| ~SmallVec<[(Maze2DState, Maze2DAction); 8]>~                 |        112 |          0 |
+| ~Maze2DState~                                                |          8 |          8 |
+| ~Maze2DAction~                                               |          1 |         64 |
+| ~(Maze2DState, Maze2DAction)~                                |         12 |          5 |
 ** Problem
-| ~&Maze2DSpace~                                               |          8 |
-| ~Maze2DSpace~                                                |         24 |
-| ~Maze2DProblem~                                              |         80 |
+| ~&Maze2DSpace~                                               |          8 |          8 |
+| ~Maze2DSpace~                                                |         24 |          2 |
+| ~Maze2DProblem~                                              |         80 |          0 |
 ** Algorithms
 *** A*
 **** Sizes
-| Struct                                                       | Size       |
-| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |
-| ~AStarRank<u32>~                                             |          8 |
-| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |
-| ~AStarSearch<Maze2DProblem, Maze2DHeuristicManhattan, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |
-| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |
+| Struct                                                       | Size       | Items/64B  |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |          1 |
+| ~AStarRank<u32>~                                             |          8 |          8 |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |          1 |
+| ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
+| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
 *** Dijkstra
 **** Sizes
-| Struct                                                       | Size       |
-| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |
-| ~DijkstraRank<u32>~                                          |          4 |
-| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |
-| ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |
-| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |
+| Struct                                                       | Size       | Items/64B  |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |          1 |
+| ~DijkstraRank<u32>~                                          |          4 |         16 |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |          1 |
+| ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
+| ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |

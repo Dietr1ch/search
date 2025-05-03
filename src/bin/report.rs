@@ -9,6 +9,7 @@ use clap::Parser;
 use indoc::indoc;
 use nonmax::NonMaxUsize;
 use owo_colors::OwoColorize;
+use smallvec::SmallVec;
 
 use astar::debug::type_name;
 use astar::heuristic_search::AStarNode;
@@ -50,7 +51,13 @@ pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
     use std::mem::size_of;
 
     let t_type = format!("~{}~", type_name::<T>());
-    writeln!(out, "| {:60} | {:10?} |", t_type, size_of::<T>(),)?;
+    let size = size_of::<T>();
+    const AVG_CACHELINE_SIZE: usize = 64;
+    let items_per_avg_cacheline = AVG_CACHELINE_SIZE / size;
+    writeln!(
+        out,
+        "| {t_type:60} | {size:10?} | {items_per_avg_cacheline:10?} |"
+    )?;
     Ok(())
 }
 
@@ -62,7 +69,11 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     writeln!(out, "* Data")?;
 
     writeln!(out, "** Sizes")?;
-    writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
+    writeln!(
+        out,
+        "| {:60} | {:10} | {:10} |",
+        "Struct", "Size", "Items/64B"
+    )?;
     print_size(out, 1u8)?;
     let buffer = [0u8; 128];
     {
@@ -75,12 +86,18 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     // Maze2D sizes
     writeln!(out, "*** Maze2D")?;
     writeln!(out, "**** Sizes")?;
-    writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
+    writeln!(
+        out,
+        "| {:60} | {:10} | {:10} |",
+        "Struct", "Size", "Items/64B"
+    )?;
     print_size(out, Maze2DCell::try_from('#').unwrap())?;
     print_size(out, Maze2DProblemCell::try_from('G').unwrap())?;
     let x = Coord::new(0).unwrap();
     print_size(out, x)?;
     print_size(out, (x, true))?;
+    print_size(out, SmallVec::<[(Maze2DState, Maze2DAction); 4]>::new())?;
+    print_size(out, SmallVec::<[(Maze2DState, Maze2DAction); 8]>::new())?;
     let s0 = Maze2DState::new_from_usize(0, 0).unwrap();
     print_size(out, s0)?;
     let a = Maze2DAction::Up;
@@ -104,7 +121,11 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     writeln!(out, "** Algorithms")?;
     writeln!(out, "*** A*")?;
     writeln!(out, "**** Sizes")?;
-    writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
+    writeln!(
+        out,
+        "| {:60} | {:10} | {:10} |",
+        "Struct", "Size", "Items/64B"
+    )?;
     print_size(
         out,
         AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100),
@@ -128,7 +149,11 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
 
     writeln!(out, "*** Dijkstra")?;
     writeln!(out, "**** Sizes")?;
-    writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
+    writeln!(
+        out,
+        "| {:60} | {:10} | {:10} |",
+        "Struct", "Size", "Items/64B"
+    )?;
     print_size(
         out,
         DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
