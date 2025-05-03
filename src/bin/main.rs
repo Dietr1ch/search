@@ -73,7 +73,7 @@ fn main() -> std::io::Result<()> {
                 >::new(random_problem);
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
-                if let Some(path) = search.find_first() {
+                if let Some(path) = search.find_next() {
                     writeln!(out, "******* {path}\n#+begin_src ron\n{path:?}\n#+end_src",)?;
                     debug_assert!(starts.contains(&path.start.unwrap()));
                     debug_assert!(goals.contains(&path.end.unwrap()));

@@ -185,7 +185,8 @@ where
         path
     }
 
-    pub fn find_first(&mut self) -> Option<Path<St, A, C>> {
+    pub fn find_next(&mut self) -> Option<Path<St, A, C>> {
+        // Check remaining un-explored nodes
         while let Some(node_index) = self.pop() {
             let state = *self.nodes[node_index].state();
             let g: C = self.nodes[node_index].g;
@@ -235,16 +236,6 @@ where
 
         None
     }
-
-    // pub fn find_all(&mut self) -> Vec<Path<St, A>> {
-    //     while let Some(node) = self.pop() {
-    //         println!("Popped {}", node);
-    //     }
-
-    //     self.push();
-
-    //     None
-    // }
 
     #[inline(always)]
     pub fn find_node(&self, s: &St) -> Option<Idx> {
