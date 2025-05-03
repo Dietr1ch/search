@@ -36,6 +36,20 @@ impl Maze2DState {
             y: Coord::new(y)?,
         })
     }
+    pub fn new_from_small_usize(x: usize, y: usize) -> Maze2DState {
+        debug_assert!(x < CoordIntrinsic::MAX as usize);
+        debug_assert!(y < CoordIntrinsic::MAX as usize);
+        let x = x as CoordIntrinsic;
+        let y = y as CoordIntrinsic;
+
+        Maze2DState {
+            x: Coord::new(x).unwrap(),
+            y: Coord::new(y).unwrap(),
+        }
+    }
+    pub fn safe_dimensions(max_x: usize, max_y: usize) -> bool {
+        (max_x < CoordIntrinsic::MAX as usize) && (max_y < CoordIntrinsic::MAX as usize)
+    }
 }
 impl State for Maze2DState {}
 
@@ -516,36 +530,33 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
 impl std::fmt::Display for Maze2DProblem {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.space.dimensions();
+        debug_assert!(Maze2DState::safe_dimensions(d.0, d.1));
+
         writeln!(
             f,
             "Maze2DProblem({}x{}) (s:{:?}, g:{:?}):",
             d.0, d.1, self.starts, self.goals
         )?;
-        for (y, line) in self
-            .space
-            .map
-            .iter()
-            .enumerate()
-            .take(MAX_ELEMENTS_DISPLAYED)
-        {
+        let map = &self.space.map;
+        for (y, line) in map.iter().enumerate().take(MAX_ELEMENTS_DISPLAYED) {
             for (x, cell) in line.iter().enumerate().take(MAX_ELEMENTS_DISPLAYED) {
-                if let Some(s) = Maze2DState::new_from_usize(x, y) {
-                    let is_start = self.starts.contains(&s);
-                    let is_goal = self.goals.contains(&s);
+                let s = Maze2DState::new_from_small_usize(x, y);
 
-                    match (is_start, is_goal) {
-                        (true, true) => {
-                            write!(f, "!")?;
-                        }
-                        (true, false) => {
-                            write!(f, "S")?;
-                        }
-                        (false, true) => {
-                            write!(f, "G")?;
-                        }
-                        (false, false) => {
-                            write!(f, "{}", cell)?;
-                        }
+                let is_start = self.starts.contains(&s);
+                let is_goal = self.goals.contains(&s);
+
+                match (is_start, is_goal) {
+                    (true, true) => {
+                        write!(f, "!")?;
+                    }
+                    (true, false) => {
+                        write!(f, "S")?;
+                    }
+                    (false, true) => {
+                        write!(f, "G")?;
+                    }
+                    (false, false) => {
+                        write!(f, "{}", cell)?;
                     }
                 }
             }
