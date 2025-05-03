@@ -117,10 +117,10 @@ use std::marker::PhantomData;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct AStarSearch<P, H, Sp, St, A, C>
+pub struct AStarSearch<H, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
     H: Heuristic<P, Sp, St, A, C>,
+    P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -143,10 +143,10 @@ where
 
 type Idx = usize;
 
-impl<P, H, Sp, St, A, C> AStarSearch<P, H, Sp, St, A, C>
+impl<H, P, Sp, St, A, C> AStarSearch<H, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
     H: Heuristic<P, Sp, St, A, C>,
+    P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -521,10 +521,10 @@ where
     }
 }
 
-impl<P, H, Sp, St, A, C> Iterator for AStarSearch<P, H, Sp, St, A, C>
+impl<H, P, Sp, St, A, C> Iterator for AStarSearch<H, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
     H: Heuristic<P, Sp, St, A, C>,
+    P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,

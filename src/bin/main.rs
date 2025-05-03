@@ -9,12 +9,9 @@ use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 
 use astar::heuristic_search::AStarSearch;
-use astar::maze_2d::Maze2DAction;
-use astar::maze_2d::Maze2DCost;
 use astar::maze_2d::Maze2DHeuristicManhattan;
 use astar::maze_2d::Maze2DProblem;
 use astar::maze_2d::Maze2DSpace;
-use astar::maze_2d::Maze2DState;
 use astar::space::Problem;
 
 #[global_allocator]
@@ -70,14 +67,8 @@ fn main() -> std::io::Result<()> {
                     writeln!(out, "  - {:?}", goal)?;
                 }
                 writeln!(out, "***** Solution")?;
-                let search = AStarSearch::<
-                    Maze2DProblem,
-                    Maze2DHeuristicManhattan,
-                    Maze2DSpace,
-                    Maze2DState,
-                    Maze2DAction,
-                    Maze2DCost,
-                >::new(random_problem);
+                let search =
+                    AStarSearch::<Maze2DHeuristicManhattan, _, _, _, _, _>::new(random_problem);
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
                 for (i, path) in search.take(3).enumerate() {

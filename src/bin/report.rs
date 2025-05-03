@@ -116,8 +116,8 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1, 1),
     )?;
     let mut search = AStarSearch::<
-        Maze2DProblem,
         Maze2DHeuristicManhattan,
+        Maze2DProblem,
         Maze2DSpace,
         Maze2DState,
         Maze2DAction,
