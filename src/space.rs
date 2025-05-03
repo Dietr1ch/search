@@ -131,7 +131,11 @@ where
     fn cost(&self, _s: &St, _a: &A) -> C {
         C::one()
     }
+    /// Expands a State
+    // TODO: Figure out how to offer a SmallVec<(St, A)>
+    // TODO: Check that (St, A) does not incurr in a lot of padding.
     fn neighbours(&self, s: &St) -> Vec<(St, A)>;
+    /// Verify is a State is valid.
     fn valid(&self, s: &St) -> bool;
 
     fn valid_path(&self, p: &Path<St, A, C>) -> bool {
