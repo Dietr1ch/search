@@ -4,9 +4,11 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
+use anstream::println;
 use clap::Parser;
 use indoc::indoc;
 use nonmax::NonMaxUsize;
+use owo_colors::OwoColorize;
 
 use astar::debug::type_name;
 use astar::heuristic_search::AStarNode;
@@ -35,6 +37,9 @@ pub struct Args {
         default_value = "/tmp/type_report.org"
     )]
     pub type_report: PathBuf,
+
+    #[command(flatten)]
+    color: colorchoice_clap::Color,
 }
 
 pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
@@ -141,7 +146,8 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    println!("Logging to {:?}", args.type_report);
+    args.color.write_global();
+    println!("Writting report to {:?}", args.type_report.green());
 
     let file = File::create(&args.type_report)?;
     let mut r = BufWriter::new(file);

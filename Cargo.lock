@@ -112,13 +112,16 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 name = "astar"
 version = "0.1.0"
 dependencies = [
+ "anstream",
  "chrono",
  "clap",
+ "colorchoice-clap",
  "derive_more",
  "image",
  "indoc",
  "nonmax",
  "num-traits",
+ "owo-colors",
  "rand 0.9.1",
  "rand_chacha 0.9.0",
  "rustc-hash",
@@ -329,6 +332,16 @@ name = "colorchoice"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b63caa9aa9397e2d9480a9b13673856c78d8ac123288526c37d7839f2a86990"
+
+[[package]]
+name = "colorchoice-clap"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96a804da36d925510ac4d61a0ee8edfdba6ae00c7d5c93c8bf58f25915966956"
+dependencies = [
+ "clap",
+ "colorchoice",
+]
 
 [[package]]
 name = "const_format"
@@ -1039,6 +1052,12 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+
+[[package]]
+name = "owo-colors"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1036865bb9422d3300cf723f657c2851d0e9ab12567854b1f4eba3d77decf564"
 
 [[package]]
 name = "paste"

@@ -2,8 +2,10 @@ use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
 
+use anstream::println;
 use clap::Parser;
 use rand_chacha::ChaCha8Rng;
+use owo_colors::OwoColorize;
 use rand_chacha::rand_core::SeedableRng;
 
 use astar::heuristic_search::AStarSearch;
@@ -28,11 +30,15 @@ pub struct Args {
 
     #[arg()]
     pub problems: Vec<PathBuf>,
+
+    #[command(flatten)]
+    color: colorchoice_clap::Color,
 }
 
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
-    println!("Logging to {:?}", args.output);
+    args.color.write_global();
+    println!("Logging to {:?}", args.output.yellow());
 
     let file = File::create(&args.output)?;
     let mut out = BufWriter::new(file);
