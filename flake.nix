@@ -62,6 +62,7 @@
               cargo-deny
               cargo-edit
               cargo-fuzz
+              cargo-outdated
               cargo-watch
 
               bacon
