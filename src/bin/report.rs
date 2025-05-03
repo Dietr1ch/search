@@ -25,6 +25,7 @@ use astar::space::Problem;
 
 /// Command line arguments
 #[derive(Parser, Debug)]
+#[clap(long_version = astar::build::CLAP_LONG_VERSION)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     #[arg(
