@@ -12,8 +12,8 @@ use crate::space::State;
 
 const MAX_ELEMENTS_DISPLAYED: usize = 20;
 
-type CoordIntrinsic = u32;
-type Coord = NonMaxU32;
+pub type CoordIntrinsic = u32;
+pub type Coord = NonMaxU32;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Maze2DState {

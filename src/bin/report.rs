@@ -13,6 +13,7 @@ use owo_colors::OwoColorize;
 use astar::debug::type_name;
 use astar::heuristic_search::AStarNode;
 use astar::heuristic_search::AStarSearch;
+use astar::maze_2d::Coord;
 use astar::maze_2d::Maze2DAction;
 use astar::maze_2d::Maze2DCell;
 use astar::maze_2d::Maze2DCost;
@@ -72,16 +73,21 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     print_size(out, buffer)?;
 
     writeln!(out, "** Space")?;
+    // Maze2D sizes
     writeln!(out, "*** Maze2D")?;
     writeln!(out, "**** Sizes")?;
     writeln!(out, "| {:60} | {:10} |", "Struct", "Size")?;
     print_size(out, Maze2DCell::try_from('#').unwrap())?;
     print_size(out, Maze2DProblemCell::try_from('G').unwrap())?;
+    let x = Coord::new(0).unwrap();
+    print_size(out, x)?;
+    print_size(out, (x, true))?;
     let s0 = Maze2DState::new_from_usize(0, 0).unwrap();
     print_size(out, s0)?;
     let a = Maze2DAction::Up;
     print_size(out, a)?;
     print_size(out, (s0, a))?;
+
     let maze_str = indoc! {"
       ###
       #S#
