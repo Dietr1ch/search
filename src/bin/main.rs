@@ -25,7 +25,7 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 #[clap(long_version = astar::build::CLAP_LONG_VERSION)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    #[arg(short, long, env = "LOGS", default_value = "/tmp/logs.org")]
+    #[arg(short, long, env = "LOGS", default_value = "logs/main.org")]
     pub output: PathBuf,
 
     #[arg()]
