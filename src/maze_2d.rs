@@ -1,8 +1,7 @@
 use rustc_hash::FxHashSet;
 use std::hash::Hash;
 
-use num_traits::identities::one;
-use num_traits::identities::zero;
+use nonmax::NonMaxU32;
 
 use crate::heuristic_search::Heuristic;
 use crate::space::Action;
@@ -11,16 +10,43 @@ use crate::space::Problem;
 use crate::space::Space;
 use crate::space::State;
 
-type Coord = u32;
-
 const MAX_ELEMENTS_DISPLAYED: usize = 20;
+
+type CoordIntrinsic = u32;
+type Coord = NonMaxU32;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Maze2DState {
     pub x: Coord,
     pub y: Coord,
 }
+impl Maze2DState {
+    pub fn new(x: CoordIntrinsic, y: CoordIntrinsic) -> Option<Maze2DState> {
+        Some(Maze2DState {
+            x: Coord::new(x)?,
+            y: Coord::new(y)?,
+        })
+    }
+    pub fn new_from_usize(x: usize, y: usize) -> Option<Maze2DState> {
+        let x = (x < CoordIntrinsic::MAX as usize).then_some(x as CoordIntrinsic)?;
+        let y = (y < CoordIntrinsic::MAX as usize).then_some(y as CoordIntrinsic)?;
+
+        Some(Maze2DState {
+            x: Coord::new(x)?,
+            y: Coord::new(y)?,
+        })
+    }
+}
 impl State for Maze2DState {}
+
+impl Default for Maze2DState {
+    fn default() -> Self {
+        Maze2DState {
+            x: Coord::new(0 as CoordIntrinsic).unwrap(),
+            y: Coord::new(0 as CoordIntrinsic).unwrap(),
+        }
+    }
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Maze2DAction {
@@ -35,7 +61,7 @@ pub enum Maze2DAction {
 }
 impl Action for Maze2DAction {}
 
-pub type Maze2DCost = u32;
+pub type Maze2DCost = CoordIntrinsic;
 impl Cost for Maze2DCost {}
 
 use derive_more::Display;
@@ -81,11 +107,11 @@ impl Maze2DSpace {
         }
     }
 
-    pub fn dimensions(&self) -> (Coord, Coord) {
+    pub fn dimensions(&self) -> (usize, usize) {
         if self.map.is_empty() {
             return (0, 0);
         }
-        (self.map[0].len() as Coord, self.map.len() as Coord)
+        (self.map[0].len(), self.map.len())
     }
     #[inline(always)]
     fn at(&self, state: &Maze2DState) -> Maze2DCell {
@@ -93,8 +119,8 @@ impl Maze2DSpace {
         unsafe {
             *self
                 .map
-                .get_unchecked(state.y as usize)
-                .get_unchecked(state.x as usize)
+                .get_unchecked(state.y.get() as usize)
+                .get_unchecked(state.x.get() as usize)
         }
     }
 
@@ -105,11 +131,12 @@ impl Maze2DSpace {
         let (max_x, max_y) = self.dimensions();
 
         for _tries in 0..1000 {
-            let x: Coord = r.random::<Coord>() % max_x;
-            let y: Coord = r.random::<Coord>() % max_y;
+            let x = r.random::<CoordIntrinsic>() % (max_x as CoordIntrinsic);
+            let y = r.random::<CoordIntrinsic>() % (max_y as CoordIntrinsic);
             let cell: Maze2DCell = self.map[y as usize][x as usize];
+
             if cell == Maze2DCell::Empty {
-                return Some(Maze2DState { x, y });
+                return Maze2DState::new(x, y);
             }
         }
 
@@ -120,46 +147,33 @@ impl Maze2DSpace {
 impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
     #[inline(always)]
     fn apply(&self, state: &Maze2DState, action: &Maze2DAction) -> Option<Maze2DState> {
-        match action {
-            Maze2DAction::Up => Some(Maze2DState {
-                x: state.x,
-                y: state.y + 1,
-            }),
-            Maze2DAction::Down => Some(Maze2DState {
-                x: state.x,
-                y: state.y - 1,
-            }),
-            Maze2DAction::Left => Some(Maze2DState {
-                x: state.x - 1,
-                y: state.y,
-            }),
-            Maze2DAction::Right => Some(Maze2DState {
-                x: state.x + 1,
-                y: state.y,
-            }),
-            Maze2DAction::LeftUp => Some(Maze2DState {
-                x: state.x - 1,
-                y: state.y + 1,
-            }),
-            Maze2DAction::RightUp => Some(Maze2DState {
-                x: state.x + 1,
-                y: state.y + 1,
-            }),
-            Maze2DAction::LeftDown => Some(Maze2DState {
-                x: state.x - 1,
-                y: state.y + 1,
-            }),
-            Maze2DAction::RightDown => Some(Maze2DState {
-                x: state.x + 1,
-                y: state.y - 1,
-            }),
-        }
+        let x = state.x.get();
+        let y = state.y.get();
+
+        #[rustfmt::skip]
+        let (x, y) = match action {
+            Maze2DAction::Up        => (x,     y + 1),
+            Maze2DAction::Down      => (x,     y - 1),
+            Maze2DAction::Left      => (x - 1, y    ),
+            Maze2DAction::Right     => (x + 1, y    ),
+            Maze2DAction::LeftUp    => (x - 1, y + 1),
+            Maze2DAction::RightUp   => (x + 1, y + 1),
+            Maze2DAction::LeftDown  => (x - 1, y - 1),
+            Maze2DAction::RightDown => (x + 1, y - 1),
+        };
+
+        Some(Maze2DState {
+            x: Coord::new(x)?,
+            y: Coord::new(y)?,
+        })
     }
 
     #[inline(always)]
     fn valid(&self, state: &Maze2DState) -> bool {
         let (max_x, max_y) = self.dimensions();
-        state.x < max_x && state.y < max_y
+        let (max_x, max_y) = (max_x as CoordIntrinsic, max_y as CoordIntrinsic);
+
+        state.x.get() < max_x && state.y.get() < max_y
     }
 
     /// Gets the neighbours of a given position.
@@ -168,10 +182,13 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
     fn neighbours(&self, state: &Maze2DState) -> Vec<(Maze2DState, Maze2DAction)> {
         let mut v = Vec::<(Maze2DState, Maze2DAction)>::new();
         let (max_x, max_y) = self.dimensions();
+        debug_assert!(max_x < CoordIntrinsic::MAX as usize);
+        debug_assert!(max_y < CoordIntrinsic::MAX as usize);
+        let (max_x, max_y) = (max_x as CoordIntrinsic, max_y as CoordIntrinsic);
 
-        let prev = Coord::MAX;
-        let same = zero::<Coord>();
-        let next = one::<Coord>();
+        let prev = CoordIntrinsic::MAX;
+        let same = 0 as CoordIntrinsic;
+        let next = 1 as CoordIntrinsic;
 
         for (dx, dy, action) in [
             // Left
@@ -187,10 +204,13 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
             (next, same, Maze2DAction::Right),
             (next, next, Maze2DAction::RightUp),
         ] {
-            let new_x: Coord = state.x.wrapping_add(dx);
-            let new_y: Coord = state.y.wrapping_add(dy);
+            let new_x = state.x.get().wrapping_add(dx);
+            let new_y = state.y.get().wrapping_add(dy);
             if new_x < max_x && new_y < max_y {
-                let s = Maze2DState { x: new_x, y: new_y };
+                let s = Maze2DState {
+                    x: NonMaxU32::new(new_x).unwrap(),
+                    y: NonMaxU32::new(new_y).unwrap(),
+                };
                 debug_assert!(self.valid(&s));
                 if self.at(&s) != Maze2DCell::Wall {
                     v.push((s, action));
@@ -393,6 +413,8 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
 
         let max_x = lines[0].len();
         let max_y = lines.len();
+        debug_assert!(max_x < CoordIntrinsic::MAX as usize);
+        debug_assert!(max_y < CoordIntrinsic::MAX as usize);
         let mut problem = Maze2DProblem {
             space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
@@ -407,15 +429,15 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
                 problem.space.map[y][x] = match cell {
                     Maze2DProblemCell::Start => {
                         problem.starts.push(Maze2DState {
-                            x: x as Coord,
-                            y: y as Coord,
+                            x: Coord::new(x as CoordIntrinsic).unwrap(),
+                            y: Coord::new(y as CoordIntrinsic).unwrap(),
                         });
                         Maze2DCell::Empty
                     }
                     Maze2DProblemCell::Goal => {
                         problem.goals.insert(Maze2DState {
-                            x: x as Coord,
-                            y: y as Coord,
+                            x: Coord::new(x as CoordIntrinsic).unwrap(),
+                            y: Coord::new(y as CoordIntrinsic).unwrap(),
                         });
                         Maze2DCell::Empty
                     }
@@ -449,26 +471,37 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
 
         let max_x = img.width() as usize;
         let max_y = img.height() as usize;
+        debug_assert!(max_x < CoordIntrinsic::MAX as usize);
+        debug_assert!(max_y < CoordIntrinsic::MAX as usize);
+
         let mut p = Maze2DProblem {
             space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
             goals: FxHashSet::<Maze2DState>::default(),
         };
+        let max_x = max_x as CoordIntrinsic;
+        let max_y = max_y as CoordIntrinsic;
 
-        for y in 0..img.height() {
-            for x in 0..img.width() {
+        for y in 0..max_y {
+            for x in 0..max_x {
                 let px = img.get_pixel(x, y);
                 p.space.map[y as usize][x as usize] = match px.0 {
                     [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
                     [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
                     [u8::MIN, u8::MAX, u8::MIN] => {
                         // GREEN (goal)
-                        p.goals.insert(Maze2DState { x, y });
+                        p.goals.insert(Maze2DState {
+                            x: Coord::new(x).unwrap(),
+                            y: Coord::new(y).unwrap(),
+                        });
                         Maze2DCell::Empty
                     }
                     [u8::MIN, u8::MIN, u8::MAX] => {
                         // BLUE (start)
-                        p.starts.push(Maze2DState { x, y });
+                        p.starts.push(Maze2DState {
+                            x: Coord::new(x).unwrap(),
+                            y: Coord::new(y).unwrap(),
+                        });
                         Maze2DCell::Empty
                     }
                     _ => Maze2DCell::Empty,
@@ -496,27 +529,23 @@ impl std::fmt::Display for Maze2DProblem {
             .take(MAX_ELEMENTS_DISPLAYED)
         {
             for (x, cell) in line.iter().enumerate().take(MAX_ELEMENTS_DISPLAYED) {
-                let is_start = self.starts.contains(&Maze2DState {
-                    x: x as Coord,
-                    y: y as Coord,
-                });
-                let is_goal = self.goals.contains(&Maze2DState {
-                    x: x as Coord,
-                    y: y as Coord,
-                });
+                if let Some(s) = Maze2DState::new_from_usize(x, y) {
+                    let is_start = self.starts.contains(&s);
+                    let is_goal = self.goals.contains(&s);
 
-                match (is_start, is_goal) {
-                    (true, true) => {
-                        write!(f, "!")?;
-                    }
-                    (true, false) => {
-                        write!(f, "S")?;
-                    }
-                    (false, true) => {
-                        write!(f, "G")?;
-                    }
-                    (false, false) => {
-                        write!(f, "{}", cell)?;
+                    match (is_start, is_goal) {
+                        (true, true) => {
+                            write!(f, "!")?;
+                        }
+                        (true, false) => {
+                            write!(f, "S")?;
+                        }
+                        (false, true) => {
+                            write!(f, "G")?;
+                        }
+                        (false, false) => {
+                            write!(f, "{}", cell)?;
+                        }
                     }
                 }
             }
@@ -535,6 +564,8 @@ pub struct Maze2DHeuristicManhattan;
 fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
     let [min_x, max_x] = std::cmp::minmax(a.x, b.x);
     let [min_y, max_y] = std::cmp::minmax(a.y, b.y);
+    let (min_x, max_x) = (min_x.get(), max_x.get());
+    let (min_y, max_y) = (min_y.get(), max_y.get());
 
     (max_x - min_x) + (max_y - min_y)
 }
