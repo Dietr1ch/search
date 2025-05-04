@@ -6,7 +6,7 @@ use shadow_rs::shadow;
 shadow!(build);
 
 pub mod debug;
-pub mod heap_primitives;
+pub mod heap_index;
 pub mod heuristic_search;
 pub mod maze_2d;
 pub mod search;

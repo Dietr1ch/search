@@ -29,16 +29,16 @@
 *** A*
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |
-| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |          1 |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         32 |          2 |
 | ~AStarRank<u32>~                                             |          8 |          8 |
-| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |          1 |
+| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         32 |          2 |
 | ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
 *** Dijkstra
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |
-| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |          1 |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         32 |          2 |
 | ~DijkstraRank<u32>~                                          |          4 |         16 |
-| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |          1 |
+| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         32 |          2 |
 | ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |

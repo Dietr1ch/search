@@ -12,6 +12,7 @@ use owo_colors::OwoColorize;
 use smallvec::SmallVec;
 
 use search::debug::type_name;
+use search::heap_index::HeapIndex;
 use search::heuristic_search::AStarNode;
 use search::heuristic_search::AStarSearch;
 use search::maze_2d::Coord;
@@ -128,13 +129,18 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     )?;
     print_size(
         out,
-        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
+        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(HeapIndex::zero(), s0, 0),
     )?;
-    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(HeapIndex::zero(), s0, 0);
     print_size(out, h_n.rank(100))?;
     print_size(
         out,
-        AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
+        AStarNode::new_from_parent(
+            HeapIndex::zero(),
+            s0,
+            (NonMaxUsize::new(0usize).unwrap(), a),
+            1,
+        ),
     )?;
     let mut search = AStarSearch::<
         Maze2DHeuristicManhattan,
@@ -156,13 +162,18 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     )?;
     print_size(
         out,
-        DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
+        DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(HeapIndex::zero(), s0, 0),
     )?;
-    let n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(HeapIndex::zero(), s0, 0);
     print_size(out, n.rank())?;
     print_size(
         out,
-        DijkstraNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
+        DijkstraNode::new_from_parent(
+            HeapIndex::zero(),
+            s0,
+            (NonMaxUsize::new(0usize).unwrap(), a),
+            1,
+        ),
     )?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(

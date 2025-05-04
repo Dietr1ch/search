@@ -3,8 +3,7 @@ use std::fmt::Debug;
 use nonmax::NonMaxUsize;
 use rustc_hash::FxHashMap;
 
-use crate::heap_primitives::index_down_left;
-use crate::heap_primitives::index_up;
+use crate::heap_index::HeapIndex;
 use crate::space::Action;
 use crate::space::Cost;
 use crate::space::Path;
@@ -36,7 +35,7 @@ where
     pub parent: Option<(NonMaxUsize, A)>,
     pub state: St,
     pub g: C,
-    heap_index: usize,
+    heap_index: HeapIndex,
 }
 
 impl<St, A, C> DijkstraNode<St, A, C>
@@ -45,7 +44,7 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new(heap_index: usize, s: St, g: C) -> Self {
+    pub fn new(heap_index: HeapIndex, s: St, g: C) -> Self {
         Self {
             parent: None,
             state: s,
@@ -53,7 +52,7 @@ where
             heap_index,
         }
     }
-    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C) -> Self {
+    pub fn new_from_parent(heap_index: HeapIndex, s: St, parent: (NonMaxUsize, A), g: C) -> Self {
         Self {
             parent: Some(parent),
             state: s,
@@ -146,7 +145,7 @@ where
         let starts = search.problem.starts().clone();
         for s in starts {
             let node_index = search.nodes.len();
-            let heap_index = search.open.len();
+            let heap_index = HeapIndex::from_usize(search.open.len());
 
             let g = C::zero();
             let node = DijkstraNode::<St, A, C>::new(heap_index, s, g);
@@ -215,14 +214,14 @@ where
                         if new_g < neigh.g {
                             // Found better path to existing node
                             neigh.g = new_g;
-                            self.open[neigh_heap_index].rank = neigh.rank();
+                            self.open[neigh_heap_index.as_usize()].rank = neigh.rank();
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
                     None => {
                         // New node
                         let new_g = g + c;
-                        let new_heap_index = self.open.len();
+                        let new_heap_index = HeapIndex::from_usize(self.open.len());
                         self.push(DijkstraNode::new_from_parent(
                             new_heap_index,
                             s,
@@ -289,7 +288,7 @@ where
         debug_assert!(!self.is_closed(&node.state));
 
         let node_index = self.nodes.len();
-        let heap_index = self.open.len();
+        let heap_index = HeapIndex::from_usize(self.open.len());
 
         self.open.push(DijkstraHeapNode {
             rank: node.rank(),
@@ -313,19 +312,21 @@ where
     pub fn verify_heap(&self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
+            let i = HeapIndex::from_usize(i);
+
             // - Has the right intrusive index set.
             debug_assert!(self.nodes[e.node_index].heap_index == i);
 
             // - Goes after its parent node, if any.
-            if i == 0 {
+            if i.is_zero() {
                 continue;
             }
-            let p = index_up(i);
+            let p = i.up();
             debug_assert!(
-                self.open[p].rank <= self.open[i].rank,
-                "Node[{p}]={:?} !<= child [{i}]={:?}. Out of heap of len={}",
-                self.open[p],
-                self.open[i],
+                self.open[p.as_usize()].rank <= self.open[i.as_usize()].rank,
+                "Node[{p:?}]={:?} !<= child [{i:?}]={:?}. Out of heap of len={}",
+                self.open[p.as_usize()],
+                self.open[i.as_usize()],
                 self.open.len(),
             );
         }
@@ -363,19 +364,33 @@ where
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
 
         // Initialize bubble-down indices
-        let mut hole = 0;
-        let mut child = index_down_left(hole); // Initially left child, reused to track the best child
-        debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-        debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+        let mut hole = HeapIndex::zero();
+        let mut child = hole.down_left(); // Initially left child, reused to track the best child
+        debug_assert!(
+            hole.as_usize() < self.open.len(),
+            "The hole IS NOT a valid index"
+        );
+        debug_assert!(
+            child.as_usize() < self.open.len(),
+            "Left child IS NOT a valid index"
+        );
         debug_assert!(hole < child);
-        let last = self.open.len() - 1;
+        let last = HeapIndex::from_usize(self.open.len() - 1);
 
         loop {
-            debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-            debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+            debug_assert!(
+                hole.as_usize() < self.open.len(),
+                "The hole IS NOT a valid index"
+            );
+            debug_assert!(
+                child.as_usize() < self.open.len(),
+                "Left child IS NOT a valid index"
+            );
             // Find the best child
-            let child_r = child + 1;
-            if child_r < self.open.len() && self.open[child_r].rank < self.open[child].rank {
+            let child_r = child.next();
+            if child_r.as_usize() < self.open.len()
+                && self.open[child_r.as_usize()].rank < self.open[child.as_usize()].rank
+            {
                 child = child_r;
             }
 
@@ -384,14 +399,14 @@ where
 
             // Update bubble-down indices
             hole = child;
-            child = index_down_left(hole); // New left child
-            if child >= self.open.len() {
+            child = hole.down_left(); // New left child
+            if child.as_usize() >= self.open.len() {
                 break;
             }
         }
         // NOTE: So far the hole made it to the last level, but it may not be at the end of the array.
-        debug_assert!(hole <= last, "The hole={hole} is < last={last}");
-        debug_assert!(hole > index_up(last), "The hole={hole} is < last={last}");
+        debug_assert!(hole <= last, "The hole={hole:?} is < last={last:?}");
+        debug_assert!(hole > last.up(), "The hole={hole:?} is < last={last:?}");
         if hole != last {
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, last);
@@ -399,8 +414,8 @@ where
         }
 
         let heap_node = self.open.pop().unwrap();
-        debug_assert_eq!(
-            self.nodes[heap_node.node_index].heap_index, 0,
+        debug_assert!(
+            self.nodes[heap_node.node_index].heap_index.is_zero(),
             "Top node half-assed swapped down should still have it's 0 index"
         );
 
@@ -409,36 +424,35 @@ where
 
     /// Raises a node
     #[inline(always)]
-    fn _unsafe_sift_up(&mut self, index: usize) -> usize {
+    fn _unsafe_sift_up(&mut self, index: HeapIndex) {
         debug_assert!(
-            index < self.open.len(),
+            index.as_usize() < self.open.len(),
             "Node is way out of sync. Index out of bounds..."
         );
         debug_assert!(
-            self.nodes[self.open[index].node_index].heap_index == index,
+            self.nodes[self.open[index.as_usize()].node_index].heap_index == index,
             "Node is out of sync."
         );
 
         // Can't improve
-        if index == 0 {
-            return index;
+        if index.is_zero() {
+            return;
         }
 
         let mut pos = index;
-        let mut parent = index_up(pos);
-        while self.open[parent].rank > self.open[pos].rank {
+        let mut parent = pos.up();
+        while self.open[parent.as_usize()].rank > self.open[pos.as_usize()].rank {
             // Nodes are different and swapped. Swap the nodes to fix the order.
             self._unsafe_swap(parent, pos);
-            debug_assert!(self.open[parent].rank < self.open[pos].rank);
+            debug_assert!(self.open[parent.as_usize()].rank < self.open[pos.as_usize()].rank);
 
             // Continue swapping upwards if needed..
-            if parent == 0 {
-                return parent;
+            if parent.is_zero() {
+                return;
             }
             pos = parent;
-            parent = index_up(pos);
+            parent = pos.up();
         }
-        pos
     }
 
     // Swapping primitives
@@ -448,17 +462,23 @@ where
     ///
     /// Keeps the intrusive indices in sync.
     #[inline(always)]
-    fn _unsafe_swap(&mut self, l: usize, r: usize) {
-        debug_assert!(l < r, "Swap({l}, {r}) uses wrong argument order");
+    fn _unsafe_swap(&mut self, l: HeapIndex, r: HeapIndex) {
+        debug_assert!(l < r, "Swap({l:?}, {r:?}) uses wrong argument order");
 
         let len = self.open.len();
-        debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
-        debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
-        self.open.swap(l, r);
-        self.nodes[self.open[l].node_index].heap_index = l;
-        self.nodes[self.open[r].node_index].heap_index = r;
         debug_assert!(
-            self.open[l].rank <= self.open[r].rank,
+            l.as_usize() < len,
+            "Left  swap index {l:?} is OUT OF BOUNDS({len})",
+        );
+        debug_assert!(
+            r.as_usize() < len,
+            "Right swap index {r:?} is OUT OF BOUNDS({len})",
+        );
+        self.open.swap(l.as_usize(), r.as_usize());
+        self.nodes[self.open[l.as_usize()].node_index].heap_index = l;
+        self.nodes[self.open[r.as_usize()].node_index].heap_index = r;
+        debug_assert!(
+            self.open[l.as_usize()].rank <= self.open[r.as_usize()].rank,
             "Swaps must locally restore the heap invariant."
         );
     }
@@ -469,20 +489,26 @@ where
     /// Only keeps the index of the element going up in sync as we should shortly
     /// after remove the element that goes down.
     #[inline(always)]
-    fn _unsafe_half_swap_down(&mut self, l: usize, r: usize) {
-        debug_assert!(l < r, "HalfSwapDown({l}, {r}) is wrong");
+    fn _unsafe_half_swap_down(&mut self, l: HeapIndex, r: HeapIndex) {
+        debug_assert!(l < r, "HalfSwapDown({l:?}, {r:?}) is wrong");
 
         let len = self.open.len();
-        debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
-        debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
-        self.open.swap(l, r);
-        self.nodes[self.open[l].node_index].heap_index = l;
         debug_assert!(
-            self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
+            l.as_usize() < len,
+            "Left  swap index {l:?} is OUT OF BOUNDS({len})",
+        );
+        debug_assert!(
+            r.as_usize() < len,
+            "Right swap index {r:?} is OUT OF BOUNDS({len})",
+        );
+        self.open.swap(l.as_usize(), r.as_usize());
+        self.nodes[self.open[l.as_usize()].node_index].heap_index = l;
+        debug_assert!(
+            self.open[l.as_usize()].rank >= self.open[r.as_usize()].rank, // (=? What if there's only one value? We still push node at the top down)
             "Half-assed swap down must be unfairly pushing a node down."
         );
         debug_assert!(
-            self.nodes[self.open[r].node_index].heap_index < r,
+            self.nodes[self.open[r.as_usize()].node_index].heap_index < r,
             "Node half-assed swapped down should still point to it's original index."
         );
     }
