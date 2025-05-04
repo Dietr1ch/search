@@ -12,9 +12,9 @@ use crate::space::Problem;
 use crate::space::Space;
 use crate::space::State;
 
-pub trait Heuristic<P, Sp, St, A, C>: std::fmt::Debug
+pub trait Heuristic<'sp, P, Sp, St, A, C>: std::fmt::Debug
 where
-    P: Problem<Sp, St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -114,11 +114,11 @@ use std::marker::PhantomData;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct AStarSearch<H, P, Sp, St, A, C>
+pub struct AStarSearch<'sp, H, P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
-    Sp: Space<St, A, C>,
+    H: Heuristic<'sp, P, Sp, St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
+    Sp: Space<St, A, C> + 'sp,
     St: State,
     A: Action,
     C: Cost,
@@ -134,17 +134,17 @@ where
 
     // TODO: Clean PhantomData
     _phantom_heuristic: PhantomData<H>,
-    _phantom_space: PhantomData<Sp>,
+    _phantom_space: PhantomData<&'sp Sp>,
     _phantom_action: PhantomData<A>,
 }
 
 type Idx = usize;
 
-impl<H, P, Sp, St, A, C> AStarSearch<H, P, Sp, St, A, C>
+impl<'sp, H, P, Sp, St, A, C> AStarSearch<'sp, H, P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
-    Sp: Space<St, A, C>,
+    H: Heuristic<'sp, P, Sp, St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
+    Sp: Space<St, A, C> + 'sp,
     St: State,
     A: Action,
     C: Cost,
@@ -554,10 +554,10 @@ where
     }
 }
 
-impl<H, P, Sp, St, A, C> Iterator for AStarSearch<H, P, Sp, St, A, C>
+impl<'sp, H, P, Sp, St, A, C> Iterator for AStarSearch<'sp, H, P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
+    H: Heuristic<'sp, P, Sp, St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,

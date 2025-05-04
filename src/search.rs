@@ -99,9 +99,9 @@ use std::marker::PhantomData;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct DijkstraSearch<P, Sp, St, A, C>
+pub struct DijkstraSearch<'sp, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -117,16 +117,16 @@ where
     problem: P,
 
     // TODO: Clean PhantomData
-    _phantom_space: PhantomData<Sp>,
+    _phantom_space: PhantomData<&'sp Sp>,
     _phantom_action: PhantomData<A>,
 }
 
 type Idx = usize;
 
-impl<P, Sp, St, A, C> DijkstraSearch<P, Sp, St, A, C>
+impl<'sp, P, Sp, St, A, C> DijkstraSearch<'sp, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
-    Sp: Space<St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
+    Sp: Space<St, A, C> + 'sp,
     St: State,
     A: Action,
     C: Cost,
@@ -524,10 +524,10 @@ where
     }
 }
 
-impl<P, Sp, St, A, C> Iterator for DijkstraSearch<P, Sp, St, A, C>
+impl<'sp, P, Sp, St, A, C> Iterator for DijkstraSearch<'sp, P, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
-    Sp: Space<St, A, C>,
+    P: Problem<'sp, Sp, St, A, C>,
+    Sp: Space<St, A, C> + 'sp,
     St: State,
     A: Action,
     C: Cost,

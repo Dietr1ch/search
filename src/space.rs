@@ -173,14 +173,14 @@ where
 
 use rustc_hash::FxHashSet;
 
-pub trait Problem<Sp, St, A, C>: std::fmt::Debug + Sized
+pub trait Problem<'sp, Sp, St, A, C>: std::fmt::Debug + Sized
 where
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
     C: Cost,
 {
-    fn space(&self) -> &Sp;
+    fn space(&self) -> &'sp Sp;
     fn starts(&self) -> &Vec<St>;
     fn goals(&self) -> &FxHashSet<St>;
 
@@ -188,8 +188,8 @@ where
         self.goals().contains(s)
     }
 
-    fn randomize<R: rand::Rng>(
-        &mut self,
+    fn new_random<R: rand::Rng>(
+        space: &'sp Sp,
         r: &mut R,
         num_starts: u16,
         num_goals: u16,

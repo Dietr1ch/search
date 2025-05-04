@@ -55,7 +55,7 @@ fn compare_search(c: &mut Criterion) {
     {
         let name = path.file_name().unwrap().to_str().unwrap();
         let path: &std::path::Path = path.as_ref();
-        let mut base_problem = Maze2DProblem::try_from(path).unwrap();
+        let space = Maze2DSpace::try_from(path).unwrap();
         let (x, y) = base_problem.space().dimensions();
 
         for i in 0..3 {
@@ -65,7 +65,9 @@ fn compare_search(c: &mut Criterion) {
             let num_starts = 3;
             let num_goals = 3;
 
-            if let Some(problem) = base_problem.randomize(&mut rng, num_starts, num_goals) {
+            if let Some(problem) =
+                Maze2DProblem::new_random(&space, &mut rng, num_starts, num_goals)
+            {
                 group.bench_with_input(BenchmarkId::new("A*", &instance_name), &problem, |b, p| {
                     b.iter(|| astar(p.clone()))
                 });

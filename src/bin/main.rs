@@ -47,14 +47,16 @@ fn main() -> std::io::Result<()> {
         writeln!(out, "*** Map")?;
         writeln!(out, "#+begin_quote\n{space}\n#+end_quote")?;
         writeln!(out, "*** Problems")?;
-        let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
 
         for instance in 0..10 {
             writeln!(out, "**** Problem {instance}")?;
             let mut rng = ChaCha8Rng::seed_from_u64(instance);
             let num_starts = 3;
             let num_goals = 3;
-            if let Some(random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
+
+            if let Some(random_problem) =
+                Maze2DProblem::new_random(&space, &mut rng, num_starts, num_goals)
+            {
                 writeln!(out, "***** Instance")?;
                 writeln!(out, "- Starts:")?;
                 let starts = random_problem.starts().clone();

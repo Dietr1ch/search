@@ -311,14 +311,14 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
 }
 
 #[derive(Clone, Debug)]
-pub struct Maze2DProblem {
-    space: Maze2DSpace,
+pub struct Maze2DProblem<'sp> {
+    space: &'sp Maze2DSpace,
     starts: Vec<Maze2DState>,
     goals: FxHashSet<Maze2DState>,
 }
 
-impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem {
-    fn space(&self) -> &Maze2DSpace {
+impl<'sp> Problem<'sp, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem<'sp> {
+    fn space(&self) -> &'sp Maze2DSpace {
         &self.space
     }
     fn starts(&self) -> &Vec<Maze2DState> {
@@ -328,25 +328,25 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
         &self.goals
     }
 
-    fn randomize<R: rand::Rng>(
-        &mut self,
+    fn new_random<R: rand::Rng>(
+        space: &'sp Maze2DSpace,
         r: &mut R,
         num_starts: u16,
         num_goals: u16,
-    ) -> Option<Maze2DProblem> {
+    ) -> Option<Maze2DProblem<'sp>> {
         let mut starts = vec![];
         let mut goals = FxHashSet::<Maze2DState>::default();
         const MAX_RANDOM_STATE_TRIES: usize = 1000;
 
         for _tries in 0..MAX_RANDOM_STATE_TRIES {
-            if let Some(random_state) = self.space().random_state::<R>(r) {
+            if let Some(random_state) = space.random_state::<R>(r) {
                 if starts.len() < num_starts as usize {
                     starts.push(random_state);
                 } else if goals.len() < num_goals as usize {
                     goals.insert(random_state);
                 } else {
                     return Some(Maze2DProblem {
-                        space: self.space.clone(),
+                        space,
                         starts,
                         goals,
                     });
@@ -358,175 +358,7 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
     }
 }
 
-#[derive(Copy, Clone, Debug, Display, PartialEq)]
-pub enum Maze2DProblemCell {
-    Cell(Maze2DCell),
-    #[display("S")]
-    Start,
-    #[display("G")]
-    Goal,
-}
-
-#[derive(Debug, Error)]
-pub enum Maze2DProblemCellParseError {
-    #[error("Invalid cell {e}")]
-    InvalidCell { e: Maze2DCellParseError },
-}
-
-impl std::convert::TryFrom<char> for Maze2DProblemCell {
-    type Error = Maze2DProblemCellParseError;
-
-    fn try_from(ch: char) -> Result<Self, Self::Error> {
-        match ch {
-            'S' => Ok(Maze2DProblemCell::Start),
-            'G' => Ok(Maze2DProblemCell::Goal),
-            ch => {
-                let cell = Maze2DCell::try_from(ch)
-                    .map_err(|e| Maze2DProblemCellParseError::InvalidCell { e })?;
-                Ok(Maze2DProblemCell::Cell(cell))
-            }
-        }
-    }
-}
-
-#[derive(Debug, Error)]
-pub enum Maze2DProblemParseError {
-    #[error("Empty input")]
-    EmptyInput,
-    #[error("Invalid cell {e} found at ({x},{y})")]
-    InvalidCell {
-        e: Maze2DProblemCellParseError,
-        x: usize,
-        y: usize,
-    },
-    #[error("I/O error when loading '{p}': {e}")]
-    IOError {
-        p: std::path::PathBuf,
-        e: std::io::Error,
-    },
-    #[error("Image error when loading '{p}': {e}")]
-    ImageError {
-        p: std::path::PathBuf,
-        e: image::ImageError,
-    },
-}
-
-impl std::convert::TryFrom<&str> for Maze2DProblem {
-    type Error = Maze2DProblemParseError;
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let lines: Vec<&str> = s.lines().collect();
-
-        if lines.is_empty() {
-            return Err(Maze2DProblemParseError::EmptyInput);
-        }
-        if lines[0].is_empty() {
-            return Err(Maze2DProblemParseError::EmptyInput);
-        }
-
-        let max_x = lines[0].len();
-        let max_y = lines.len();
-        debug_assert!(max_x < CoordIntrinsic::MAX as usize);
-        debug_assert!(max_y < CoordIntrinsic::MAX as usize);
-        let mut problem = Maze2DProblem {
-            space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
-            starts: vec![],
-            goals: FxHashSet::default(),
-        };
-
-        for (y, line) in lines.iter().enumerate() {
-            for (x, ch) in line.chars().enumerate() {
-                let cell = Maze2DProblemCell::try_from(ch)
-                    .map_err(|e| Maze2DProblemParseError::InvalidCell { e, x, y })?;
-
-                problem.space.map[y][x] = match cell {
-                    Maze2DProblemCell::Start => {
-                        problem.starts.push(Maze2DState {
-                            x: Coord::new(x as CoordIntrinsic).unwrap(),
-                            y: Coord::new(y as CoordIntrinsic).unwrap(),
-                        });
-                        Maze2DCell::Empty
-                    }
-                    Maze2DProblemCell::Goal => {
-                        problem.goals.insert(Maze2DState {
-                            x: Coord::new(x as CoordIntrinsic).unwrap(),
-                            y: Coord::new(y as CoordIntrinsic).unwrap(),
-                        });
-                        Maze2DCell::Empty
-                    }
-                    Maze2DProblemCell::Cell(c) => c,
-                }
-            }
-        }
-
-        Ok(problem)
-    }
-}
-
-impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
-    type Error = Maze2DProblemParseError;
-
-    fn try_from(p: &std::path::Path) -> Result<Self, Self::Error> {
-        use image::ImageReader;
-
-        let img = ImageReader::open(p)
-            .map_err(|e| Maze2DProblemParseError::IOError {
-                p: p.to_path_buf(),
-                e,
-            })?
-            .decode()
-            .map_err(|e| Maze2DProblemParseError::ImageError {
-                p: p.to_path_buf(),
-                e,
-            })?
-            .grayscale()
-            .into_rgb8();
-
-        let max_x = img.width() as usize;
-        let max_y = img.height() as usize;
-        debug_assert!(max_x < CoordIntrinsic::MAX as usize);
-        debug_assert!(max_y < CoordIntrinsic::MAX as usize);
-
-        let mut p = Maze2DProblem {
-            space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
-            starts: vec![],
-            goals: FxHashSet::<Maze2DState>::default(),
-        };
-        let max_x = max_x as CoordIntrinsic;
-        let max_y = max_y as CoordIntrinsic;
-
-        for y in 0..max_y {
-            for x in 0..max_x {
-                let px = img.get_pixel(x, y);
-                p.space.map[y as usize][x as usize] = match px.0 {
-                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
-                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
-                    [u8::MIN, u8::MAX, u8::MIN] => {
-                        // GREEN (goal)
-                        p.goals.insert(Maze2DState {
-                            x: Coord::new(x).unwrap(),
-                            y: Coord::new(y).unwrap(),
-                        });
-                        Maze2DCell::Empty
-                    }
-                    [u8::MIN, u8::MIN, u8::MAX] => {
-                        // BLUE (start)
-                        p.starts.push(Maze2DState {
-                            x: Coord::new(x).unwrap(),
-                            y: Coord::new(y).unwrap(),
-                        });
-                        Maze2DCell::Empty
-                    }
-                    _ => Maze2DCell::Empty,
-                }
-            }
-        }
-
-        Ok(p)
-    }
-}
-
-impl std::fmt::Display for Maze2DProblem {
+impl std::fmt::Display for Maze2DProblem<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let d = self.space.dimensions();
         debug_assert!(Maze2DState::safe_dimensions(d.0, d.1));
@@ -580,9 +412,9 @@ fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
     (max_x - min_x) + (max_y - min_y)
 }
 
-impl<P, Sp, A> Heuristic<P, Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
+impl<'sp, P, Sp, A> Heuristic<'sp, P, Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
 where
-    P: Problem<Sp, Maze2DState, A, Maze2DCost>,
+    P: Problem<'sp, Sp, Maze2DState, A, Maze2DCost>,
     Sp: Space<Maze2DState, A, Maze2DCost>,
     A: Action,
 {
