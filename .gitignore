@@ -8,6 +8,11 @@
 
 # Rust
 /target
+/data/benches/criterion/*.svg
+
+# Perf
+perf.data
+perf.data.old
 
 # Project
 /logs
