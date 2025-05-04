@@ -310,8 +310,7 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
     }
 }
 
-#[derive(Debug)]
-#[cfg_attr(feature = "inspect", derive(Clone))]
+#[derive(Clone, Debug)]
 pub struct Maze2DProblem {
     space: Maze2DSpace,
     starts: Vec<Maze2DState>,

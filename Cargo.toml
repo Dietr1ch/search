@@ -37,13 +37,20 @@ overflow-checks = false
 strip=true
 panic = "abort"
 
+[profile.bench]
+inherits = "release"
+debug = true
+strip=false
+
 
 [dependencies]
 anstream = "0.6.18"
 chrono = "0.4.41"
 clap = { version = "4.5.37", features = ["derive", "env"] }
 colorchoice-clap = "1.0.6"
+criterion = "0.5"
 derive_more = { version = "2.0.1", features = ["display"] }
+glob = "0.3.2"
 image = "0.25.6"
 indoc = "2.0.6"
 nonmax = "0.5.5"
@@ -61,6 +68,14 @@ tikv-jemallocator = { version = "0.6", features = ["stats"] }
 
 [build-dependencies]
 shadow-rs = "1.1.1"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+
+[[bench]]
+name = "compare_maze2d"
+harness = false
 
 
 [[bin]]

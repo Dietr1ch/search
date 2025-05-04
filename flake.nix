@@ -59,8 +59,10 @@
             ];
 
             packages = with pkgs; [
+              cargo-criterion
               cargo-deny
               cargo-edit
+              cargo-flamegraph
               cargo-fuzz
               cargo-outdated
               cargo-watch
@@ -70,6 +72,8 @@
               just
 
               lldb
+
+              gnuplot_qt
             ];
 
             env = {

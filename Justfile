@@ -9,3 +9,6 @@ test:
 
 report:
 	cargo run --bin 'report' --features 'inspect'
+
+bench:
+	cargo flamegraph --bench compare_maze2d --output data/benches/criterion/maze2d.svg -- --bench
