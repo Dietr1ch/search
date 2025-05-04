@@ -22,7 +22,7 @@
 /// The parent
 ///
 /// ```
-/// use astar::heap_primitives::index_up;
+/// use search::heap_primitives::index_up;
 /// assert_eq!(index_up(1), 0);
 /// assert_eq!(index_up(2), 0);
 /// assert_eq!(index_up(3), 1);
@@ -39,7 +39,7 @@ pub fn index_up(i: usize) -> usize {
 /// The left children
 ///
 /// ```
-/// use astar::heap_primitives::index_down_left;
+/// use search::heap_primitives::index_down_left;
 /// assert_eq!(index_down_left(0), 1);
 /// assert_eq!(index_down_left(1), 3);
 /// assert_eq!(index_down_left(3), 7);
@@ -53,7 +53,7 @@ pub fn index_down_left(i: usize) -> usize {
 /// The right children
 ///
 /// ```
-/// use astar::heap_primitives::index_down_right;
+/// use search::heap_primitives::index_down_right;
 /// assert_eq!(index_down_right(0), 2);
 /// assert_eq!(index_down_right(1), 4);
 /// assert_eq!(index_down_right(2), 6);

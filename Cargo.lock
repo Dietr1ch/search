@@ -109,29 +109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 
 [[package]]
-name = "astar"
-version = "0.1.0"
-dependencies = [
- "anstream",
- "chrono",
- "clap",
- "colorchoice-clap",
- "derive_more",
- "image",
- "indoc",
- "nonmax",
- "num-traits",
- "owo-colors",
- "rand 0.9.1",
- "rand_chacha 0.9.0",
- "rustc-hash",
- "shadow-rs",
- "smallvec",
- "thiserror 2.0.12",
- "tikv-jemallocator",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1315,6 +1292,29 @@ name = "ryu"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
+
+[[package]]
+name = "search"
+version = "0.1.0"
+dependencies = [
+ "anstream",
+ "chrono",
+ "clap",
+ "colorchoice-clap",
+ "derive_more",
+ "image",
+ "indoc",
+ "nonmax",
+ "num-traits",
+ "owo-colors",
+ "rand 0.9.1",
+ "rand_chacha 0.9.0",
+ "rustc-hash",
+ "shadow-rs",
+ "smallvec",
+ "thiserror 2.0.12",
+ "tikv-jemallocator",
+]
 
 [[package]]
 name = "semver"

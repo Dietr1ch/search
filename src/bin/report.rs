@@ -11,25 +11,25 @@ use nonmax::NonMaxUsize;
 use owo_colors::OwoColorize;
 use smallvec::SmallVec;
 
-use astar::debug::type_name;
-use astar::heuristic_search::AStarNode;
-use astar::heuristic_search::AStarSearch;
-use astar::maze_2d::Coord;
-use astar::maze_2d::Maze2DAction;
-use astar::maze_2d::Maze2DCell;
-use astar::maze_2d::Maze2DCost;
-use astar::maze_2d::Maze2DHeuristicManhattan;
-use astar::maze_2d::Maze2DProblem;
-use astar::maze_2d::Maze2DProblemCell;
-use astar::maze_2d::Maze2DSpace;
-use astar::maze_2d::Maze2DState;
-use astar::search::DijkstraNode;
-use astar::search::DijkstraSearch;
-use astar::space::Problem;
+use search::debug::type_name;
+use search::heuristic_search::AStarNode;
+use search::heuristic_search::AStarSearch;
+use search::maze_2d::Coord;
+use search::maze_2d::Maze2DAction;
+use search::maze_2d::Maze2DCell;
+use search::maze_2d::Maze2DCost;
+use search::maze_2d::Maze2DHeuristicManhattan;
+use search::maze_2d::Maze2DProblem;
+use search::maze_2d::Maze2DProblemCell;
+use search::maze_2d::Maze2DSpace;
+use search::maze_2d::Maze2DState;
+use search::search::DijkstraNode;
+use search::search::DijkstraSearch;
+use search::space::Problem;
 
 /// Command line arguments
 #[derive(Parser, Debug)]
-#[clap(long_version = astar::build::CLAP_LONG_VERSION)]
+#[clap(long_version = search::build::CLAP_LONG_VERSION)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     #[arg(

@@ -8,18 +8,18 @@ use owo_colors::OwoColorize;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 
-use astar::heuristic_search::AStarSearch;
-use astar::maze_2d::Maze2DHeuristicManhattan;
-use astar::maze_2d::Maze2DProblem;
-use astar::maze_2d::Maze2DSpace;
-use astar::space::Problem;
+use search::heuristic_search::AStarSearch;
+use search::maze_2d::Maze2DHeuristicManhattan;
+use search::maze_2d::Maze2DProblem;
+use search::maze_2d::Maze2DSpace;
+use search::space::Problem;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 /// Command line arguments
 #[derive(Parser, Debug)]
-#[clap(long_version = astar::build::CLAP_LONG_VERSION)]
+#[clap(long_version = search::build::CLAP_LONG_VERSION)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     #[arg(short, long, env = "LOGS", default_value = "logs/main.org")]
