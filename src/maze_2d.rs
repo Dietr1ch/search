@@ -193,7 +193,7 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
     /// Gets the neighbours of a given position.
     ///
     /// NOTE: These states can only be used with the current Maze
-    fn neighbours(&self, state: &Maze2DState) -> Vec<(Maze2DState, Maze2DAction)> {
+    fn neighbours(&mut self, state: &Maze2DState) -> Vec<(Maze2DState, Maze2DAction)> {
         let mut v = Vec::<(Maze2DState, Maze2DAction)>::new();
         let (max_x, max_y) = self.dimensions();
         debug_assert!(max_x < CoordIntrinsic::MAX as usize);
@@ -318,14 +318,14 @@ pub struct Maze2DProblem {
 }
 
 impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem {
-    fn space(&self) -> &Maze2DSpace {
-        &self.space
+    fn space(&mut self) -> &mut Maze2DSpace {
+        &mut self.space
     }
-    fn starts(&self) -> &Vec<Maze2DState> {
-        &self.starts
+    fn starts(&mut self) -> &mut Vec<Maze2DState> {
+        &mut self.starts
     }
-    fn goals(&self) -> &FxHashSet<Maze2DState> {
-        &self.goals
+    fn goals(&mut self) -> &mut FxHashSet<Maze2DState> {
+        &mut self.goals
     }
 
     fn randomize<R: rand::Rng>(
@@ -587,9 +587,9 @@ where
     A: Action,
 {
     #[inline(always)]
-    fn h(p: &P, s: &Maze2DState) -> Maze2DCost {
+    fn h(p: &mut P, s: &Maze2DState) -> Maze2DCost {
         let mut min_c = Maze2DCost::MAX;
-        for g in p.goals() {
+        for g in &*p.goals() {
             min_c = std::cmp::min(min_c, manhattan_distance(s, g));
         }
         min_c

@@ -54,7 +54,7 @@ fn main() -> std::io::Result<()> {
             let mut rng = ChaCha8Rng::seed_from_u64(instance);
             let num_starts = 3;
             let num_goals = 3;
-            if let Some(random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
+            if let Some(mut random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
                 writeln!(out, "***** Instance")?;
                 writeln!(out, "- Starts:")?;
                 let starts = random_problem.starts().clone();

@@ -134,7 +134,7 @@ where
     /// Expands a State
     // TODO: Figure out how to offer a SmallVec<(St, A)>
     // TODO: Check that (St, A) does not incurr in a lot of padding.
-    fn neighbours(&self, s: &St) -> Vec<(St, A)>;
+    fn neighbours(&mut self, s: &St) -> Vec<(St, A)>;
     /// Verify is a State is valid.
     fn valid(&self, s: &St) -> bool;
 
@@ -180,11 +180,11 @@ where
     A: Action,
     C: Cost,
 {
-    fn space(&self) -> &Sp;
-    fn starts(&self) -> &Vec<St>;
-    fn goals(&self) -> &FxHashSet<St>;
+    fn space(&mut self) -> &mut Sp;
+    fn starts(&mut self) -> &mut Vec<St>;
+    fn goals(&mut self) -> &mut FxHashSet<St>;
 
-    fn is_goal(&self, s: &St) -> bool {
+    fn is_goal(&mut self, s: &St) -> bool {
         self.goals().contains(s)
     }
 

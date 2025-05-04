@@ -20,7 +20,7 @@ where
     A: Action,
     C: Cost,
 {
-    fn h(_p: &P, _s: &St) -> C {
+    fn h(_p: &mut P, _s: &St) -> C {
         C::zero()
     }
 }
@@ -172,7 +172,7 @@ where
             let node = AStarNode::<St, A, C>::new(heap_index, s, g);
 
             // search.push(node);
-            let h: C = H::h(&search.problem, &s);
+            let h: C = H::h(&mut search.problem, &s);
             search.open.push(AStarHeapNode {
                 rank: node.rank(h),
                 node_index,
@@ -186,7 +186,7 @@ where
         search
     }
 
-    fn build_path(&self, mut node_index: usize) -> Path<St, A, C> {
+    fn build_path(&mut self, mut node_index: usize) -> Path<St, A, C> {
         let e = &self.nodes[node_index];
         let mut path = Path::<St, A, C>::new_from_start(*e.state());
 
@@ -244,7 +244,7 @@ where
                             // Found better path to existing node
                             // TODO: Check if rank update can be improved
                             neigh.g = new_g;
-                            let neigh_h = H::h(&self.problem, &s);
+                            let neigh_h = H::h(&mut self.problem, &s);
                             self.open[neigh.heap_index].rank = neigh.rank(neigh_h);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
@@ -253,7 +253,7 @@ where
                         // No, let's create a new Node for it.
                         let c: C = self.problem.space().cost(&s, &a);
                         let neigh_g = g + c;
-                        let neigh_h = H::h(&self.problem, &s);
+                        let neigh_h = H::h(&mut self.problem, &s);
                         let new_heap_index = self.open.len();
                         self.push(
                             AStarNode::new_from_parent(
@@ -351,7 +351,7 @@ where
     }
     #[inline(always)]
     #[cfg(feature = "verify")]
-    pub fn verify_heap(&self) {
+    pub fn verify_heap(&mut self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
             // - Has the right intrusive index set.

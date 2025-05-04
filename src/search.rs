@@ -167,7 +167,7 @@ where
         search
     }
 
-    fn build_path(&self, mut node_index: usize) -> Path<St, A, C> {
+    fn build_path(&mut self, mut node_index: usize) -> Path<St, A, C> {
         let e = &self.nodes[node_index];
         let mut path = Path::<St, A, C>::new_from_start(*e.state());
 

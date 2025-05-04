@@ -126,7 +126,7 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     "};
 
     writeln!(out, "** Problem")?;
-    let problem = Maze2DProblem::try_from(maze_str).unwrap();
+    let mut problem = Maze2DProblem::try_from(maze_str).unwrap();
     print_size(out, problem.space())?;
     print_size(out, problem.space().clone())?;
     print_size(out, problem.clone())?;
