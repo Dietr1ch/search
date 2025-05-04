@@ -51,7 +51,6 @@ where
     pub parent: Option<(NonMaxUsize, A)>,
     pub state: St,
     pub g: C,
-    pub h: C,
     heap_index: usize,
 }
 
@@ -61,30 +60,27 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new(heap_index: usize, s: St, g: C, h: C) -> Self {
+    pub fn new(heap_index: usize, s: St, g: C) -> Self {
         Self {
             parent: None,
             state: s,
             g,
-            h,
             heap_index,
         }
     }
-    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C, h: C) -> Self {
+    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C) -> Self {
         Self {
             parent: Some(parent),
             state: s,
             g,
-            h,
             heap_index,
         }
     }
 
-    pub fn reach(&mut self, new_parent: (NonMaxUsize, A), g: C, h: C) {
+    pub fn reach(&mut self, new_parent: (NonMaxUsize, A), g: C) {
         debug_assert!(g < self.g);
         self.parent = Some(new_parent);
         self.g = g;
-        self.h = h;
     }
 }
 
@@ -97,8 +93,8 @@ where
     pub fn state(&self) -> &St {
         &self.state
     }
-    pub fn rank(&self) -> AStarRank<C> {
-        AStarRank::new(self.g, self.h)
+    pub fn rank(&self, h: C) -> AStarRank<C> {
+        AStarRank::new(self.g, h)
     }
 }
 
@@ -172,12 +168,12 @@ where
             let heap_index = search.open.len();
 
             let g = C::zero();
-            let h: C = H::h(&search.problem, &s);
-            let node = AStarNode::<St, A, C>::new(heap_index, s, g, h);
+            let node = AStarNode::<St, A, C>::new(heap_index, s, g);
 
             // search.push(node);
+            let h: C = H::h(&search.problem, &s);
             search.open.push(AStarHeapNode {
-                rank: node.rank(),
+                rank: node.rank(h),
                 node_index,
             });
             search.node_index.insert(s, (node_index, false));
@@ -247,22 +243,25 @@ where
                             // Found better path to existing node
                             // TODO: Check if rank update can be improved
                             neigh.g = new_g;
-                            self.open[neigh.heap_index].rank = neigh.rank();
+                            let neigh_h = H::h(&self.problem, &s);
+                            self.open[neigh.heap_index].rank = neigh.rank(neigh_h);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
                     None => {
                         // New node
-                        let new_g = g + c;
-                        let new_h = H::h(&self.problem, &s);
+                        let neigh_g = g + c;
+                        let neigh_h = H::h(&self.problem, &s);
                         let new_heap_index = self.open.len();
-                        self.push(AStarNode::new_from_parent(
-                            new_heap_index,
-                            s,
-                            (NonMaxUsize::new(node_index).unwrap(), a),
-                            new_g,
-                            new_h,
-                        ));
+                        self.push(
+                            AStarNode::new_from_parent(
+                                new_heap_index,
+                                s,
+                                (NonMaxUsize::new(node_index).unwrap(), a),
+                                neigh_g,
+                            ),
+                            neigh_h,
+                        );
                     }
                 }
             }
@@ -322,7 +321,7 @@ where
         }
     }
 
-    fn push(&mut self, mut node: AStarNode<St, A, C>) {
+    fn push(&mut self, mut node: AStarNode<St, A, C>, h: C) {
         self.verify_heap();
         debug_assert!(!self.is_closed(&node.state));
 
@@ -330,7 +329,7 @@ where
         let heap_index = self.open.len();
 
         self.open.push(AStarHeapNode {
-            rank: node.rank(),
+            rank: node.rank(h),
             node_index,
         });
         self.node_index.insert(*node.state(), (node_index, false));

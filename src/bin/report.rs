@@ -128,13 +128,13 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
     )?;
     print_size(
         out,
-        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100),
+        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
     )?;
-    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0, 100);
-    print_size(out, h_n.rank())?;
+    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    print_size(out, h_n.rank(100))?;
     print_size(
         out,
-        AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1, 1),
+        AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
     )?;
     let mut search = AStarSearch::<
         Maze2DHeuristicManhattan,
