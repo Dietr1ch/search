@@ -50,6 +50,7 @@
               rustToolchain
 
               llvmPackages.bintools
+              llvmPackages.bolt
               mold
               rustc
               cargo
@@ -65,6 +66,7 @@
               cargo-flamegraph
               cargo-fuzz
               cargo-outdated
+              cargo-pgo
               cargo-watch
 
               bacon
