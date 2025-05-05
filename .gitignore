@@ -13,6 +13,7 @@
 # Perf
 perf.data
 perf.data.old
+profile.coz
 
 # Project
 /logs

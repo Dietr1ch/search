@@ -75,6 +75,8 @@
 
               lldb
 
+              coz
+
               gnuplot_qt
             ];
 
