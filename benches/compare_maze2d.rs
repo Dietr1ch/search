@@ -56,9 +56,10 @@ fn compare_search(c: &mut Criterion) {
         let name = path.file_name().unwrap().to_str().unwrap();
         let path: &std::path::Path = path.as_ref();
         let mut base_problem = Maze2DProblem::try_from(path).unwrap();
+        let (x, y) = base_problem.space().dimensions();
 
         for i in 0..3 {
-            let instance_name = format!("{name}:{i}");
+            let instance_name = format!("{name}[{x}x{y}]:{i}");
             let mut rng = ChaCha8Rng::seed_from_u64(i);
 
             let num_starts = 3;
