@@ -525,6 +525,29 @@ where
             "Node half-assed swapped down should still point to it's original index."
         );
     }
+
+    pub fn print_memory_stats(&self) {
+        use std::mem::size_of;
+
+        println!("AStarSearch Stats:");
+        let s = size_of::<AStarNode<St, A, C>>();
+        let l = self.nodes.len();
+        let c = self.nodes.capacity();
+        println!("  - |Nodes|:   {} ({}B)", l, l * s);
+        println!("  - |Nodes|*:  {} ({}B)", c, c * s);
+
+        let s = size_of::<AStarHeapNode<C>>();
+        let l = self.open.len();
+        let c = self.open.capacity();
+        println!("  - |Open|:   {} ({}B)", l, l * s);
+        println!("  - |Open|*:  {} ({}B)", c, c * s);
+
+        let s = size_of::<(St, (usize, bool))>();
+        let l = self.node_index.len();
+        let c = self.node_index.capacity();
+        println!("  - |Index|:  {} ({}B)", l, l * s);
+        println!("  - |Index|*: {} ({}B)", c, c * s);
+    }
 }
 
 impl<H, P, Sp, St, A, C> Iterator for AStarSearch<H, P, Sp, St, A, C>
