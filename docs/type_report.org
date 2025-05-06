@@ -1,4 +1,8 @@
 :PROPERTIES:
+:VERSION: "0.1.0"
+:GIT_BRANCH: "master"
+:BUILD_IS_DEBUG: true
+:GIT_STATUS: CLEAN
 :END:
 #+title: Search library
 

@@ -1,5 +1,7 @@
 #![feature(non_null_from_ref)]
-
+/// Report tool
+///
+/// Generates docs/type_report.org
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;
@@ -63,6 +65,14 @@ pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
 
 pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()> {
     writeln!(out, ":PROPERTIES:")?;
+    writeln!(out, ":VERSION: {:?}", search::build::PKG_VERSION)?;
+    writeln!(out, ":GIT_BRANCH: {:?}", shadow_rs::branch())?;
+    writeln!(out, ":BUILD_IS_DEBUG: {}", shadow_rs::is_debug())?;
+    if search::build::GIT_CLEAN {
+        writeln!(out, ":GIT_STATUS: CLEAN")?;
+    } else {
+        writeln!(out, ":GIT_STATUS: DIRTY")?;
+    }
     writeln!(out, ":END:")?;
     writeln!(out, "#+title: Search library")?;
     writeln!(out)?;
