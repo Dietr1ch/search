@@ -83,15 +83,16 @@ where
     }
 }
 
+// TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-struct DijkstraHeapNode<C>
+pub struct DijkstraHeapNode<C>
 where
     C: Cost,
 {
-    rank: DijkstraRank<C>,
+    pub rank: DijkstraRank<C>,
     /// The index of this node in the Node Arena
-    node_index: usize,
+    pub node_index: usize,
 }
 
 use std::marker::PhantomData;

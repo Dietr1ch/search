@@ -9,12 +9,13 @@ use std::path::PathBuf;
 use anstream::println;
 use clap::Parser;
 use indoc::indoc;
-use nonmax::NonMaxUsize;
 use owo_colors::OwoColorize;
 use smallvec::SmallVec;
 
 use search::debug::type_name;
+use search::heuristic_search::AStarHeapNode;
 use search::heuristic_search::AStarNode;
+use search::heuristic_search::AStarRank;
 use search::heuristic_search::AStarSearch;
 use search::maze_2d::Coord;
 use search::maze_2d::Maze2DAction;
@@ -25,7 +26,9 @@ use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DProblemCell;
 use search::maze_2d::Maze2DSpace;
 use search::maze_2d::Maze2DState;
+use search::search::DijkstraHeapNode;
 use search::search::DijkstraNode;
+use search::search::DijkstraRank;
 use search::search::DijkstraSearch;
 use search::space::Problem;
 
@@ -136,16 +139,16 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
+    let node = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    print_size(out, node)?;
     print_size(
         out,
-        AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
+        AStarHeapNode {
+            rank: AStarRank::new(0, 0),
+            node_index: 0usize,
+        },
     )?;
-    let h_n = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
-    print_size(out, h_n.rank(100))?;
-    print_size(
-        out,
-        AStarNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
-    )?;
+    print_size(out, (s0, (0usize, true)))?;
     let mut search = AStarSearch::<
         Maze2DHeuristicManhattan,
         Maze2DProblem,
@@ -164,16 +167,16 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
+    let node = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    print_size(out, node)?;
     print_size(
         out,
-        DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0),
+        DijkstraHeapNode {
+            rank: DijkstraRank::new(0),
+            node_index: 0usize,
+        },
     )?;
-    let n = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
-    print_size(out, n.rank())?;
-    print_size(
-        out,
-        DijkstraNode::new_from_parent(0usize, s0, (NonMaxUsize::new(0usize).unwrap(), a), 1),
-    )?;
+    print_size(out, (s0, (0usize, true)))?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
             problem.clone(),

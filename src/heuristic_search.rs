@@ -98,15 +98,16 @@ where
     }
 }
 
+// TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-struct AStarHeapNode<C>
+pub struct AStarHeapNode<C>
 where
     C: Cost,
 {
-    rank: AStarRank<C>,
+    pub rank: AStarRank<C>,
     /// The index of this node in the Node Arena
-    node_index: usize,
+    pub node_index: usize,
 }
 
 use std::marker::PhantomData;
