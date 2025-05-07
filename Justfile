@@ -15,10 +15,10 @@ bench:
 
 profile_astar:
 	cargo build --bin 'astar' --profile 'bench'
-	coz run --- ./target/release/astar data/problems/Maze2D/*.png"
+	coz run --- ./target/release/astar --num-instances 100 data/problems/Maze2D/*.png
 	coz plot
 
 profile_dijkstra:
 	cargo build --bin 'dijkstra' --profile 'bench'
-	coz run --- ./target/release/dijkstra data/problems/Maze2D/*.png"
+	coz run --- ./target/release/dijkstra --num-instances 100 data/problems/Maze2D/*.png
 	coz plot
