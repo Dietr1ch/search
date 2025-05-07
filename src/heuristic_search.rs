@@ -216,29 +216,29 @@ where
             let g: C = self.nodes[node_index].g;
             debug_assert!(!self.is_closed(&state));
 
-            // NOTE: We can return here if we only need one path
-            // if self.problem.is_goal(&state) {
-            //     yield Some(self.build_path(node_index));
-            // }
+            // NOTE: We can do a goal-check and return here if we only need one
+            // path or can yield a result
 
             // Mark as closed
             self.mark_closed(&state);
+
             // Expand state
             for (s, a) in self.problem.space().neighbours(&state) {
-                let c: C = self.problem.space().cost(&s, &a);
-
+                // Have we seen this State?
                 match self.node_index.get(&s) {
                     Some((_, true)) => {
-                        // Closed
+                        // Yes, and we expanded the State already.
                         // NOTE: Could be a goal we had already found through a
                         // sub-optimal path. Currently we only search for
                         // an optimal path to a new goal.
                         continue;
                     }
                     Some((node_index, false)) => {
-                        // Existing, but unexplored node
+                        // Yes, but it's still unexplored. Update the existing
+                        // Node if needed.
                         let neigh = &mut self.nodes[*node_index];
                         let neigh_heap_index = neigh.heap_index;
+                        let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
@@ -250,7 +250,8 @@ where
                         }
                     }
                     None => {
-                        // New node
+                        // No, let's create a new Node for it.
+                        let c: C = self.problem.space().cost(&s, &a);
                         let neigh_g = g + c;
                         let neigh_h = H::h(&self.problem, &s);
                         let new_heap_index = self.open.len();
@@ -267,6 +268,8 @@ where
                 }
             }
 
+            // NOTE: This should be done before expanding if we could yield or
+            // only want the path to the first goal.
             if self.problem.is_goal(&state) {
                 return Some(self.build_path(node_index));
             }
