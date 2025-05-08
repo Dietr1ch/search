@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use num_traits::SaturatingAdd;
 use num_traits::sign::Unsigned;
+use num_traits::SaturatingAdd;
 
 pub trait Action: Copy + Clone + Debug + PartialEq + Eq {}
 pub trait State: Copy + Clone + Debug + PartialEq + Eq + Hash {}
@@ -171,27 +171,15 @@ where
     }
 }
 
-use rustc_hash::FxHashSet;
-
-pub trait Problem<Sp, St, A, C>: std::fmt::Debug + Sized
+/// A general heuristic useful on any problem instance.
+pub trait Heuristic<Sp, St, A, C>: std::fmt::Debug
 where
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
     C: Cost,
 {
-    fn space(&self) -> &Sp;
-    fn starts(&self) -> &Vec<St>;
-    fn goals(&self) -> &FxHashSet<St>;
-
-    fn is_goal(&self, s: &St) -> bool {
-        self.goals().contains(s)
+    fn h(_a: &St, _b: &St) -> C {
+        C::zero()
     }
-
-    fn randomize<R: rand::Rng>(
-        &mut self,
-        r: &mut R,
-        num_starts: u16,
-        num_goals: u16,
-    ) -> Option<Self>;
 }

@@ -3,10 +3,11 @@ use std::hash::Hash;
 
 use nonmax::NonMaxU32;
 
-use crate::heuristic_search::Heuristic;
+use crate::problem::Problem;
+use crate::problem::ProblemHeuristic;
 use crate::space::Action;
 use crate::space::Cost;
-use crate::space::Problem;
+use crate::space::Heuristic;
 use crate::space::Space;
 use crate::space::State;
 
@@ -580,7 +581,7 @@ fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
     (max_x - min_x) + (max_y - min_y)
 }
 
-impl<P, Sp, A> Heuristic<P, Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
+impl<P, Sp, A> ProblemHeuristic<P, Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
 where
     P: Problem<Sp, Maze2DState, A, Maze2DCost>,
     Sp: Space<Maze2DState, A, Maze2DCost>,
@@ -593,5 +594,16 @@ where
             min_c = std::cmp::min(min_c, manhattan_distance(s, g));
         }
         min_c
+    }
+}
+
+impl<Sp, A> Heuristic<Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
+where
+    Sp: Space<Maze2DState, A, Maze2DCost>,
+    A: Action,
+{
+    #[inline(always)]
+    fn h(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
+        manhattan_distance(a, b)
     }
 }

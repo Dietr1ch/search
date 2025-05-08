@@ -12,11 +12,13 @@ use indoc::indoc;
 use owo_colors::OwoColorize;
 use smallvec::SmallVec;
 
+use search::astar::AStarHeapNode;
+use search::astar::AStarRank;
+use search::astar::AStarSearch;
 use search::debug::type_name;
-use search::heuristic_search::AStarHeapNode;
-use search::heuristic_search::AStarNode;
-use search::heuristic_search::AStarRank;
-use search::heuristic_search::AStarSearch;
+use search::dijkstra::DijkstraHeapNode;
+use search::dijkstra::DijkstraRank;
+use search::dijkstra::DijkstraSearch;
 use search::maze_2d::Coord;
 use search::maze_2d::Maze2DAction;
 use search::maze_2d::Maze2DCell;
@@ -26,11 +28,8 @@ use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DProblemCell;
 use search::maze_2d::Maze2DSpace;
 use search::maze_2d::Maze2DState;
-use search::search::DijkstraHeapNode;
-use search::search::DijkstraNode;
-use search::search::DijkstraRank;
-use search::search::DijkstraSearch;
-use search::space::Problem;
+use search::problem::Problem;
+use search::search::SearchTreeNode;
 
 /// Command line arguments
 #[derive(Parser, Debug)]
@@ -139,7 +138,7 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    let node = AStarNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
     print_size(out, node)?;
     print_size(
         out,
@@ -167,7 +166,7 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    let node = DijkstraNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
     print_size(out, node)?;
     print_size(
         out,

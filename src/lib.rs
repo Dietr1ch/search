@@ -7,7 +7,10 @@ shadow!(build);
 
 pub mod debug;
 pub mod heap_primitives;
-pub mod heuristic_search;
 pub mod maze_2d;
+pub mod problem;
 pub mod search;
 pub mod space;
+
+pub mod astar;
+pub mod dijkstra;

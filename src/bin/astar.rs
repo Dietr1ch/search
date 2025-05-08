@@ -8,11 +8,11 @@ use owo_colors::OwoColorize;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-use search::heuristic_search::AStarSearch;
+use search::astar::AStarSearch;
 use search::maze_2d::Maze2DHeuristicManhattan;
 use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DSpace;
-use search::space::Problem;
+use search::problem::Problem;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;

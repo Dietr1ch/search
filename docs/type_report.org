@@ -33,7 +33,7 @@
 *** A*
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |
-| ~AStarNode<Maze2DState, Maze2DAction, u32>~                  |         40 |          1 |
+| ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~AStarHeapNode<u32>~                                         |         16 |          4 |
 | ~(Maze2DState, (usize, bool))~                               |         24 |          2 |
 | ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
@@ -41,7 +41,7 @@
 *** Dijkstra
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |
-| ~DijkstraNode<Maze2DState, Maze2DAction, u32>~               |         40 |          1 |
+| ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~DijkstraHeapNode<u32>~                                      |         16 |          4 |
 | ~(Maze2DState, (usize, bool))~                               |         24 |          2 |
 | ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |

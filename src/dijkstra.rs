@@ -5,107 +5,36 @@ use rustc_hash::FxHashMap;
 
 use crate::heap_primitives::index_down_left;
 use crate::heap_primitives::index_up;
+use crate::problem::Problem;
+use crate::search::recover_path;
+use crate::search::SearchTreeNode;
 use crate::space::Action;
 use crate::space::Cost;
 use crate::space::Path;
-use crate::space::Problem;
 use crate::space::Space;
 use crate::space::State;
 
-pub trait Heuristic<P, Sp, St, A, C>: std::fmt::Debug
-where
-    P: Problem<Sp, St, A, C>,
-    Sp: Space<St, A, C>,
-    St: State,
-    A: Action,
-    C: Cost,
-{
-    fn h(_p: &P, _s: &St) -> C {
-        C::zero()
-    }
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct AStarRank<C: Cost> {
-    r: (C, C),
+pub struct DijkstraRank<C: Cost> {
+    r: C,
 }
-impl<C> AStarRank<C>
+impl<C> DijkstraRank<C>
 where
     C: Cost,
 {
-    pub fn new(g: C, h: C) -> Self {
-        Self {
-            r: (g.saturating_add(&h), h),
-        }
-    }
-}
-
-#[derive(Debug)]
-#[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct AStarNode<St, A, C>
-where
-    St: State,
-    A: Action,
-    C: Cost,
-{
-    pub parent: Option<(NonMaxUsize, A)>,
-    pub state: St,
-    pub g: C,
-    heap_index: usize,
-}
-
-impl<St, A, C> AStarNode<St, A, C>
-where
-    St: State,
-    A: Action,
-    C: Cost,
-{
-    pub fn new(heap_index: usize, s: St, g: C) -> Self {
-        Self {
-            parent: None,
-            state: s,
-            g,
-            heap_index,
-        }
-    }
-    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C) -> Self {
-        Self {
-            parent: Some(parent),
-            state: s,
-            g,
-            heap_index,
-        }
-    }
-
-    pub fn reach(&mut self, new_parent: (NonMaxUsize, A), g: C) {
-        debug_assert!(g < self.g);
-        self.parent = Some(new_parent);
-        self.g = g;
-    }
-}
-
-impl<St, A, C> AStarNode<St, A, C>
-where
-    St: State,
-    A: Action,
-    C: Cost,
-{
-    pub fn state(&self) -> &St {
-        &self.state
-    }
-    pub fn rank(&self, h: C) -> AStarRank<C> {
-        AStarRank::new(self.g, h)
+    pub fn new(g: C) -> Self {
+        Self { r: g }
     }
 }
 
 // TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct AStarHeapNode<C>
+pub struct DijkstraHeapNode<C>
 where
     C: Cost,
 {
-    pub rank: AStarRank<C>,
+    pub rank: DijkstraRank<C>,
     /// The index of this node in the Node Arena
     pub node_index: usize,
 }
@@ -114,17 +43,16 @@ use std::marker::PhantomData;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct AStarSearch<H, P, Sp, St, A, C>
+pub struct DijkstraSearch<P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
     P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
     C: Cost,
 {
-    nodes: Vec<AStarNode<St, A, C>>,
-    open: Vec<AStarHeapNode<C>>,
+    nodes: Vec<SearchTreeNode<St, A, C>>,
+    open: Vec<DijkstraHeapNode<C>>,
     /// Amalgamation of,
     /// - The `HashMap<St, &Node>`, but using just the node index
     /// - The "Closed Set" `HashSet<St>`
@@ -133,16 +61,14 @@ where
     problem: P,
 
     // TODO: Clean PhantomData
-    _phantom_heuristic: PhantomData<H>,
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
 }
 
 type Idx = usize;
 
-impl<H, P, Sp, St, A, C> AStarSearch<H, P, Sp, St, A, C>
+impl<P, Sp, St, A, C> DijkstraSearch<P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
     P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
@@ -158,7 +84,6 @@ where
             problem: p,
 
             // TODO: Clean PhantomData
-            _phantom_heuristic: PhantomData,
             _phantom_space: PhantomData,
             _phantom_action: PhantomData,
         };
@@ -169,43 +94,21 @@ where
             let heap_index = search.open.len();
 
             let g = C::zero();
-            let node = AStarNode::<St, A, C>::new(heap_index, s, g);
+            let node = SearchTreeNode::<St, A, C>::new(heap_index, s, g);
 
             // search.push(node);
-            let h: C = H::h(&search.problem, &s);
-            search.open.push(AStarHeapNode {
-                rank: node.rank(h),
+            search.open.push(DijkstraHeapNode {
+                rank: DijkstraRank::new(g),
                 node_index,
             });
             search.node_index.insert(s, (node_index, false));
             search.nodes.push(node);
             search._unsafe_sift_up(heap_index);
+
             search.verify_heap();
         }
 
         search
-    }
-
-    fn build_path(&self, mut node_index: usize) -> Path<St, A, C> {
-        let e = &self.nodes[node_index];
-        let mut path = Path::<St, A, C>::new_from_start(*e.state());
-
-        while let Some((parent_index, a)) = self.nodes[node_index].parent {
-            let p = &self.nodes[parent_index.get()];
-
-            let s = p.state();
-            let c = self.problem.space().cost(s, &a);
-            // Action
-            debug_assert!(c != C::zero());
-            // Start
-
-            path.append((*s, a), c);
-            debug_assert!(node_index != parent_index.get());
-            node_index = parent_index.get();
-        }
-
-        path.reverse();
-        path
     }
 
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
@@ -242,28 +145,22 @@ where
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            // TODO: Check if rank update can be improved
                             neigh.g = new_g;
-                            let neigh_h = H::h(&self.problem, &s);
-                            self.open[neigh.heap_index].rank = neigh.rank(neigh_h);
+                            self.open[neigh.heap_index].rank = DijkstraRank::new(neigh.g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
                     None => {
                         // No, let's create a new Node for it.
                         let c: C = self.problem.space().cost(&s, &a);
-                        let neigh_g = g + c;
-                        let neigh_h = H::h(&self.problem, &s);
+                        let new_g = g + c;
                         let new_heap_index = self.open.len();
-                        self.push(
-                            AStarNode::new_from_parent(
-                                new_heap_index,
-                                s,
-                                (NonMaxUsize::new(node_index).unwrap(), a),
-                                neigh_g,
-                            ),
-                            neigh_h,
-                        );
+                        self.push(SearchTreeNode::new_from_parent(
+                            new_heap_index,
+                            s,
+                            (NonMaxUsize::new(node_index).unwrap(), a),
+                            new_g,
+                        ));
                     }
                 }
             }
@@ -271,7 +168,11 @@ where
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
             if self.problem.is_goal(&state) {
-                return Some(self.build_path(node_index));
+                return Some(recover_path::<Sp, St, A, C>(
+                    self.problem.space(),
+                    &self.nodes,
+                    node_index,
+                ));
             }
         }
 
@@ -305,7 +206,7 @@ where
     }
 
     #[inline(always)]
-    pub fn pop_node(&mut self) -> Option<&AStarNode<St, A, C>> {
+    pub fn pop_node(&mut self) -> Option<&SearchTreeNode<St, A, C>> {
         match self.pop() {
             Some(i) => Some(&self.nodes[i]),
             None => None,
@@ -325,15 +226,15 @@ where
         }
     }
 
-    fn push(&mut self, mut node: AStarNode<St, A, C>, h: C) {
+    fn push(&mut self, mut node: SearchTreeNode<St, A, C>) {
         self.verify_heap();
         debug_assert!(!self.is_closed(&node.state));
 
         let node_index = self.nodes.len();
         let heap_index = self.open.len();
 
-        self.open.push(AStarHeapNode {
-            rank: node.rank(h),
+        self.open.push(DijkstraHeapNode {
+            rank: DijkstraRank::new(node.g),
             node_index,
         });
         self.node_index.insert(*node.state(), (node_index, false));
@@ -345,12 +246,12 @@ where
     }
 
     #[inline(always)]
-    #[cfg(not(feature = "verify"))]
+    #[cfg(not(feature = "inspect"))]
     pub fn verify_heap(&self) {
         // All good... (hopefully)
     }
     #[inline(always)]
-    #[cfg(feature = "verify")]
+    #[cfg(feature = "inspect")]
     pub fn verify_heap(&self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
@@ -420,8 +321,6 @@ where
                 child = child_r;
             }
 
-            debug_assert!(self.open[hole].rank <= self.open[child].rank);
-
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, child);
 
@@ -457,8 +356,8 @@ where
             index < self.open.len(),
             "Node is way out of sync. Index out of bounds..."
         );
-        debug_assert_eq!(
-            self.nodes[self.open[index].node_index].heap_index, index,
+        debug_assert!(
+            self.nodes[self.open[index].node_index].heap_index == index,
             "Node is out of sync."
         );
 
@@ -522,7 +421,7 @@ where
         self.nodes[self.open[l].node_index].heap_index = l;
         debug_assert!(
             self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
-            "Half-assed swap down must be unfairly pushing a node down. {self:?}"
+            "Half-assed swap down must be unfairly pushing a node down."
         );
         debug_assert!(
             self.nodes[self.open[r].node_index].heap_index < r,
@@ -533,14 +432,14 @@ where
     pub fn print_memory_stats(&self) {
         use std::mem::size_of;
 
-        println!("AStarSearch Stats:");
-        let s = size_of::<AStarNode<St, A, C>>();
+        println!("DijkstraSearch Stats:");
+        let s = size_of::<SearchTreeNode<St, A, C>>();
         let l = self.nodes.len();
         let c = self.nodes.capacity();
         println!("  - |Nodes|:   {} ({}B)", l, l * s);
         println!("  - |Nodes|*:  {} ({}B)", c, c * s);
 
-        let s = size_of::<AStarHeapNode<C>>();
+        let s = size_of::<DijkstraHeapNode<C>>();
         let l = self.open.len();
         let c = self.open.capacity();
         println!("  - |Open|:   {} ({}B)", l, l * s);
@@ -554,9 +453,8 @@ where
     }
 }
 
-impl<H, P, Sp, St, A, C> Iterator for AStarSearch<H, P, Sp, St, A, C>
+impl<P, Sp, St, A, C> Iterator for DijkstraSearch<P, Sp, St, A, C>
 where
-    H: Heuristic<P, Sp, St, A, C>,
     P: Problem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
