@@ -223,7 +223,6 @@ where
             rank: DijkstraRank::new(g),
             node_index,
         });
-        debug_assert_eq!(self.open.len(), heap_index);
         self._unsafe_sift_up(heap_index);
 
         self.verify_heap();

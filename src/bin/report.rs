@@ -29,6 +29,7 @@ use search::maze_2d::Maze2DProblemCell;
 use search::maze_2d::Maze2DSpace;
 use search::maze_2d::Maze2DState;
 use search::problem::Problem;
+use search::search::SearchTreeIndex;
 use search::search::SearchTreeNode;
 
 /// Command line arguments
@@ -138,13 +139,13 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
     print_size(
         out,
         AStarHeapNode {
             rank: AStarRank::new(0, 0),
-            node_index: 0usize,
+            node_index: SearchTreeIndex::fake_new(),
         },
     )?;
     print_size(out, (s0, (0usize, true)))?;
@@ -166,13 +167,13 @@ pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Resul
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, 0);
+    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
     print_size(
         out,
         DijkstraHeapNode {
             rank: DijkstraRank::new(0),
-            node_index: 0usize,
+            node_index: SearchTreeIndex::fake_new(),
         },
     )?;
     print_size(out, (s0, (0usize, true)))?;

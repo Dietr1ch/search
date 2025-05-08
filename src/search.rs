@@ -9,6 +9,13 @@ use crate::space::State;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct SearchTreeIndex(usize);
 
+impl SearchTreeIndex {
+    #[cfg(feature = "inspect")]
+    pub fn fake_new() -> Self {
+        SearchTreeIndex(0usize)
+    }
+}
+
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
 pub struct SearchTreeNode<St, A, C>
@@ -57,6 +64,7 @@ where
 }
 
 #[derive(Debug)]
+#[cfg_attr(feature = "inspect", derive(Clone))]
 pub struct SearchTree<St, A, C>
 where
     St: State,
@@ -96,7 +104,7 @@ where
         space: &Sp,
         node_index: SearchTreeIndex,
     ) -> Path<St, A, C> {
-        recover_path(space, &mut self.nodes, node_index)
+        recover_path(space, &self.nodes, node_index)
     }
 }
 
