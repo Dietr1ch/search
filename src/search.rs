@@ -1,12 +1,13 @@
 use std::fmt::Debug;
 
-use nonmax::NonMaxUsize;
-
 use crate::space::Action;
 use crate::space::Cost;
 use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct SearchTreeIndex(usize);
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
@@ -16,7 +17,7 @@ where
     A: Action,
     C: Cost,
 {
-    pub parent: Option<(NonMaxUsize, A)>,
+    pub parent: Option<(SearchTreeIndex, A)>,
     pub state: St,
     pub g: C,
     pub heap_index: usize,
@@ -36,7 +37,7 @@ where
             heap_index,
         }
     }
-    pub fn new_from_parent(heap_index: usize, s: St, parent: (NonMaxUsize, A), g: C) -> Self {
+    pub fn new_from_parent(heap_index: usize, s: St, parent: (SearchTreeIndex, A), g: C) -> Self {
         Self {
             parent: Some(parent),
             state: s,
@@ -45,7 +46,7 @@ where
         }
     }
 
-    pub fn reach(&mut self, new_parent: (NonMaxUsize, A), g: C) {
+    pub fn reach(&mut self, new_parent: (SearchTreeIndex, A), g: C) {
         debug_assert!(g < self.g);
         self.parent = Some(new_parent);
         self.g = g;
@@ -63,23 +64,102 @@ where
     }
 }
 
+#[derive(Debug)]
+pub struct SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    nodes: Vec<SearchTreeNode<St, A, C>>,
+}
+
+impl<St, A, C> SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    pub fn new() -> Self {
+        Self { nodes: vec![] }
+    }
+    pub fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
+        let index = SearchTreeIndex(self.nodes.len());
+        self.nodes.push(node);
+        index
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.nodes.is_empty()
+    }
+    pub fn len(&self) -> usize {
+        self.nodes.len()
+    }
+    pub fn capacity(&self) -> usize {
+        self.nodes.capacity()
+    }
+
+    pub fn path<Sp: Space<St, A, C>>(
+        &mut self,
+        space: &Sp,
+        node_index: SearchTreeIndex,
+    ) -> Path<St, A, C> {
+        recover_path(space, &mut self.nodes, node_index)
+    }
+}
+
+impl<St, A, C> Default for SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<St, A, C> std::ops::Index<SearchTreeIndex> for SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    type Output = SearchTreeNode<St, A, C>;
+
+    fn index(&self, index: SearchTreeIndex) -> &Self::Output {
+        &self.nodes[index.0]
+    }
+}
+
+impl<St, A, C> std::ops::IndexMut<SearchTreeIndex> for SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    fn index_mut(&mut self, index: SearchTreeIndex) -> &mut SearchTreeNode<St, A, C> {
+        &mut self.nodes[index.0]
+    }
+}
+
 pub fn recover_path<Sp: Space<St, A, C>, St: State, A: Action, C: Cost>(
     space: &Sp,
     nodes: &[SearchTreeNode<St, A, C>],
-    mut node_index: usize,
+    mut node_index: SearchTreeIndex,
 ) -> Path<St, A, C> {
-    let e = &nodes[node_index];
+    let e = &nodes[node_index.0];
     let mut path = Path::<St, A, C>::new_from_start(*e.state());
 
-    while let Some((parent_index, a)) = nodes[node_index].parent {
-        let p = &nodes[parent_index.get()];
+    while let Some((parent_index, a)) = nodes[node_index.0].parent {
+        let p = &nodes[parent_index.0];
         let s = p.state();
         let c: C = space.cost(s, &a);
         debug_assert!(c != C::zero());
 
         path.append((*s, a), c);
-        debug_assert!(node_index != parent_index.get());
-        node_index = parent_index.get();
+        debug_assert!(node_index != parent_index);
+        node_index = parent_index;
     }
 
     path.reverse();

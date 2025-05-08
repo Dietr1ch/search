@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
-use nonmax::NonMaxUsize;
 use rustc_hash::FxHashMap;
 
 use crate::heap_primitives::index_down_left;
 use crate::heap_primitives::index_up;
 use crate::problem::Problem;
 use crate::problem::ProblemHeuristic;
-use crate::search::recover_path;
+use crate::search::SearchTree;
+use crate::search::SearchTreeIndex;
 use crate::search::SearchTreeNode;
 use crate::space::Action;
 use crate::space::Cost;
@@ -39,7 +39,7 @@ where
 {
     pub rank: AStarRank<C>,
     /// The index of this node in the Node Arena
-    pub node_index: usize,
+    pub node_index: SearchTreeIndex,
 }
 
 use std::marker::PhantomData;
@@ -55,12 +55,12 @@ where
     A: Action,
     C: Cost,
 {
-    nodes: Vec<SearchTreeNode<St, A, C>>,
+    search_tree: SearchTree<St, A, C>,
     open: Vec<AStarHeapNode<C>>,
     /// Amalgamation of,
     /// - The `HashMap<St, &Node>`, but using just the node index
     /// - The "Closed Set" `HashSet<St>`
-    node_index: FxHashMap<St, (usize, bool)>,
+    node_index: FxHashMap<St, (SearchTreeIndex, bool)>,
 
     problem: P,
 
@@ -69,8 +69,6 @@ where
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
 }
-
-type Idx = usize;
 
 impl<PH, P, Sp, St, A, C> AStarSearch<PH, P, Sp, St, A, C>
 where
@@ -83,7 +81,7 @@ where
 {
     pub fn new(p: P) -> Self {
         let mut search = Self {
-            nodes: vec![],
+            search_tree: SearchTree::<St, A, C>::new(),
             open: vec![],
             node_index: FxHashMap::default(),
 
@@ -97,11 +95,10 @@ where
 
         let starts = search.problem.starts().clone();
         for s in starts {
-            let node_index = search.nodes.len();
             let heap_index = search.open.len();
-
             let g = C::zero();
             let node = SearchTreeNode::<St, A, C>::new(heap_index, s, g);
+            let node_index: SearchTreeIndex = search.search_tree.push(node);
 
             // search.push(node);
             let h: C = PH::h(&search.problem, &s);
@@ -110,7 +107,6 @@ where
                 node_index,
             });
             search.node_index.insert(s, (node_index, false));
-            search.nodes.push(node);
             search._unsafe_sift_up(heap_index);
             search.verify_heap();
         }
@@ -122,8 +118,8 @@ where
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
         while let Some(node_index) = self.pop() {
-            let state = *self.nodes[node_index].state();
-            let g: C = self.nodes[node_index].g;
+            let state = *self.search_tree[node_index].state();
+            let g: C = self.search_tree[node_index].g;
             debug_assert!(!self.is_closed(&state));
 
             // NOTE: We can do a goal-check and return here if we only need one
@@ -146,7 +142,7 @@ where
                     Some((node_index, false)) => {
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
-                        let neigh = &mut self.nodes[*node_index];
+                        let neigh = &mut self.search_tree[*node_index];
                         let neigh_heap_index = neigh.heap_index;
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
@@ -169,7 +165,7 @@ where
                             SearchTreeNode::new_from_parent(
                                 new_heap_index,
                                 s,
-                                (NonMaxUsize::new(node_index).unwrap(), a),
+                                (node_index, a),
                                 neigh_g,
                             ),
                             neigh_h,
@@ -181,21 +177,13 @@ where
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
             if self.problem.is_goal(&state) {
-                return Some(recover_path::<Sp, St, A, C>(
-                    self.problem.space(),
-                    &self.nodes,
-                    node_index,
-                ));
+                return Some(self.search_tree.path(self.problem.space(), node_index));
             }
         }
 
         None
     }
 
-    #[inline(always)]
-    pub fn find_node(&self, s: &St) -> Option<Idx> {
-        self.node_index.get(s).map(|(i, _is_closed)| *i)
-    }
     #[inline(always)]
     pub fn is_closed(&self, s: &St) -> bool {
         match self.node_index.get(s) {
@@ -221,13 +209,13 @@ where
     #[inline(always)]
     pub fn pop_node(&mut self) -> Option<&SearchTreeNode<St, A, C>> {
         match self.pop() {
-            Some(i) => Some(&self.nodes[i]),
+            Some(i) => Some(&self.search_tree[i]),
             None => None,
         }
     }
 
     #[inline(always)]
-    fn pop(&mut self) -> Option<Idx> {
+    fn pop(&mut self) -> Option<SearchTreeIndex> {
         match self.open.len() {
             0 | 1 => self.open.pop().map(|n| n.node_index),
             _ => {
@@ -239,20 +227,19 @@ where
         }
     }
 
-    fn push(&mut self, mut node: SearchTreeNode<St, A, C>, h: C) {
+    fn push(&mut self, node: SearchTreeNode<St, A, C>, h: C) {
         self.verify_heap();
         debug_assert!(!self.is_closed(&node.state));
+        let node_index = self.search_tree.push(node);
+        let node = &mut self.search_tree[node_index];
 
-        let node_index = self.nodes.len();
         let heap_index = self.open.len();
-
         self.open.push(AStarHeapNode {
             rank: AStarRank::new(node.g, h),
             node_index,
         });
         self.node_index.insert(*node.state(), (node_index, false));
         node.heap_index = heap_index;
-        self.nodes.push(node);
         self._unsafe_sift_up(heap_index);
 
         self.verify_heap();
@@ -269,7 +256,7 @@ where
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
             // - Has the right intrusive index set.
-            debug_assert!(self.nodes[e.node_index].heap_index == i);
+            debug_assert!(self.search_tree[e.node_index].heap_index == i);
 
             // - Goes after its parent node, if any.
             if i == 0 {
@@ -291,7 +278,7 @@ where
     /// Works by unfairly sifting down the top-node to the last level, where it can
     /// be swapped with the very last element of the array and popped
     /// Temporarily breaks invariants around the node sifting down unfairly.
-    fn _unsafe_pop_non_trivial_heap(&mut self) -> usize {
+    fn _unsafe_pop_non_trivial_heap(&mut self) -> SearchTreeIndex {
         debug_assert!(!self.open.is_empty(), "You can't pop from an empty heap");
         debug_assert!(
             self.open.len() != 1,
@@ -357,7 +344,7 @@ where
 
         let heap_node = self.open.pop().unwrap();
         debug_assert_eq!(
-            self.nodes[heap_node.node_index].heap_index, 0,
+            self.search_tree[heap_node.node_index].heap_index, 0,
             "Top node half-assed swapped down should still have it's 0 index"
         );
 
@@ -372,7 +359,7 @@ where
             "Node is way out of sync. Index out of bounds..."
         );
         debug_assert_eq!(
-            self.nodes[self.open[index].node_index].heap_index, index,
+            self.search_tree[self.open[index].node_index].heap_index, index,
             "Node is out of sync."
         );
 
@@ -412,8 +399,8 @@ where
         debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
         debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
         self.open.swap(l, r);
-        self.nodes[self.open[l].node_index].heap_index = l;
-        self.nodes[self.open[r].node_index].heap_index = r;
+        self.search_tree[self.open[l].node_index].heap_index = l;
+        self.search_tree[self.open[r].node_index].heap_index = r;
         debug_assert!(
             self.open[l].rank <= self.open[r].rank,
             "Swaps must locally restore the heap invariant."
@@ -433,13 +420,13 @@ where
         debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
         debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
         self.open.swap(l, r);
-        self.nodes[self.open[l].node_index].heap_index = l;
+        self.search_tree[self.open[l].node_index].heap_index = l;
         debug_assert!(
             self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
             "Half-assed swap down must be unfairly pushing a node down. {self:?}"
         );
         debug_assert!(
-            self.nodes[self.open[r].node_index].heap_index < r,
+            self.search_tree[self.open[r].node_index].heap_index < r,
             "Node half-assed swapped down should still point to it's original index."
         );
     }
@@ -449,8 +436,8 @@ where
 
         println!("AStarSearch Stats:");
         let s = size_of::<SearchTreeNode<St, A, C>>();
-        let l = self.nodes.len();
-        let c = self.nodes.capacity();
+        let l = self.search_tree.len();
+        let c = self.search_tree.capacity();
         println!("  - |Nodes|:   {} ({}B)", l, l * s);
         println!("  - |Nodes|*:  {} ({}B)", c, c * s);
 
