@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use anstream::println;
 use clap::Parser;
 use owo_colors::OwoColorize;
-use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use rand_chacha::rand_core::SeedableRng;
 
 use search::dijkstra::DijkstraSearch;
 use search::maze_2d::Maze2DProblem;

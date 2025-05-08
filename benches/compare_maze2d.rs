@@ -1,10 +1,10 @@
-use criterion::criterion_group;
-use criterion::criterion_main;
 use criterion::BenchmarkId;
 use criterion::Criterion;
+use criterion::criterion_group;
+use criterion::criterion_main;
 use glob::glob;
-use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use rand_chacha::rand_core::SeedableRng;
 
 use search::astar::AStarSearch;
 use search::dijkstra::DijkstraSearch;

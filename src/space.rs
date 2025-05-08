@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use num_traits::sign::Unsigned;
 use num_traits::SaturatingAdd;
+use num_traits::sign::Unsigned;
 
 pub trait Action: Copy + Clone + Debug + PartialEq + Eq {}
 pub trait State: Copy + Clone + Debug + PartialEq + Eq + Hash {}
