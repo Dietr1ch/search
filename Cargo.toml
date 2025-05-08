@@ -76,6 +76,7 @@ shadow-rs = "1.1.1"
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 iai = { git = "https://github.com/sigaloid/iai", rev = "6c83e942" }
+calliper = "0.1.4"
 
 
 # Targets
@@ -99,4 +100,8 @@ harness = false
 ## iai
 [[bench]]
 name = "trace_compare_maze2d"  # ./benches/trace_compare_maze2d.rs
+harness = false
+## calliper
+[[bench]]
+name = "calliper_first_benchmark"  # ./benches/calliper_first_benchmark.rs
 harness = false
