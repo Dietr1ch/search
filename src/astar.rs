@@ -187,7 +187,7 @@ where
     }
 
     #[inline(always)]
-    pub fn is_closed(&self, s: &St) -> bool {
+    pub(crate) fn is_closed(&self, s: &St) -> bool {
         match self.node_index.get(s) {
             Some((_index, is_closed)) => *is_closed,
             None => false,
@@ -209,9 +209,9 @@ where
     }
 
     #[inline(always)]
-    pub fn pop_node(&mut self) -> Option<&SearchTreeNode<St, A, C>> {
+    pub fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
         match self.pop() {
-            Some(i) => Some(&self.search_tree[i]),
+            Some(i) => Some(&mut self.search_tree[i]),
             None => None,
         }
     }
@@ -262,12 +262,12 @@ where
 
     #[inline(always)]
     #[cfg(not(feature = "verify"))]
-    pub fn verify_heap(&self) {
+    pub(crate) fn verify_heap(&self) {
         // All good... (hopefully)
     }
     #[inline(always)]
     #[cfg(feature = "verify")]
-    pub fn verify_heap(&self) {
+    pub(crate) fn verify_heap(&self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
             // - Has the right intrusive index set.

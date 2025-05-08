@@ -33,8 +33,8 @@
 /// ```
 #[inline(always)]
 pub fn index_up(i: usize) -> usize {
-    (i - 1) >> 1
     // TODO: Introduce arity as a parameter
+    (i - 1) / 2
 }
 
 /// The left children

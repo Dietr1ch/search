@@ -49,7 +49,7 @@ pub struct Args {
     color: colorchoice_clap::Color,
 }
 
-pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
+fn print_size<T: std::fmt::Debug, W: std::io::Write>(
     out: &mut BufWriter<W>,
     _: T,
 ) -> std::io::Result<()> {
@@ -66,7 +66,7 @@ pub fn print_size<T: std::fmt::Debug, W: std::io::Write>(
     Ok(())
 }
 
-pub fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()> {
+fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()> {
     writeln!(out, ":PROPERTIES:")?;
     writeln!(out, ":VERSION: {:?}", search::build::PKG_VERSION)?;
     writeln!(out, ":GIT_BRANCH: {:?}", shadow_rs::branch())?;

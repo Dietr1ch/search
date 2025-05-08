@@ -24,10 +24,10 @@ where
     A: Action,
     C: Cost,
 {
-    pub parent: Option<(SearchTreeIndex, A)>,
-    pub state: St,
-    pub g: C,
-    pub heap_index: usize,
+    pub(crate) parent: Option<(SearchTreeIndex, A)>,
+    pub(crate) state: St,
+    pub(crate) g: C,
+    pub(crate) heap_index: usize,
 }
 
 impl<St, A, C> SearchTreeNode<St, A, C>
@@ -59,14 +59,14 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn state(&self) -> &St {
+    pub(crate) fn state(&self) -> &St {
         &self.state
     }
 }
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct SearchTree<St, A, C>
+pub(crate) struct SearchTree<St, A, C>
 where
     St: State,
     A: Action,
@@ -82,18 +82,15 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { nodes: vec![] }
     }
-    pub fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
+    pub(crate) fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
         let index = SearchTreeIndex(self.nodes.len());
         self.nodes.push(node);
         index
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.nodes.is_empty()
-    }
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
@@ -145,7 +142,7 @@ where
     }
 }
 
-pub fn recover_path<Sp: Space<St, A, C>, St: State, A: Action, C: Cost>(
+pub(crate) fn recover_path<Sp: Space<St, A, C>, St: State, A: Action, C: Cost>(
     space: &Sp,
     nodes: &[SearchTreeNode<St, A, C>],
     mut node_index: SearchTreeIndex,

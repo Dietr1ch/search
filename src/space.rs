@@ -47,7 +47,7 @@ where
     C: Cost,
 {
     #[inline(always)]
-    pub fn new_from_start(start: S) -> Self {
+    pub(crate) fn new_from_start(start: S) -> Self {
         Self {
             start: Some(start),
             end: Some(start),
@@ -69,7 +69,7 @@ where
     }
 
     #[inline(always)]
-    pub fn append(&mut self, last_action: (S, A), c: C) {
+    pub(crate) fn append(&mut self, last_action: (S, A), c: C) {
         let (s, a) = last_action;
         self.actions.push(a);
         self.end = Some(s);
@@ -79,13 +79,13 @@ where
     /// Reverses the Path, likely making it invalid.
     ///
     /// Useful when naturally reconstructing paths in reverse.
-    pub fn reverse(&mut self) {
+    pub(crate) fn reverse(&mut self) {
         (self.end, self.start) = (self.start, self.end);
         self.actions.reverse();
     }
 
     #[inline(always)]
-    pub fn empty() -> Self {
+    pub fn new_empty() -> Self {
         Self {
             start: None,
             actions: vec![],
@@ -155,7 +155,7 @@ where
             false
         } else {
             // Empty paths are fine
-            *p == Path::<St, A, C>::empty()
+            *p == Path::<St, A, C>::new_empty()
         }
     }
 
@@ -172,6 +172,7 @@ where
     }
 }
 
+// TODO: Figure out how to use a general heuristic. Do we require sub-goaling?
 /// A general heuristic useful on any problem instance.
 pub trait Heuristic<Sp, St, A, C>: std::fmt::Debug
 where

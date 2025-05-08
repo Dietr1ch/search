@@ -13,16 +13,16 @@ use crate::space::State;
 
 const MAX_ELEMENTS_DISPLAYED: usize = 20;
 
-pub type CoordIntrinsic = u32;
+pub(crate) type CoordIntrinsic = u32;
 pub type Coord = NonMaxU32;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Maze2DState {
-    pub x: Coord,
-    pub y: Coord,
+    pub(crate) x: Coord,
+    pub(crate) y: Coord,
 }
 impl Maze2DState {
-    pub fn new(x: CoordIntrinsic, y: CoordIntrinsic) -> Option<Maze2DState> {
+    pub(crate) fn new(x: CoordIntrinsic, y: CoordIntrinsic) -> Option<Maze2DState> {
         Some(Maze2DState {
             x: Coord::new(x)?,
             y: Coord::new(y)?,
@@ -37,7 +37,7 @@ impl Maze2DState {
             y: Coord::new(y)?,
         })
     }
-    pub fn new_from_small_usize(x: usize, y: usize) -> Maze2DState {
+    pub(crate) fn new_from_small_usize(x: usize, y: usize) -> Maze2DState {
         debug_assert!(x < CoordIntrinsic::MAX as usize);
         debug_assert!(y < CoordIntrinsic::MAX as usize);
         let x = x as CoordIntrinsic;
@@ -48,7 +48,7 @@ impl Maze2DState {
             y: Coord::new(y).unwrap(),
         }
     }
-    pub fn safe_dimensions(max_x: usize, max_y: usize) -> bool {
+    pub(crate) fn safe_dimensions(max_x: usize, max_y: usize) -> bool {
         (max_x < CoordIntrinsic::MAX as usize) && (max_y < CoordIntrinsic::MAX as usize)
     }
 }
@@ -109,14 +109,14 @@ impl std::convert::TryFrom<char> for Maze2DCell {
 
 #[derive(Clone)]
 pub struct Maze2DSpace {
-    pub map: Vec<Vec<Maze2DCell>>,
+    pub(crate) map: Vec<Vec<Maze2DCell>>,
 }
 
 impl Maze2DSpace {
     pub fn new_from_map(map: Vec<Vec<Maze2DCell>>) -> Self {
         Self { map }
     }
-    pub fn new_empty_with_dimensions(x: usize, y: usize) -> Self {
+    pub(crate) fn new_empty_with_dimensions(x: usize, y: usize) -> Self {
         Self {
             map: vec![vec![Maze2DCell::Empty; x]; y],
         }
