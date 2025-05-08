@@ -8,13 +8,15 @@ authors = [
 default-run = "main"
 build = "build.rs"
 
+
 [features]
 # Allows inspecting data structure internals
 inspect = []
 verify = []
 
+
 # Profiles
-# --------
+# ========
 # https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles
 
 # Dev
@@ -43,6 +45,8 @@ debug = true
 strip=false
 
 
+# Dependencies
+# ============
 [dependencies]
 anstream = "0.6.18"
 chrono = "0.4.41"
@@ -71,16 +75,28 @@ shadow-rs = "1.1.1"
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
+iai = { git = "https://github.com/sigaloid/iai", rev = "6c83e942" }
 
 
+# Targets
+# =======
+
+# Binaries
+[[bin]]
+name = "main"  # ./src/bin/main.rs
+
+[[bin]]
+name = "report"  # ./src/bin/report.rs
+required-features = ["inspect"]
+
+# Sampling benchmarks
+## criterion
 [[bench]]
-name = "compare_maze2d"
+name = "sample_compare_maze2d"  # ./benches/sample_compare_maze2d.rs
 harness = false
 
-
-[[bin]]
-name = "main"
-
-[[bin]]
-name = "report"
-required-features = ["inspect"]
+# Tracing benchmarks
+## iai
+[[bench]]
+name = "trace_compare_maze2d"  # ./benches/trace_compare_maze2d.rs
+harness = false

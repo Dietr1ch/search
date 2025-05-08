@@ -647,6 +647,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbd780fe5cc30f81464441920d82ac8740e2e46b29a6fad543ddd075229ce37e"
 
 [[package]]
+name = "iai"
+version = "0.1.1"
+source = "git+https://github.com/sigaloid/iai?rev=6c83e942#6c83e9429b86290f88d6ff30ca6c0d6014b5a5f3"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.63"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1492,6 +1500,7 @@ dependencies = [
  "criterion",
  "derive_more",
  "glob",
+ "iai",
  "image",
  "indoc",
  "nonmax",

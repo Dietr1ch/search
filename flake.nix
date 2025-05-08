@@ -63,10 +63,12 @@
               cargo-criterion
               cargo-deny
               cargo-edit
+              cargo-expand
               cargo-flamegraph
               cargo-fuzz
               cargo-outdated
               cargo-pgo
+              cargo-valgrind
               cargo-watch
 
               bacon
@@ -74,6 +76,7 @@
               just
 
               lldb
+              valgrind-light  # light: without gdb
 
               coz
               critcmp
