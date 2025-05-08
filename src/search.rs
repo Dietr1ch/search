@@ -29,17 +29,9 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new(heap_index: usize, s: St, g: C) -> Self {
+    pub fn new(heap_index: usize, s: St, parent: Option<(SearchTreeIndex, A)>, g: C) -> Self {
         Self {
-            parent: None,
-            state: s,
-            g,
-            heap_index,
-        }
-    }
-    pub fn new_from_parent(heap_index: usize, s: St, parent: (SearchTreeIndex, A), g: C) -> Self {
-        Self {
-            parent: Some(parent),
+            parent,
             state: s,
             g,
             heap_index,

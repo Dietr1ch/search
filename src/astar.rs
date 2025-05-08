@@ -94,20 +94,10 @@ where
         };
 
         for s in search.problem.starts().clone() {
-            let heap_index = search.open.len();
-            let g = C::zero();
-            let node = SearchTreeNode::<St, A, C>::new(heap_index, s, g);
-            let node_index: SearchTreeIndex = search.search_tree.push(node);
-
-            // search.push(node);
+            let g: C = C::zero();
             let h: C = PH::h(&search.problem, &s);
-            search.open.push(AStarHeapNode {
-                rank: AStarRank::new(g, h),
-                node_index,
-            });
-            search.node_index.insert(s, (node_index, false));
-            search._unsafe_sift_up(heap_index);
-            search.verify_heap();
+            let parent: Option<(SearchTreeIndex, A)> = None;
+            search.push_new(&s, parent, g, h);
         }
 
         search
@@ -159,16 +149,8 @@ where
                         let c: C = self.problem.space().cost(&s, &a);
                         let neigh_g = g + c;
                         let neigh_h = PH::h(&self.problem, &s);
-                        let new_heap_index = self.open.len();
-                        self.push(
-                            SearchTreeNode::new_from_parent(
-                                new_heap_index,
-                                s,
-                                (node_index, a),
-                                neigh_g,
-                            ),
-                            neigh_h,
-                        );
+
+                        self.push_new(&s, Some((node_index, a)), neigh_g, neigh_h);
                     }
                 }
             }
@@ -227,19 +209,32 @@ where
     }
 
     #[inline(always)]
-    fn push(&mut self, node: SearchTreeNode<St, A, C>, h: C) {
+    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C, h: C) {
         self.verify_heap();
-        debug_assert!(!self.is_closed(&node.state));
-        let node_index = self.search_tree.push(node);
-        let node = &mut self.search_tree[node_index];
+        debug_assert!(!self.is_closed(s));
 
-        let heap_index = self.open.len();
+        // NOTE: search_tree and open have indices to each other.
+        // Compute next heap index to allow creating SearchTreeNode
+        let heap_index = self.open.len(); // Future heap_index
+
+        // 1. Add SearchTreeNode to search_tree
+        let node_index: SearchTreeIndex = self
+            .search_tree
+            .push(SearchTreeNode::<St, A, C>::new(heap_index, *s, parent, g));
+        let node = &mut self.search_tree[node_index];
+        debug_assert_eq!(node.heap_index, heap_index);
+        debug_assert_eq!(node.g, g);
+
+        // 2. Add entry to node_map
+        let is_closed = false;
+        self.node_index.insert(*s, (node_index, is_closed));
+
+        // 3. Add AStarHeapNode to open using it's SearchTreeIndex
         self.open.push(AStarHeapNode {
-            rank: AStarRank::new(node.g, h),
+            rank: AStarRank::new(g, h),
             node_index,
         });
-        self.node_index.insert(*node.state(), (node_index, false));
-        node.heap_index = heap_index;
+        debug_assert_eq!(self.open.len(), heap_index);
         self._unsafe_sift_up(heap_index);
 
         self.verify_heap();
