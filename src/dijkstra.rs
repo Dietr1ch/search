@@ -98,6 +98,7 @@ where
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
+        // TODO: See if pop_node() would be the same or faster
         while let Some(node_index) = self.pop() {
             let state = *self.search_tree[node_index].state();
             let g: C = self.search_tree[node_index].g;

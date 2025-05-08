@@ -62,6 +62,7 @@ where
     }
 
     /// Runs sanity checks
+    // TODO: Verify path in a Space
     #[inline(always)]
     pub fn seems_valid(&self) -> bool {
         self.start.is_some() == self.end.is_some() && self.cost.valid()

@@ -34,6 +34,7 @@
 #[inline(always)]
 pub fn index_up(i: usize) -> usize {
     (i - 1) >> 1
+    // TODO: Introduce arity as a parameter
 }
 
 /// The left children
@@ -47,6 +48,7 @@ pub fn index_up(i: usize) -> usize {
 /// ```
 #[inline(always)]
 pub fn index_down_left(i: usize) -> usize {
+    // TODO: Introduce arity as a parameter
     (2 * i) + 1
 }
 
@@ -62,5 +64,6 @@ pub fn index_down_left(i: usize) -> usize {
 /// ```
 #[inline(always)]
 pub fn index_down_right(i: usize) -> usize {
+    // TODO: Introduce arity as a parameter
     2 * (i + 1)
 }

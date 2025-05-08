@@ -45,6 +45,7 @@ where
         }
     }
 
+    /// Gives this Node a better path through a new parent.
     pub fn reach(&mut self, new_parent: (SearchTreeIndex, A), g: C) {
         debug_assert!(g < self.g);
         self.parent = Some(new_parent);
@@ -71,6 +72,7 @@ where
     A: Action,
     C: Cost,
 {
+    // TODO: Use an Arena as the SearchTreeNode store
     nodes: Vec<SearchTreeNode<St, A, C>>,
 }
 
