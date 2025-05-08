@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use rustc_hash::FxHashMap;
 
 use crate::heap_primitives::index_down_left;
+use crate::heap_primitives::index_down_right;
 use crate::heap_primitives::index_up;
 use crate::problem::Problem;
 use crate::search::SearchTree;
@@ -301,6 +302,7 @@ where
             debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
             // Find the best child
             let child_r = child + 1;
+            debug_assert_eq!(child_r, index_down_right(hole));
             if child_r < self.open.len() && self.open[child_r].rank < self.open[child].rank {
                 child = child_r;
             }
