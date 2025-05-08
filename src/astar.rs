@@ -93,8 +93,7 @@ where
             _phantom_action: PhantomData,
         };
 
-        let starts = search.problem.starts().clone();
-        for s in starts {
+        for s in search.problem.starts().clone() {
             let heap_index = search.open.len();
             let g = C::zero();
             let node = SearchTreeNode::<St, A, C>::new(heap_index, s, g);
