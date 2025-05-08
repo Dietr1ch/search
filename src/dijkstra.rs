@@ -213,6 +213,7 @@ where
         }
     }
 
+    #[inline(always)]
     fn push(&mut self, node: SearchTreeNode<St, A, C>) {
         self.verify_heap();
         debug_assert!(!self.is_closed(&node.state));
