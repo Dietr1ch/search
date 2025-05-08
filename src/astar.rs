@@ -79,9 +79,9 @@ where
     search_tree: SearchTree<St, A, C>,
     open: Vec<AStarHeapNode<C>>,
     /// Amalgamation of,
-    /// - The `HashMap<St, &Node>`, but using just the node index
+    /// - The `HashMap<St, &mut SearchTreeNode>`, but using SearchTreeIndex
     /// - The "Closed Set" `HashSet<St>`
-    node_index: FxHashMap<St, (SearchTreeIndex, bool)>,
+    node_map: FxHashMap<St, (SearchTreeIndex, bool)>,
 
     problem: P,
 
@@ -104,7 +104,7 @@ where
         let mut search = Self {
             search_tree: SearchTree::<St, A, C>::new(),
             open: vec![],
-            node_index: FxHashMap::default(),
+            node_map: FxHashMap::default(),
 
             problem: p,
 
@@ -142,7 +142,7 @@ where
             // Expand state
             for (s, a) in self.problem.space().neighbours(&state) {
                 // Have we seen this State?
-                match self.node_index.get(&s) {
+                match self.node_map.get(&s) {
                     Some((_, true)) => {
                         // Yes, and we expanded the State already.
                         // NOTE: Could be a goal we had already found through a
@@ -188,19 +188,19 @@ where
 
     #[inline(always)]
     pub(crate) fn is_closed(&self, s: &St) -> bool {
-        match self.node_index.get(s) {
+        match self.node_map.get(s) {
             Some((_index, is_closed)) => *is_closed,
             None => false,
         }
     }
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
-        match self.node_index.get(s) {
+        match self.node_map.get(s) {
             Some((_index, true)) => {
                 // Closed a closed state
             }
             Some((index, false)) => {
-                self.node_index.insert(*s, (*index, true));
+                self.node_map.insert(*s, (*index, true));
             }
             None => {
                 unreachable!("Tried closing a state without a node");
@@ -248,7 +248,7 @@ where
 
         // 2. Add entry to node_map
         let is_closed = false;
-        self.node_index.insert(*s, (node_index, is_closed));
+        self.node_map.insert(*s, (node_index, is_closed));
 
         // 3. Add AStarHeapNode to open using it's SearchTreeIndex
         self.open.push(AStarHeapNode {
@@ -463,9 +463,9 @@ where
         println!("  - |Open|:   {} ({}B)", l, l * s);
         println!("  - |Open|*:  {} ({}B)", c, c * s);
 
-        let s = size_of::<(St, (usize, bool))>();
-        let l = self.node_index.len();
-        let c = self.node_index.capacity();
+        let s = size_of::<(St, (SearchTreeIndex, bool))>();
+        let l = self.node_map.len();
+        let c = self.node_map.capacity();
         println!("  - |Index|:  {} ({}B)", l, l * s);
         println!("  - |Index|*: {} ({}B)", c, c * s);
     }
