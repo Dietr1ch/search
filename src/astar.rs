@@ -76,16 +76,34 @@ where
     A: Action,
     C: Cost,
 {
+    /// All the Search Nodes. Naturally forms a Search Forest as each node may
+    /// have a parent Node.
+    ///
+    /// Could be backed by an Arena since this collection only grows and does
+    /// not need contiguous memory.
     search_tree: SearchTree<St, A, C>,
+
+    /// An intrusive heap of (AStarRank, SearchTreeIndex) that keeps the
+    /// referenced node updated (SearchTreeNode::heap_index).
+    /// This allows re-ranking a SearchTreeNode in the heap without a linear
+    /// search for its (AStarRank, SearchTreeIndex) entry.
+    ///
+    /// for (i, hn) in self.open.enumerate():
+    ///   assert_eq(self.search_tree[hn.node_index].heap_index, i)
     open: Vec<AStarHeapNode<C>>,
+
     /// Amalgamation of,
     /// - The `HashMap<St, &mut SearchTreeNode>`, but using SearchTreeIndex
+    ///   - To find existing Search Nodes from their State.
     /// - The "Closed Set" `HashSet<St>`
+    ///   - To recall whether we had already explored a state.
+    ///
+    /// It's the same size as the Search Tree.
     node_map: FxHashMap<St, (SearchTreeIndex, bool)>,
 
     problem: P,
 
-    // TODO: Clean PhantomData
+    // TODO: Clean PhantomData if possible.
     _phantom_heuristic: PhantomData<PH>,
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
