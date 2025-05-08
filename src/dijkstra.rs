@@ -16,14 +16,14 @@ use crate::space::State;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DijkstraRank<C: Cost> {
-    r: C,
+    g: C,
 }
 impl<C> DijkstraRank<C>
 where
     C: Cost,
 {
     pub fn new(g: C) -> Self {
-        Self { r: g }
+        Self { g }
     }
 }
 
@@ -121,16 +121,16 @@ where
                         // an optimal path to a new goal.
                         continue;
                     }
-                    Some((node_index, false)) => {
+                    Some((neigh_index, false)) => {
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
-                        let neigh = &mut self.search_tree[*node_index];
+                        let neigh = &mut self.search_tree[*neigh_index];
                         let neigh_heap_index = neigh.heap_index;
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            neigh.g = new_g;
+                            neigh.reach((node_index, a), new_g);
                             self.open[neigh.heap_index].rank = DijkstraRank::new(neigh.g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }

@@ -16,8 +16,23 @@ use crate::space::Space;
 use crate::space::State;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+/// The ranking tuple for A*
+///
+/// We prefer better f-values, and tie break for lower h.
+///
+/// Intuition around higher g-value might be slightly easier, but keeping the
+/// raw h value helps to avoid recomputing it later.
+///
+// ```
+// use search::astar::AStarRank;
+// use search::space::Cost;
+//
+// impl Cost for u16 {}
+// assert!(AStarRank::<u16>::new(2, 0) < AStarRank::<u16>::new(2, 1));
+// ```
 pub struct AStarRank<C: Cost> {
-    r: (C, C),
+    f: C,
+    h: C,
 }
 impl<C> AStarRank<C>
 where
@@ -25,8 +40,13 @@ where
 {
     pub fn new(g: C, h: C) -> Self {
         Self {
-            r: (g.saturating_add(&h), h),
+            f: g.saturating_add(&h),
+            h,
         }
+    }
+    /// Improves g in Rank{f, h} without recomputing h.
+    pub fn improve_g(&mut self, new_g: C) {
+        self.f = new_g.saturating_add(&self.h);
     }
 }
 
@@ -129,19 +149,18 @@ where
                         // an optimal path to a new goal.
                         continue;
                     }
-                    Some((node_index, false)) => {
+                    Some((neigh_index, false)) => {
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
-                        let neigh = &mut self.search_tree[*node_index];
+                        let neigh = &mut self.search_tree[*neigh_index];
                         let neigh_heap_index = neigh.heap_index;
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            // TODO: Check if rank update can be improved
-                            neigh.g = new_g;
-                            let neigh_h = PH::h(&self.problem, &s);
-                            self.open[neigh.heap_index].rank = AStarRank::new(neigh.g, neigh_h);
+                            // know neigh.h
+                            neigh.reach((node_index, a), new_g);
+                            self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
