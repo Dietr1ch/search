@@ -76,6 +76,7 @@
               lldb
 
               coz
+              critcmp
 
               gnuplot_qt
             ];
