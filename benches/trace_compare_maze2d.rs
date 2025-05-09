@@ -5,15 +5,15 @@ use std::path::PathBuf;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 
-use search::heuristic_search::AStarSearch;
+use search::astar::AStarSearch;
+use search::dijkstra::DijkstraSearch;
 use search::maze_2d::Maze2DAction;
 use search::maze_2d::Maze2DCost;
 use search::maze_2d::Maze2DHeuristicManhattan;
 use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DSpace;
 use search::maze_2d::Maze2DState;
-use search::search::DijkstraSearch;
-use search::space::Problem;
+use search::problem::Problem;
 
 fn get_instance() -> Maze2DProblem {
     let path = PathBuf::from("data/problems/Maze2D/0.png");
