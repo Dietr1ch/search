@@ -439,9 +439,7 @@ where
         println!("DijkstraSearch Stats:");
         let s = size_of::<SearchTreeNode<St, A, C>>();
         let l = self.search_tree.len();
-        let c = self.search_tree.capacity();
         println!("  - |Nodes|:   {} ({}B)", l, l * s);
-        println!("  - |Nodes|*:  {} ({}B)", c, c * s);
 
         let s = size_of::<DijkstraHeapNode<C>>();
         let l = self.open.len();

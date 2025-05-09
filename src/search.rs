@@ -1,18 +1,33 @@
 use std::fmt::Debug;
 
+use typed_arena::Arena;
+
 use crate::space::Action;
 use crate::space::Cost;
 use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct SearchTreeIndex(usize);
+/// An opaque index into an Arena<..>
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct SearchTreeIndex {
+    index: usize, // TODO: Consider adding scrambled/signed pointers.
+}
 
 impl SearchTreeIndex {
+    #[inline(always)]
+    fn new(index: usize) -> Self {
+        Self { index }
+    }
     #[cfg(feature = "inspect")]
+    #[inline(always)]
     pub fn fake_new() -> Self {
-        SearchTreeIndex(0usize)
+        Self::new(0usize)
+    }
+
+    #[inline(always)]
+    fn from_ptr<T>(ptr: *const T) -> Self {
+        Self::new(ptr as usize)
     }
 }
 
@@ -64,7 +79,6 @@ where
     }
 }
 
-#[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
 pub(crate) struct SearchTree<St, A, C>
 where
@@ -72,8 +86,7 @@ where
     A: Action,
     C: Cost,
 {
-    // TODO: Use an Arena as the SearchTreeNode store
-    nodes: Vec<SearchTreeNode<St, A, C>>,
+    nodes: Arena<SearchTreeNode<St, A, C>>,
 }
 
 impl<St, A, C> SearchTree<St, A, C>
@@ -82,28 +95,44 @@ where
     A: Action,
     C: Cost,
 {
+    #[inline(always)]
     pub(crate) fn new() -> Self {
-        Self { nodes: vec![] }
+        Self {
+            nodes: Arena::<SearchTreeNode<St, A, C>>::new(),
+        }
     }
+    #[inline(always)]
     pub(crate) fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
-        let index = SearchTreeIndex(self.nodes.len());
-        self.nodes.push(node);
-        index
+        let node = self.nodes.alloc(node);
+        SearchTreeIndex::from_ptr::<_>(node as *const _)
     }
 
+    #[inline(always)]
     pub fn len(&self) -> usize {
         self.nodes.len()
-    }
-    pub fn capacity(&self) -> usize {
-        self.nodes.capacity()
     }
 
     pub fn path<Sp: Space<St, A, C>>(
         &mut self,
         space: &Sp,
-        node_index: SearchTreeIndex,
+        mut node_index: SearchTreeIndex,
     ) -> Path<St, A, C> {
-        recover_path(space, &self.nodes, node_index)
+        let e = &self[node_index];
+        let mut path = Path::<St, A, C>::new_from_start(*e.state());
+
+        while let Some((parent_index, a)) = self[node_index].parent {
+            let p = &self[parent_index];
+            let s = p.state();
+            let c: C = space.cost(s, &a);
+            debug_assert!(c != C::zero());
+
+            path.append((*s, a), c);
+            debug_assert!(node_index != parent_index);
+            node_index = parent_index;
+        }
+
+        path.reverse();
+        path
     }
 }
 
@@ -113,6 +142,7 @@ where
     A: Action,
     C: Cost,
 {
+    #[inline(always)]
     fn default() -> Self {
         Self::new()
     }
@@ -126,8 +156,10 @@ where
 {
     type Output = SearchTreeNode<St, A, C>;
 
+    #[inline(always)]
     fn index(&self, index: SearchTreeIndex) -> &Self::Output {
-        &self.nodes[index.0]
+        // TODO: Wrap this into something slightly safer
+        unsafe { &*(index.index as *mut SearchTreeNode<St, A, C>) }
     }
 }
 
@@ -137,30 +169,20 @@ where
     A: Action,
     C: Cost,
 {
+    #[inline(always)]
     fn index_mut(&mut self, index: SearchTreeIndex) -> &mut SearchTreeNode<St, A, C> {
-        &mut self.nodes[index.0]
+        // TODO: Wrap this into something slightly safer
+        unsafe { &mut *(index.index as *mut SearchTreeNode<St, A, C>) }
     }
 }
 
-pub(crate) fn recover_path<Sp: Space<St, A, C>, St: State, A: Action, C: Cost>(
-    space: &Sp,
-    nodes: &[SearchTreeNode<St, A, C>],
-    mut node_index: SearchTreeIndex,
-) -> Path<St, A, C> {
-    let e = &nodes[node_index.0];
-    let mut path = Path::<St, A, C>::new_from_start(*e.state());
-
-    while let Some((parent_index, a)) = nodes[node_index.0].parent {
-        let p = &nodes[parent_index.0];
-        let s = p.state();
-        let c: C = space.cost(s, &a);
-        debug_assert!(c != C::zero());
-
-        path.append((*s, a), c);
-        debug_assert!(node_index != parent_index);
-        node_index = parent_index;
+impl<St, A, C> std::fmt::Debug for SearchTree<St, A, C>
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "SearchTree{{({} nodes)}}", self.len())
     }
-
-    path.reverse();
-    path
 }
