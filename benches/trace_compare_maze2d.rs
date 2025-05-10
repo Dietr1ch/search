@@ -2,8 +2,8 @@ extern crate std;
 
 use std::path::PathBuf;
 
-use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha8Rng;
+use rand_chacha::rand_core::SeedableRng;
 
 use search::astar::AStarSearch;
 use search::dijkstra::DijkstraSearch;
