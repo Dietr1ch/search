@@ -79,7 +79,6 @@ where
     }
 }
 
-#[cfg_attr(feature = "inspect", derive(Clone))]
 pub(crate) struct SearchTree<St, A, C>
 where
     St: State,

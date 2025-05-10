@@ -10,7 +10,6 @@ use anstream::println;
 use clap::Parser;
 use indoc::indoc;
 use owo_colors::OwoColorize;
-use smallvec::SmallVec;
 
 use search::astar::AStarHeapNode;
 use search::astar::AStarRank;
@@ -109,8 +108,6 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
     let x = Coord::new(0).unwrap();
     print_size(out, x)?;
     print_size(out, (x, true))?;
-    print_size(out, SmallVec::<[(Maze2DState, Maze2DAction); 4]>::new())?;
-    print_size(out, SmallVec::<[(Maze2DState, Maze2DAction); 8]>::new())?;
     let s0 = Maze2DState::new_from_usize(0, 0).unwrap();
     print_size(out, s0)?;
     let a = Maze2DAction::Up;
@@ -139,8 +136,10 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
+    // search_tree: Arena<SearchTreeNode>
     let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
+    // heap: Vec<(Rank, SearchTreeIndex)>
     print_size(
         out,
         AStarHeapNode {
@@ -148,7 +147,10 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    print_size(out, (s0, (0usize, true)))?;
+    // node_map: HashMap<State, (SearchTreeIndex, bool)
+    print_size(out, SearchTreeIndex::fake_new())?;
+    print_size(out, (SearchTreeIndex::fake_new(), true))?;
+    print_size(out, (s0, (SearchTreeIndex::fake_new(), true)))?;
     let mut search = AStarSearch::<
         Maze2DHeuristicManhattan,
         Maze2DProblem,
@@ -157,8 +159,8 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         Maze2DAction,
         Maze2DCost,
     >::new(problem.clone());
-    print_size(out, search.clone())?;
     print_size(out, search.find_next_goal())?;
+    print_size(out, search)?;
 
     writeln!(out, "*** Dijkstra")?;
     writeln!(out, "**** Sizes")?;
@@ -167,8 +169,10 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
+    // search_tree: Arena<SearchTreeNode>
     let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
+    // heap: Vec<(Rank, SearchTreeIndex)>
     print_size(
         out,
         DijkstraHeapNode {
@@ -176,13 +180,16 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    print_size(out, (s0, (0usize, true)))?;
+    // node_map: HashMap<State, (SearchTreeIndex, bool)
+    print_size(out, SearchTreeIndex::fake_new())?;
+    print_size(out, (SearchTreeIndex::fake_new(), true))?;
+    print_size(out, (s0, (SearchTreeIndex::fake_new(), true)))?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
             problem.clone(),
         );
-    print_size(out, search.clone())?;
     print_size(out, search.find_next_goal())?;
+    print_size(out, search)?;
 
     out.flush()
 }

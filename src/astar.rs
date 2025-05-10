@@ -66,7 +66,6 @@ where
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-#[cfg_attr(feature = "inspect", derive(Clone))]
 pub struct AStarSearch<PH, P, Sp, St, A, C>
 where
     PH: ProblemHeuristic<P, Sp, St, A, C>,

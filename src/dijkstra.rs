@@ -43,7 +43,6 @@ where
 use std::marker::PhantomData;
 
 #[derive(Debug)]
-#[cfg_attr(feature = "inspect", derive(Clone))]
 pub struct DijkstraSearch<P, Sp, St, A, C>
 where
     P: Problem<Sp, St, A, C>,

@@ -1,6 +1,6 @@
 :PROPERTIES:
 :VERSION: "0.1.0"
-:GIT_BRANCH: "master"
+:GIT_BRANCH: "dev/nasty_ptrs"
 :BUILD_IS_DEBUG: true
 :GIT_STATUS: CLEAN
 :END:
@@ -20,8 +20,6 @@
 | ~Maze2DProblemCell~                                          |          1 |         64 |
 | ~NonMaxU32~                                                  |          4 |         16 |
 | ~(NonMaxU32, bool)~                                          |          8 |          8 |
-| ~SmallVec<[(Maze2DState, Maze2DAction); 4]>~                 |         64 |          1 |
-| ~SmallVec<[(Maze2DState, Maze2DAction); 8]>~                 |        112 |          0 |
 | ~Maze2DState~                                                |          8 |          8 |
 | ~Maze2DAction~                                               |          1 |         64 |
 | ~(Maze2DState, Maze2DAction)~                                |         12 |          5 |
@@ -35,14 +33,18 @@
 | Struct                                                       | Size       | Items/64B  |
 | ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~AStarHeapNode<u32>~                                         |         16 |          4 |
-| ~(Maze2DState, (usize, bool))~                               |         24 |          2 |
-| ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
+| ~SearchTreeIndex~                                            |          8 |          8 |
+| ~(SearchTreeIndex, bool)~                                    |         16 |          4 |
+| ~(Maze2DState, (SearchTreeIndex, bool))~                     |         24 |          2 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
+| ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |
 *** Dijkstra
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |
 | ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~DijkstraHeapNode<u32>~                                      |         16 |          4 |
-| ~(Maze2DState, (usize, bool))~                               |         24 |          2 |
-| ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        160 |          0 |
+| ~SearchTreeIndex~                                            |          8 |          8 |
+| ~(SearchTreeIndex, bool)~                                    |         16 |          4 |
+| ~(Maze2DState, (SearchTreeIndex, bool))~                     |         24 |          2 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
+| ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |
