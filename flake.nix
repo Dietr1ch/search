@@ -68,6 +68,7 @@
               cargo-fuzz
               cargo-outdated
               cargo-pgo
+              cargo-show-asm
               cargo-valgrind
               cargo-watch
 
