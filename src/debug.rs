@@ -15,11 +15,13 @@ pub fn print_size<T: std::fmt::Debug>(t: &T) {
 
 /// Returns a shorter version of [`std::any::type_name`]
 // MIT from https://github.com/jakobhellermann/pretty-type-name/tree/main
+#[must_use]
 pub fn type_name<T: ?Sized>() -> String {
     let name = std::any::type_name::<T>();
     type_name_str(name)
 }
 
+#[must_use]
 fn type_name_str(name: &str) -> String {
     if let Some(before) = name.strip_suffix("::{{closure}}") {
         return format!("{}::{{{{closure}}}}", type_name_str(before));

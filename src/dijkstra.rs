@@ -91,6 +91,7 @@ where
     A: Action,
     C: Cost,
 {
+    #[must_use]
     pub fn new(p: P) -> Self {
         let mut search = Self {
             search_tree: SearchTree::<St, A, C>::new(),
@@ -113,6 +114,7 @@ where
         search
     }
 
+    #[must_use]
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
@@ -174,6 +176,7 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     pub(crate) fn is_closed(&self, s: &St) -> bool {
         match self.node_map.get(s) {
             Some((_index, is_closed)) => *is_closed,
@@ -196,6 +199,7 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     pub fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
         match self.pop() {
             Some(i) => Some(&mut self.search_tree[i]),
@@ -204,6 +208,7 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     fn pop(&mut self) -> Option<SearchTreeIndex> {
         match self.open.len() {
             0 | 1 => self.open.pop().map(|n| n.node_index),

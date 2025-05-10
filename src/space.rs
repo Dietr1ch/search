@@ -47,6 +47,7 @@ where
     C: Cost,
 {
     #[inline(always)]
+    #[must_use]
     pub(crate) fn new_from_start(start: S) -> Self {
         Self {
             start: Some(start),
@@ -57,6 +58,7 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.actions.is_empty()
     }
@@ -64,6 +66,7 @@ where
     /// Runs sanity checks
     // TODO: Verify path in a Space
     #[inline(always)]
+    #[must_use]
     pub fn seems_valid(&self) -> bool {
         self.start.is_some() == self.end.is_some() && self.cost.valid()
     }
@@ -85,6 +88,7 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     pub fn new_empty() -> Self {
         Self {
             start: None,
@@ -127,18 +131,23 @@ where
     A: Action,
     C: Cost,
 {
+    #[must_use]
     fn apply(&self, s: &St, a: &A) -> Option<St>;
 
+    #[must_use]
     fn cost(&self, _s: &St, _a: &A) -> C {
         C::one()
     }
     /// Expands a State
     // TODO: Figure out how to offer a SmallVec<(St, A)>
     // TODO: Check that (St, A) does not incurr in a lot of padding.
+    #[must_use]
     fn neighbours(&self, s: &St) -> Vec<(St, A)>;
     /// Verify is a State is valid.
+    #[must_use]
     fn valid(&self, s: &St) -> bool;
 
+    #[must_use]
     fn valid_path(&self, p: &Path<St, A, C>) -> bool {
         if let Some(start) = p.start {
             // Verify path
@@ -159,13 +168,16 @@ where
         }
     }
 
+    #[must_use]
     fn size(&self) -> Option<usize> {
         None
     }
 
+    #[must_use]
     fn supports_random_state() -> bool {
         false
     }
+    #[must_use]
     fn random_state<R: rand::Rng>(&self, _r: &mut R) -> Option<St> {
         debug_assert!(!Self::supports_random_state());
         None
@@ -181,6 +193,7 @@ where
     A: Action,
     C: Cost,
 {
+    #[must_use]
     fn h(_a: &St, _b: &St) -> C {
         C::zero()
     }

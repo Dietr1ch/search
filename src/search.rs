@@ -95,11 +95,13 @@ where
     C: Cost,
 {
     #[inline(always)]
+    #[must_use]
     pub(crate) fn new() -> Self {
         Self {
             nodes: Arena::<SearchTreeNode<St, A, C>>::new(),
         }
     }
+
     #[inline(always)]
     pub(crate) fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
         let node = self.nodes.alloc(node);
@@ -107,10 +109,12 @@ where
     }
 
     #[inline(always)]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.nodes.len()
     }
 
+    #[must_use]
     pub fn path<Sp: Space<St, A, C>>(
         &mut self,
         space: &Sp,

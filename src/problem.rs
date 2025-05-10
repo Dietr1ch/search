@@ -12,14 +12,19 @@ where
     A: Action,
     C: Cost,
 {
+    #[must_use]
     fn space(&self) -> &Sp;
+    #[must_use]
     fn starts(&self) -> &Vec<St>;
+    #[must_use]
     fn goals(&self) -> &FxHashSet<St>;
 
+    #[must_use]
     fn is_goal(&self, s: &St) -> bool {
         self.goals().contains(s)
     }
 
+    #[must_use]
     fn randomize<R: rand::Rng>(
         &mut self,
         r: &mut R,
@@ -37,6 +42,7 @@ where
     A: Action,
     C: Cost,
 {
+    #[must_use]
     fn h(_p: &P, _s: &St) -> C {
         C::zero()
     }

@@ -32,6 +32,7 @@
 /// assert_eq!(index_up(25), 12);
 /// ```
 #[inline(always)]
+#[must_use]
 pub fn index_up(i: usize) -> usize {
     // TODO: Introduce arity as a parameter
     (i - 1) / 2
@@ -47,6 +48,7 @@ pub fn index_up(i: usize) -> usize {
 /// assert_eq!(index_down_left(11), 23);
 /// ```
 #[inline(always)]
+#[must_use]
 pub fn index_down_left(i: usize) -> usize {
     // TODO: Introduce arity as a parameter
     (2 * i) + 1
@@ -63,6 +65,7 @@ pub fn index_down_left(i: usize) -> usize {
 /// assert_eq!(index_down_right(4), 10);
 /// ```
 #[inline(always)]
+#[must_use]
 pub fn index_down_right(i: usize) -> usize {
     // TODO: Introduce arity as a parameter
     2 * (i + 1)
