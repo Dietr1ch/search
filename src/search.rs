@@ -8,10 +8,17 @@ use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
 
-/// An opaque index into an Arena<..>
+/// A reference to a SearchTreeNode<St, A, C>.
+///
+/// It's more like a (&SearchTreeNode<St, A, C>, bool) underneath to help track
+/// whether the node is closed.
+///
+/// ~ointers~ generalises using the unnecessary bits in a pointer, but offers
+/// them in a buffer and is still the same native pointer width, so
+/// `(ointers::Ptr<T>, bool)` still uses more bits than `ointers::Ptr<T>`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct SearchTreeIndex {
-    index: usize, // TODO: Consider adding scrambled/signed pointers.
+    index: usize,
 }
 
 impl SearchTreeIndex {
@@ -25,9 +32,21 @@ impl SearchTreeIndex {
         Self::new(0usize)
     }
 
+    pub fn is_closed(&self) -> bool {
+        self.index & 1usize == 1usize
+    }
+    pub fn as_closed(&self) -> Self {
+        debug_assert!(!self.is_closed());
+        Self {
+            index: self.index | 1usize,
+        }
+    }
+
     #[inline(always)]
-    fn from_ptr<T>(ptr: *const T) -> Self {
-        Self::new(ptr as usize)
+    fn from_ptr<St: State, A: Action, C: Cost>(ptr: *const SearchTreeNode<St, A, C>) -> Self {
+        let i = Self::new(ptr as usize);
+        debug_assert!(!i.is_closed());
+        i
     }
 }
 
@@ -105,7 +124,7 @@ where
     #[inline(always)]
     pub(crate) fn push(&mut self, node: SearchTreeNode<St, A, C>) -> SearchTreeIndex {
         let node = self.nodes.alloc(node);
-        SearchTreeIndex::from_ptr::<_>(node as *const _)
+        SearchTreeIndex::from_ptr::<St, A, C>(node as *const _)
     }
 
     #[inline(always)]
@@ -162,7 +181,10 @@ where
     #[inline(always)]
     fn index(&self, index: SearchTreeIndex) -> &Self::Output {
         // TODO: Wrap this into something slightly safer
-        unsafe { &*(index.index as *mut SearchTreeNode<St, A, C>) }
+        unsafe {
+            let index = index.index & !1usize;
+            &*(index as *mut SearchTreeNode<St, A, C>)
+        }
     }
 }
 
@@ -175,7 +197,10 @@ where
     #[inline(always)]
     fn index_mut(&mut self, index: SearchTreeIndex) -> &mut SearchTreeNode<St, A, C> {
         // TODO: Wrap this into something slightly safer
-        unsafe { &mut *(index.index as *mut SearchTreeNode<St, A, C>) }
+        unsafe {
+            let index = index.index & !1usize;
+            &mut *(index as *mut SearchTreeNode<St, A, C>)
+        }
     }
 }
 

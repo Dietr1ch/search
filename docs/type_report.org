@@ -1,6 +1,6 @@
 :PROPERTIES:
 :VERSION: "0.1.0"
-:GIT_BRANCH: "dev/nasty_ptrs"
+:GIT_BRANCH: "master"
 :BUILD_IS_DEBUG: true
 :GIT_STATUS: CLEAN
 :END:
@@ -34,8 +34,7 @@
 | ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~AStarHeapNode<u32>~                                         |         16 |          4 |
 | ~SearchTreeIndex~                                            |          8 |          8 |
-| ~(SearchTreeIndex, bool)~                                    |         16 |          4 |
-| ~(Maze2DState, (SearchTreeIndex, bool))~                     |         24 |          2 |
+| ~(Maze2DState, SearchTreeIndex)~                             |         16 |          4 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
 | ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |
 *** Dijkstra
@@ -44,7 +43,6 @@
 | ~SearchTreeNode<Maze2DState, Maze2DAction, u32>~             |         40 |          1 |
 | ~DijkstraHeapNode<u32>~                                      |         16 |          4 |
 | ~SearchTreeIndex~                                            |          8 |          8 |
-| ~(SearchTreeIndex, bool)~                                    |         16 |          4 |
-| ~(Maze2DState, (SearchTreeIndex, bool))~                     |         24 |          2 |
+| ~(Maze2DState, SearchTreeIndex)~                             |         16 |          4 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
 | ~DijkstraSearch<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |

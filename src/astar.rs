@@ -98,7 +98,7 @@ where
     ///   - To recall whether we had already explored a state.
     ///
     /// It's the same size as the Search Tree.
-    node_map: FxHashMap<St, (SearchTreeIndex, bool)>,
+    node_map: FxHashMap<St, SearchTreeIndex>,
 
     problem: P,
 
@@ -162,14 +162,15 @@ where
             for (s, a) in self.problem.space().neighbours(&state) {
                 // Have we seen this State?
                 match self.node_map.get(&s) {
-                    Some((_, true)) => {
-                        // Yes, and we expanded the State already.
-                        // NOTE: Could be a goal we had already found through a
-                        // sub-optimal path. Currently we only search for
-                        // an optimal path to a new goal.
-                        continue;
-                    }
-                    Some((neigh_index, false)) => {
+                    Some(neigh_index) => {
+                        if neigh_index.is_closed() {
+                            // Yes, and we expanded the State already.
+                            // NOTE: Could be a goal we had already found through a
+                            // sub-optimal path. Currently we only search for
+                            // an optimal path to a new goal.
+                            continue;
+                        }
+
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
                         let neigh = &mut self.search_tree[*neigh_index];
@@ -209,18 +210,20 @@ where
     #[must_use]
     pub(crate) fn is_closed(&self, s: &St) -> bool {
         match self.node_map.get(s) {
-            Some((_index, is_closed)) => *is_closed,
+            Some(node_index) => node_index.is_closed(),
             None => false,
         }
     }
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
         match self.node_map.get(s) {
-            Some((_index, true)) => {
-                // Closed a closed state
-            }
-            Some((index, false)) => {
-                self.node_map.insert(*s, (*index, true));
+            Some(node_index) => {
+                if node_index.is_closed() {
+                    // Closed a closed state
+                    return;
+                } else {
+                    self.node_map.insert(*s, node_index.as_closed());
+                }
             }
             None => {
                 unreachable!("Tried closing a state without a node");
@@ -269,8 +272,8 @@ where
         debug_assert_eq!(node.g, g);
 
         // 2. Add entry to node_map
-        let is_closed = false;
-        self.node_map.insert(*s, (node_index, is_closed));
+        debug_assert!(!node_index.is_closed());
+        self.node_map.insert(*s, node_index);
 
         // 3. Add AStarHeapNode to open using it's SearchTreeIndex
         self.open.push(AStarHeapNode {
@@ -483,7 +486,7 @@ where
         println!("  - |Open|:   {} ({}B)", l, l * s);
         println!("  - |Open|*:  {} ({}B)", c, c * s);
 
-        let s = size_of::<(St, (SearchTreeIndex, bool))>();
+        let s = size_of::<(St, SearchTreeIndex)>();
         let l = self.node_map.len();
         let c = self.node_map.capacity();
         println!("  - |Index|:  {} ({}B)", l, l * s);

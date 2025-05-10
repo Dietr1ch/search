@@ -147,10 +147,9 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    // node_map: HashMap<State, (SearchTreeIndex, bool)
+    // node_map: HashMap<State, SearchTreeIndex>
     print_size(out, SearchTreeIndex::fake_new())?;
-    print_size(out, (SearchTreeIndex::fake_new(), true))?;
-    print_size(out, (s0, (SearchTreeIndex::fake_new(), true)))?;
+    print_size(out, (s0, SearchTreeIndex::fake_new()))?;
     let mut search = AStarSearch::<
         Maze2DHeuristicManhattan,
         Maze2DProblem,
@@ -180,10 +179,9 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    // node_map: HashMap<State, (SearchTreeIndex, bool)
+    // node_map: HashMap<State, SearchTreeIndex>
     print_size(out, SearchTreeIndex::fake_new())?;
-    print_size(out, (SearchTreeIndex::fake_new(), true))?;
-    print_size(out, (s0, (SearchTreeIndex::fake_new(), true)))?;
+    print_size(out, (s0, SearchTreeIndex::fake_new()))?;
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
             problem.clone(),
