@@ -32,7 +32,7 @@ pub struct Args {
     #[arg()]
     pub problems: Vec<PathBuf>,
 
-    #[arg(long, default_value_t = 10u64)]
+    #[arg(long, default_value_t = 100u64)]
     pub num_instances: u64,
     #[arg(long, default_value_t = 3u16)]
     pub instance_starts: u16,
