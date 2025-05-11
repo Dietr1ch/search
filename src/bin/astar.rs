@@ -79,10 +79,7 @@ fn main() -> std::io::Result<()> {
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
                 for (i, path) in search.take(3).enumerate() {
-                    writeln!(
-                        out,
-                        "******* Path {i} {path}\n#+begin_src ron\n{path:?}\n#+end_src",
-                    )?;
+                    writeln!(out, "******* Path {i} {path}",)?;
                     debug_assert!(starts.contains(&path.start.unwrap()));
                     debug_assert!(goals.contains(&path.end.unwrap()));
                 }
