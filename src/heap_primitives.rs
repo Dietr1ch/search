@@ -23,13 +23,13 @@
 ///
 /// ```
 /// use search::heap_primitives::index_parent;
-/// assert_eq!(index_parent<2>(1), 0);
-/// assert_eq!(index_parent<2>(2), 0);
-/// assert_eq!(index_parent<2>(3), 1);
-/// assert_eq!(index_parent<2>(4), 1);
-/// assert_eq!(index_parent<2>(5), 2);
-/// assert_eq!(index_parent<2>(6), 2);
-/// assert_eq!(index_parent<2>(25), 12);
+/// assert_eq!(index_parent::<2>(1), 0);
+/// assert_eq!(index_parent::<2>(2), 0);
+/// assert_eq!(index_parent::<2>(3), 1);
+/// assert_eq!(index_parent::<2>(4), 1);
+/// assert_eq!(index_parent::<2>(5), 2);
+/// assert_eq!(index_parent::<2>(6), 2);
+/// assert_eq!(index_parent::<2>(25), 12);
 /// ```
 #[inline(always)]
 #[must_use]
@@ -41,10 +41,10 @@ pub fn index_parent<const A: usize>(i: usize) -> usize {
 ///
 /// ```
 /// use search::heap_primitives::index_first_children;
-/// assert_eq!(index_first_children<2usize>(0), 1);
-/// assert_eq!(index_first_children<2usize>(1), 3);
-/// assert_eq!(index_first_children<2usize>(3), 7);
-/// assert_eq!(index_first_children<2usize>(11), 23);
+/// assert_eq!(index_first_children::<2usize>(0), 1);
+/// assert_eq!(index_first_children::<2usize>(1), 3);
+/// assert_eq!(index_first_children::<2usize>(3), 7);
+/// assert_eq!(index_first_children::<2usize>(11), 23);
 /// ```
 pub fn index_first_children<const A: usize>(i: usize) -> usize {
     (A * i) + 1
@@ -54,11 +54,11 @@ pub fn index_first_children<const A: usize>(i: usize) -> usize {
 ///
 /// ```
 /// use search::heap_primitives::index_last_children;
-/// assert_eq!(index_last_children<2usize>(0), 2);
-/// assert_eq!(index_last_children<2usize>(1), 4);
-/// assert_eq!(index_last_children<2usize>(2), 6);
-/// assert_eq!(index_last_children<2usize>(6), 14);
-/// assert_eq!(index_last_children<2usize>(4), 10);
+/// assert_eq!(index_last_children::<2usize>(0), 2);
+/// assert_eq!(index_last_children::<2usize>(1), 4);
+/// assert_eq!(index_last_children::<2usize>(2), 6);
+/// assert_eq!(index_last_children::<2usize>(6), 14);
+/// assert_eq!(index_last_children::<2usize>(4), 10);
 /// ```
 #[inline(always)]
 #[must_use]
@@ -71,10 +71,10 @@ pub fn index_last_children<const A: usize>(i: usize) -> usize {
 // ///
 // /// ```
 // /// use search::heap_primitives::index_children;
-// /// assert_eq!(index_children<2>(0), 1..=2);
-// /// assert_eq!(index_children<2>(1), 3..=4);
-// /// assert_eq!(index_children<2>(3), 7..=8);
-// /// assert_eq!(index_children<2>(11), 23..=24);
+// /// assert_eq!(index_children::<2>(0), 1..=2);
+// /// assert_eq!(index_children::<2>(1), 3..=4);
+// /// assert_eq!(index_children::<2>(3), 7..=8);
+// /// assert_eq!(index_children::<2>(11), 23..=24);
 // /// ```
 // #[inline(always)]
 // #[must_use]
