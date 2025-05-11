@@ -246,13 +246,10 @@ where
     }
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
-        match self.node_map.get(s) {
+        match self.node_map.get_mut(s) {
             Some(node_index) => {
-                if node_index.is_closed() {
-                    // Closed a closed state
-                    return;
-                } else {
-                    self.node_map.insert(*s, node_index.as_closed());
+                if !node_index.is_closed() {
+                    node_index.set_closed();
                 }
             }
             None => {

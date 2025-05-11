@@ -35,11 +35,9 @@ impl SearchTreeIndex {
     pub fn is_closed(&self) -> bool {
         self.index & 1usize == 1usize
     }
-    pub fn as_closed(&self) -> Self {
+    pub fn set_closed(&mut self) {
         debug_assert!(!self.is_closed());
-        Self {
-            index: self.index | 1usize,
-        }
+        self.index |= 1usize;
     }
 
     #[inline(always)]
