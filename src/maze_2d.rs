@@ -1,6 +1,7 @@
 use rustc_hash::FxHashSet;
 use std::hash::Hash;
 
+use derive_more::Display;
 use nonmax::NonMaxU32;
 
 use crate::problem::Problem;
@@ -16,11 +17,13 @@ const MAX_ELEMENTS_DISPLAYED: usize = 20;
 pub(crate) type CoordIntrinsic = u32;
 pub type Coord = NonMaxU32;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[display("({x},{y})")]
 pub struct Maze2DState {
     pub(crate) x: Coord,
     pub(crate) y: Coord,
 }
+
 impl Maze2DState {
     pub(crate) fn new(x: CoordIntrinsic, y: CoordIntrinsic) -> Option<Maze2DState> {
         Some(Maze2DState {
@@ -63,15 +66,23 @@ impl Default for Maze2DState {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Display, PartialEq, Eq)]
 pub enum Maze2DAction {
-    Up,        // y++
-    Down,      // y--
-    Left,      // x--
-    Right,     // x++
-    LeftUp,    // x--, y++
-    RightUp,   // x++, y++
-    LeftDown,  // x--, y--
+    #[display("↑")]
+    Up, // y++
+    #[display("↓")]
+    Down, // y--
+    #[display("←")]
+    Left, // x--
+    #[display("→")]
+    Right, // x++
+    #[display("↖")]
+    LeftUp, // x--, y++
+    #[display("↗")]
+    RightUp, // x++, y++
+    #[display("↙")]
+    LeftDown, // x--, y--
+    #[display("↘")]
     RightDown, // x++, y--
 }
 impl Action for Maze2DAction {}
@@ -79,7 +90,6 @@ impl Action for Maze2DAction {}
 pub type Maze2DCost = CoordIntrinsic;
 impl Cost for Maze2DCost {}
 
-use derive_more::Display;
 #[derive(Copy, Clone, Debug, Display, PartialEq)]
 pub enum Maze2DCell {
     #[display("░")]

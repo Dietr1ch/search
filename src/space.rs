@@ -1,16 +1,18 @@
 use std::fmt::Debug;
+use std::fmt::Display;
 use std::hash::Hash;
 
 use num_traits::SaturatingAdd;
+use itertools::Itertools;
 use num_traits::sign::Unsigned;
 
-pub trait Action: Copy + Clone + Debug + PartialEq + Eq {}
-pub trait State: Copy + Clone + Debug + PartialEq + Eq + Hash {}
+pub trait Action: Copy + Clone + Debug + Display + PartialEq + Eq {}
+pub trait State: Copy + Clone + Debug + Display + PartialEq + Eq + Hash {}
 pub trait Cost:
     Copy
     + Clone
     + Debug
-    + std::fmt::Display
+    + Display
     + PartialEq
     + Eq
     + PartialOrd
@@ -99,7 +101,7 @@ where
     }
 }
 
-impl<S, A, C> std::fmt::Display for Path<S, A, C>
+impl<S, A, C> Display for Path<S, A, C>
 where
     S: State,
     A: Action,
@@ -112,10 +114,14 @@ where
             (Some(start), Some(end)) => {
                 write!(
                     f,
-                    "Path({}, {:?}:{:?}:{:?})",
+                    "Path({}, {:?}:{}:{:?})",
                     self.cost,
                     start,
-                    self.actions.iter().take(20).collect::<Vec<_>>(),
+                    self.actions
+                        .iter()
+                        .take(20)
+                        .map(|a| a.to_string())
+                        .join(", "),
                     end
                 )
             }
