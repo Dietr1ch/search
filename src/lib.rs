@@ -8,6 +8,7 @@ shadow!(build);
 // Internals
 // ---------
 pub mod debug;
+pub mod derank;
 pub mod heap_primitives;
 
 // Search space and problems

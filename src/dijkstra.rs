@@ -1,7 +1,10 @@
+use std::cmp::min;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use rustc_hash::FxHashMap;
 
+use crate::derank::derank;
 use crate::problem::Problem;
 use crate::search::SearchTree;
 use crate::search::SearchTreeIndex;
@@ -43,12 +46,32 @@ pub struct DijkstraHeapNode<C>
 where
     C: Cost,
 {
+    /// The rank of this node that defines how good it is.
     pub rank: DijkstraRank<C>,
     /// The index of this node in the Node Arena
     pub node_index: SearchTreeIndex,
 }
 
-use std::marker::PhantomData;
+impl<C: Cost> PartialEq for DijkstraHeapNode<C> {
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        self.rank.eq(&other.rank)
+    }
+}
+impl<C: Cost> Eq for DijkstraHeapNode<C> {}
+
+impl<C: Cost> PartialOrd for DijkstraHeapNode<C> {
+    #[inline(always)]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.rank.cmp(&other.rank))
+    }
+}
+impl<C: Cost> Ord for DijkstraHeapNode<C> {
+    #[inline(always)]
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.rank.cmp(&other.rank)
+    }
+}
 
 #[derive(Debug)]
 pub struct DijkstraSearch<P, Sp, St, A, C>
@@ -336,12 +359,13 @@ where
             // Find the best child
             child = down_left(hole);
             debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
-            for i in 1..HEAP_ARITY {
-                let c = child + i;
-                if c < len && self.open[c].rank < self.open[child].rank {
-                    child = c;
-                }
-            }
+            child += derank(&self.open[child..min(child + HEAP_ARITY, len)]);
+            // for i in 1..HEAP_ARITY {
+            //     let c = child + i;
+            //     if c < len && self.open[c].rank < self.open[child].rank {
+            //         child = c;
+            //     }
+            // }
 
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, child);

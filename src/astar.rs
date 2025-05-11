@@ -1,7 +1,10 @@
+use std::marker::PhantomData;
+use std::cmp::min;
 use std::fmt::Debug;
 
 use rustc_hash::FxHashMap;
 
+use crate::derank::derank;
 use crate::problem::Problem;
 use crate::problem::ProblemHeuristic;
 use crate::search::SearchTree;
@@ -71,7 +74,26 @@ where
     pub node_index: SearchTreeIndex,
 }
 
-use std::marker::PhantomData;
+impl<C: Cost> PartialEq for AStarHeapNode<C> {
+    #[inline(always)]
+    fn eq(&self, other: &Self) -> bool {
+        self.rank.eq(&other.rank)
+    }
+}
+impl<C: Cost> Eq for AStarHeapNode<C> {}
+
+impl<C: Cost> PartialOrd for AStarHeapNode<C> {
+    #[inline(always)]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.rank.cmp(&other.rank))
+    }
+}
+impl<C: Cost> Ord for AStarHeapNode<C> {
+    #[inline(always)]
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.rank.cmp(&other.rank)
+    }
+}
 
 #[derive(Debug)]
 pub struct AStarSearch<PH, P, Sp, St, A, C>
@@ -352,11 +374,13 @@ where
         // 2. If the hole is not the last element, we swap it for the last one.
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
 
+        let len = self.open.len();
+
         // Initialize bubble-down indices
         let mut hole = 0;
         let mut child = down_left(hole); // Initially left child, reused to track the best child
-        debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-        debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+        debug_assert!(hole < len, "The hole IS NOT a valid index");
+        debug_assert!(child < len, "Left child IS NOT a valid index");
         debug_assert!(hole < child);
         let last = self.open.len() - 1;
 
@@ -364,11 +388,9 @@ where
             debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
             debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
             // Find the best child
-            let child_r = child + 1;
-            debug_assert_eq!(child_r, down_right(hole));
-            if child_r < self.open.len() && self.open[child_r].rank < self.open[child].rank {
-                child = child_r;
-            }
+            child = down_left(hole);
+            debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
+            child += derank(&self.open[child..min(child + HEAP_ARITY, len)]);
 
             debug_assert!(self.open[hole].rank <= self.open[child].rank);
 
