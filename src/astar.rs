@@ -1,6 +1,6 @@
-use std::marker::PhantomData;
 use std::cmp::min;
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use rustc_hash::FxHashMap;
 

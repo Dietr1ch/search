@@ -11,11 +11,7 @@
 #[inline(always)]
 #[must_use]
 fn fight<T: PartialOrd>(a: &[T], l: usize, r: usize) -> usize {
-    if a[l] <= a[r] {
-        l
-    } else {
-        r
-    }
+    if a[l] <= a[r] { l } else { r }
 }
 
 // 0   1

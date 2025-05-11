@@ -2,8 +2,8 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::hash::Hash;
 
-use num_traits::SaturatingAdd;
 use itertools::Itertools;
+use num_traits::SaturatingAdd;
 use num_traits::sign::Unsigned;
 
 pub trait Action: Copy + Clone + Debug + Display + PartialEq + Eq {}
