@@ -51,6 +51,14 @@ also makes finding the min/max quick.
 - D2: (4*i) + 2
 - D3: (4*i) + 3
 - D4: (4*i) + 4 = 4(i+1)
+** K-heap
+*** Index jumps
+- Up: (i-1)//W
+- D1: (W*i) + 1
+- D2: (W*i) + 2
+- D3: (W*i) + 3
+- D..: (W*i) + ..
+- DW: (W*i) + W = W(i+1)
 
 * Operations
 ** External

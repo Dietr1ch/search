@@ -19,54 +19,70 @@
 //   - DL: (2*i) + 1
 //   - DR: 2(i+1)
 
-/// The parent
+/// The parent node
 ///
 /// ```
-/// use search::heap_primitives::index_up;
-/// assert_eq!(index_up(1), 0);
-/// assert_eq!(index_up(2), 0);
-/// assert_eq!(index_up(3), 1);
-/// assert_eq!(index_up(4), 1);
-/// assert_eq!(index_up(5), 2);
-/// assert_eq!(index_up(6), 2);
-/// assert_eq!(index_up(25), 12);
+/// use search::heap_primitives::index_parent;
+/// assert_eq!(index_parent<2>(1), 0);
+/// assert_eq!(index_parent<2>(2), 0);
+/// assert_eq!(index_parent<2>(3), 1);
+/// assert_eq!(index_parent<2>(4), 1);
+/// assert_eq!(index_parent<2>(5), 2);
+/// assert_eq!(index_parent<2>(6), 2);
+/// assert_eq!(index_parent<2>(25), 12);
 /// ```
 #[inline(always)]
 #[must_use]
-pub fn index_up(i: usize) -> usize {
-    // TODO: Introduce arity as a parameter
-    (i - 1) / 2
+pub fn index_parent<const A: usize>(i: usize) -> usize {
+    (i - 1) / A
 }
 
 /// The left children
 ///
 /// ```
-/// use search::heap_primitives::index_down_left;
-/// assert_eq!(index_down_left(0), 1);
-/// assert_eq!(index_down_left(1), 3);
-/// assert_eq!(index_down_left(3), 7);
-/// assert_eq!(index_down_left(11), 23);
+/// use search::heap_primitives::index_first_children;
+/// assert_eq!(index_first_children<2usize>(0), 1);
+/// assert_eq!(index_first_children<2usize>(1), 3);
+/// assert_eq!(index_first_children<2usize>(3), 7);
+/// assert_eq!(index_first_children<2usize>(11), 23);
 /// ```
-#[inline(always)]
-#[must_use]
-pub fn index_down_left(i: usize) -> usize {
-    // TODO: Introduce arity as a parameter
-    (2 * i) + 1
+pub fn index_first_children<const A: usize>(i: usize) -> usize {
+    (A * i) + 1
 }
 
-/// The right children
+/// The last children
 ///
 /// ```
-/// use search::heap_primitives::index_down_right;
-/// assert_eq!(index_down_right(0), 2);
-/// assert_eq!(index_down_right(1), 4);
-/// assert_eq!(index_down_right(2), 6);
-/// assert_eq!(index_down_right(6), 14);
-/// assert_eq!(index_down_right(4), 10);
+/// use search::heap_primitives::index_last_children;
+/// assert_eq!(index_last_children<2usize>(0), 2);
+/// assert_eq!(index_last_children<2usize>(1), 4);
+/// assert_eq!(index_last_children<2usize>(2), 6);
+/// assert_eq!(index_last_children<2usize>(6), 14);
+/// assert_eq!(index_last_children<2usize>(4), 10);
 /// ```
 #[inline(always)]
 #[must_use]
-pub fn index_down_right(i: usize) -> usize {
-    // TODO: Introduce arity as a parameter
-    2 * (i + 1)
+pub fn index_last_children<const A: usize>(i: usize) -> usize {
+    A * (i + 1)
+}
+
+// TODO: Implement heap_primitives::index_children<A>(usize)
+// /// The children nodes
+// ///
+// /// ```
+// /// use search::heap_primitives::index_children;
+// /// assert_eq!(index_children<2>(0), 1..=2);
+// /// assert_eq!(index_children<2>(1), 3..=4);
+// /// assert_eq!(index_children<2>(3), 7..=8);
+// /// assert_eq!(index_children<2>(11), 23..=24);
+// /// ```
+// #[inline(always)]
+// #[must_use]
+// pub fn index_children<const A: usize>(i: usize) -> std::range::RangeInclusive<usize> {
+//     index_first_children::<A>(i)..=index_last_children::<A>(i)
+// }
+
+pub fn size_of_cacheline_arity<T: Sized>() -> usize {
+    let s = std::mem::size_of::<T>();
+    std::cmp::max(128 / s, 2usize)
 }

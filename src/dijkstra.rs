@@ -2,9 +2,6 @@ use std::fmt::Debug;
 
 use rustc_hash::FxHashMap;
 
-use crate::heap_primitives::index_down_left;
-use crate::heap_primitives::index_down_right;
-use crate::heap_primitives::index_up;
 use crate::problem::Problem;
 use crate::search::SearchTree;
 use crate::search::SearchTreeIndex;
@@ -26,6 +23,17 @@ where
     pub fn new(g: C) -> Self {
         Self { g }
     }
+}
+
+const HEAP_ARITY: usize = 8usize;
+fn up(i: usize) -> usize {
+    crate::heap_primitives::index_parent::<HEAP_ARITY>(i)
+}
+fn down_left(i: usize) -> usize {
+    crate::heap_primitives::index_first_children::<HEAP_ARITY>(i)
+}
+fn down_right(i: usize) -> usize {
+    crate::heap_primitives::index_last_children::<HEAP_ARITY>(i)
 }
 
 // TODO: Make public only with the "inspect" feature
@@ -271,7 +279,7 @@ where
             if i == 0 {
                 continue;
             }
-            let p = index_up(i);
+            let p = up(i);
             debug_assert!(
                 self.open[p].rank <= self.open[i].rank,
                 "Node[{p}]={:?} !<= child [{i}]={:?}. Out of heap of len={}",
@@ -313,22 +321,26 @@ where
         // 2. If the hole is not the last element, we swap it for the last one.
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
 
+        let len = self.open.len();
+        let last = len - 1;
+
         // Initialize bubble-down indices
         let mut hole = 0;
-        let mut child = index_down_left(hole); // Initially left child, reused to track the best child
-        debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-        debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+        let mut child = down_left(hole); // Initially left child, reused to track the best child
         debug_assert!(hole < child);
-        let last = self.open.len() - 1;
 
         loop {
-            debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-            debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+            debug_assert!(hole < len, "The hole IS NOT a valid index");
+            debug_assert!(child < len, "Left child IS NOT a valid index");
+
             // Find the best child
-            let child_r = child + 1;
-            debug_assert_eq!(child_r, index_down_right(hole));
-            if child_r < self.open.len() && self.open[child_r].rank < self.open[child].rank {
-                child = child_r;
+            child = down_left(hole);
+            debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
+            for i in 1..HEAP_ARITY {
+                let c = child + i;
+                if c < len && self.open[c].rank < self.open[child].rank {
+                    child = c;
+                }
             }
 
             // Swap and update internal indices
@@ -336,14 +348,14 @@ where
 
             // Update bubble-down indices
             hole = child;
-            child = index_down_left(hole); // New left child
+            child = down_left(hole); // New left child
             if child >= self.open.len() {
                 break;
             }
         }
         // NOTE: So far the hole made it to the last level, but it may not be at the end of the array.
         debug_assert!(hole <= last, "The hole={hole} is < last={last}");
-        debug_assert!(hole > index_up(last), "The hole={hole} is < last={last}");
+        debug_assert!(hole > up(last), "The hole={hole} is < last={last}");
         if hole != last {
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, last);
@@ -377,7 +389,7 @@ where
         }
 
         let mut pos = index;
-        let mut parent = index_up(pos);
+        let mut parent = up(pos);
         while self.open[parent].rank > self.open[pos].rank {
             // Nodes are different and swapped. Swap the nodes to fix the order.
             self._unsafe_swap(parent, pos);
@@ -388,7 +400,7 @@ where
                 return parent;
             }
             pos = parent;
-            parent = index_up(pos);
+            parent = up(pos);
         }
         pos
     }
