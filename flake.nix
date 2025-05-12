@@ -1,5 +1,5 @@
 {
-  description = "A Nix-flake-based Rust development environment";
+  description = "A playground for heuristic search algorithms";
 
   inputs = {
     nixpkgs = {
