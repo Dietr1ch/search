@@ -1,0 +1,6 @@
+[Hunspell]
+lang = "en_GB"
+skip_os_lookups = true
+use_builtin = true
+
+extra_dictionaries = ["lingo.dic"]
