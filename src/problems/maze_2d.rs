@@ -73,24 +73,27 @@ impl Default for Maze2DState {
     }
 }
 
+#[repr(u8)]
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq, PartialOrd)]
 pub enum Maze2DAction {
+    // Orthogonal actions are and lower than Diagonal actions
     #[display("↑")]
-    Up = 0, // y++
+    Up = 0u8, // y++
     #[display("↓")]
-    Down = 1, // y--
+    Down = 2u8, // y--
     #[display("←")]
-    Left = 2, // x--
+    Left = 4u8, // x--
     #[display("→")]
-    Right = 3, // x++
+    Right = 6u8, // x++
+    // Diagonal actions are odd and higher than Orthogonal actions
     #[display("↖")]
-    LeftUp = 4, // x--, y++
+    LeftUp = 7u8, // x--, y++
     #[display("↗")]
-    RightUp = 5, // x++, y++
+    RightUp = 9u8, // x++, y++
     #[display("↙")]
-    LeftDown = 6, // x--, y--
+    LeftDown = 11u8, // x--, y--
     #[display("↘")]
-    RightDown = 7, // x++, y--
+    RightDown = 13u8, // x++, y--
 }
 impl Action for Maze2DAction {}
 
@@ -215,13 +218,22 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
 
     #[inline(always)]
     fn cost(&self, _s: &Maze2DState, a: &Maze2DAction) -> Maze2DCost {
-        debug_assert!(Maze2DAction::Up < Maze2DAction::Right);
-        debug_assert!(Maze2DAction::Down < Maze2DAction::Right);
-        debug_assert!(Maze2DAction::Left < Maze2DAction::Right);
-
-        if *a <= Maze2DAction::Right {
+        // Is this necessary? Probably not, but it's rare to be able to use this.
+        if (*a as CoordIntrinsic) & 1u32 == 0u32 {
+            debug_assert!(
+                *a == Maze2DAction::Up
+                    || *a == Maze2DAction::Down
+                    || *a == Maze2DAction::Left
+                    || *a == Maze2DAction::Right
+            );
             ORTHOGONAL_COST
         } else {
+            debug_assert!(
+                *a == Maze2DAction::LeftUp
+                    || *a == Maze2DAction::LeftDown
+                    || *a == Maze2DAction::RightUp
+                    || *a == Maze2DAction::RightDown
+            );
             DIAGONAL_COST
         }
     }
