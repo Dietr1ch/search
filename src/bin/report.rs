@@ -1,7 +1,7 @@
 #![feature(non_null_from_ref)]
 /// Report tool
 ///
-/// Generates docs/type_report.org
+/// Generates `docs/type_report.org`
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::PathBuf;

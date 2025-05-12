@@ -95,17 +95,19 @@ where
     /// not need contiguous memory.
     search_tree: SearchTree<St, A, C>,
 
-    /// An intrusive heap of (AStarRank, SearchTreeIndex) that keeps the
-    /// referenced node updated (SearchTreeNode::heap_index).
-    /// This allows re-ranking a SearchTreeNode in the heap without a linear
-    /// search for its (AStarRank, SearchTreeIndex) entry.
+    /// An intrusive heap of `(AStarRank, SearchTreeIndex)` that keeps the
+    /// referenced node updated (`SearchTreeNode::heap_index`).
+    /// This allows re-ranking a `SearchTreeNode` in the heap without a linear
+    /// search for its `(AStarRank, SearchTreeIndex)` entry.
     ///
+    /// ```pseudocode
     /// for (i, hn) in self.open.enumerate():
     ///   assert_eq(self.search_tree[hn.node_index].heap_index, i)
+    /// ```
     open: Vec<DijkstraHeapNode<C>>,
 
     /// Amalgamation of,
-    /// - The `HashMap<St, &mut SearchTreeNode>`, but using SearchTreeIndex
+    /// - The `HashMap<St, &mut SearchTreeNode>`, but using `SearchTreeIndex`
     ///   - To find existing Search Nodes from their State.
     /// - The "Closed Set" `HashSet<St>`
     ///   - To recall whether we had already explored a state.
@@ -433,7 +435,7 @@ where
     // Swapping primitives
     /// Swaps two elements in the heap.
     ///
-    /// For consistency in calling code l < r is checked.
+    /// For consistency in calling code `l < r` is checked.
     ///
     /// Keeps the intrusive indices in sync.
     #[inline(always)]
@@ -453,7 +455,7 @@ where
     }
     /// Swaps two elements in the heap.
     ///
-    /// For consistency in calling code l < r is checked.
+    /// For consistency in calling code `l < r` is checked.
     ///
     /// Only keeps the index of the element going up in sync as we should shortly
     /// after remove the element that goes down.
