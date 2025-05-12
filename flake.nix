@@ -60,6 +60,7 @@
             ];
 
             packages = with pkgs; [
+              cargo-audit
               cargo-criterion
               cargo-deny
               cargo-edit
