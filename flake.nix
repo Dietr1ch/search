@@ -70,6 +70,7 @@
               cargo-outdated
               cargo-pgo
               cargo-show-asm
+              cargo-spellcheck
               cargo-valgrind
               cargo-watch
 
