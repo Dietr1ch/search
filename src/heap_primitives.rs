@@ -46,6 +46,8 @@ pub fn index_parent<const A: usize>(i: usize) -> usize {
 /// assert_eq!(index_first_children::<2usize>(3), 7);
 /// assert_eq!(index_first_children::<2usize>(11), 23);
 /// ```
+#[inline(always)]
+#[must_use]
 pub fn index_first_children<const A: usize>(i: usize) -> usize {
     (A * i) + 1
 }

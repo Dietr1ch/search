@@ -52,12 +52,18 @@ where
 }
 
 const HEAP_ARITY: usize = 2;
+#[inline(always)]
+#[must_use]
 fn up(i: usize) -> usize {
     crate::heap_primitives::index_parent::<HEAP_ARITY>(i)
 }
+#[inline(always)]
+#[must_use]
 fn down_left(i: usize) -> usize {
     crate::heap_primitives::index_first_children::<HEAP_ARITY>(i)
 }
+#[inline(always)]
+#[must_use]
 fn down_right(i: usize) -> usize {
     crate::heap_primitives::index_last_children::<HEAP_ARITY>(i)
 }
