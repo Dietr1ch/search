@@ -50,7 +50,7 @@ strip=false
 [dependencies]
 anstream = "0.6.18"
 chrono = "0.4.41"
-clap = { version = "4.5.37", features = ["derive", "env"] }
+clap = { version = "4.5.38", features = ["derive", "env"] }
 colorchoice-clap = "1.0.6"
 criterion = "0.5"
 derive_more = { version = "2.0.1", features = ["display"] }
