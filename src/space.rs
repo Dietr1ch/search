@@ -145,7 +145,6 @@ where
         C::one()
     }
     /// Expands a State
-    // TODO: Figure out how to offer a SmallVec<(St, A)>
     // TODO: Check that (St, A) does not incurr in a lot of padding.
     #[must_use]
     fn neighbours(&self, s: &St) -> Vec<(St, A)>;

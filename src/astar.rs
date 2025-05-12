@@ -138,7 +138,6 @@ where
 
     problem: P,
 
-    // TODO: Clean PhantomData if possible.
     _phantom_heuristic: PhantomData<PH>,
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
@@ -162,7 +161,6 @@ where
 
             problem: p,
 
-            // TODO: Clean PhantomData
             _phantom_heuristic: PhantomData,
             _phantom_space: PhantomData,
             _phantom_action: PhantomData,
@@ -182,7 +180,7 @@ where
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
-        // TODO: See if pop_node() would be the same or faster
+        // TODO: See if pop_node() would be the same or faster that pop()
         while let Some(node_index) = self.pop() {
             let state = *self.search_tree[node_index].state();
             let g: C = self.search_tree[node_index].g;
