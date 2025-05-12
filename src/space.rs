@@ -140,6 +140,7 @@ where
     #[must_use]
     fn apply(&self, s: &St, a: &A) -> Option<St>;
 
+    #[inline(always)]
     #[must_use]
     fn cost(&self, _s: &St, _a: &A) -> C {
         C::one()

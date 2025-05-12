@@ -66,29 +66,32 @@ impl Default for Maze2DState {
     }
 }
 
-#[derive(Copy, Clone, Debug, Display, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Display, PartialEq, Eq, PartialOrd)]
 pub enum Maze2DAction {
     #[display("↑")]
-    Up, // y++
+    Up = 0, // y++
     #[display("↓")]
-    Down, // y--
+    Down = 1, // y--
     #[display("←")]
-    Left, // x--
+    Left = 2, // x--
     #[display("→")]
-    Right, // x++
+    Right = 3, // x++
     #[display("↖")]
-    LeftUp, // x--, y++
+    LeftUp = 4, // x--, y++
     #[display("↗")]
-    RightUp, // x++, y++
+    RightUp = 5, // x++, y++
     #[display("↙")]
-    LeftDown, // x--, y--
+    LeftDown = 6, // x--, y--
     #[display("↘")]
-    RightDown, // x++, y--
+    RightDown = 7, // x++, y--
 }
 impl Action for Maze2DAction {}
 
 pub type Maze2DCost = CoordIntrinsic;
 impl Cost for Maze2DCost {}
+
+const ORTHOGONAL_COST: Maze2DCost = 100u32;
+const DIAGONAL_COST: Maze2DCost = 141u32; // 1.414213562373095
 
 #[derive(Copy, Clone, Debug, Display, PartialEq)]
 pub enum Maze2DCell {
@@ -199,6 +202,19 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
         let (max_x, max_y) = (max_x as CoordIntrinsic, max_y as CoordIntrinsic);
 
         state.x.get() < max_x && state.y.get() < max_y
+    }
+
+    #[inline(always)]
+    fn cost(&self, _s: &Maze2DState, a: &Maze2DAction) -> Maze2DCost {
+        debug_assert!(Maze2DAction::Up < Maze2DAction::Right);
+        debug_assert!(Maze2DAction::Down < Maze2DAction::Right);
+        debug_assert!(Maze2DAction::Left < Maze2DAction::Right);
+
+        if *a <= Maze2DAction::Right {
+            ORTHOGONAL_COST
+        } else {
+            DIAGONAL_COST
+        }
     }
 
     /// Gets the neighbours of a given position.
