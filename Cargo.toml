@@ -18,6 +18,8 @@ verify = []
 mem_profile = ["dep:dhat"]
 # Add coz support
 coz_profile = ["dep:coz"]
+# Add support for reverse search
+partial_reverse = []
 
 
 # Profiles

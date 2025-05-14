@@ -194,6 +194,27 @@ where
     }
 }
 
+/// A space that allows computing paths in reverse.
+pub trait ReversibleSpace<St, A, C>: Space<St, A, C> + Clone + std::fmt::Debug
+where
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    /// Reverse action
+    #[must_use]
+    fn reverse(&self, a: &A) -> A;
+
+    /// States that can reach a certain state.
+    #[must_use]
+    fn reverse_neighbours(&self, s: &St) -> Vec<(St, A)>;
+
+    /// Some of the States that can reach a certain state.
+    #[must_use]
+    #[cfg(feature = "partial_reverse")]
+    fn partial_reverse_neighbours(&self, s: &St) -> Vec<(St, A)>;
+}
+
 /// A general heuristic useful to move between any pair of states.
 pub trait ObjectiveHeuristic<Sp, St, A, C>: std::fmt::Debug
 where
