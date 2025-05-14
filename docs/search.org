@@ -1,0 +1,155 @@
+* Search
+While natural, Search requires defining many concepts.
+
+** Definitions
+*** TODO Figure out how to structure definitions
+- Graph<V,E> := (Set<V>, Set<E>)
+  - V
+  - E := (V, V)
+  - |G| := |V|
+
+- Walk<G<V, E>>  := [E]  : W ~= v_0 : (v_0, v1) : v_1 : ... v_{l-1} : (v_{l-1}, vl) : v_l ∧ V(W) = V
+  - List of consecutive edges
+- Trail<G<V, E>> := [!E]
+  - Walk with unique edges. No silly loops.
+- Path<G<V, E>>  := [!E] : !V
+  - Walk/Trail with unique vertices. Actually no silly loops.
+
+- Search
+  - Search Tree/Space
+  - Node
+    - Wraps a State with search info.
+  - Path
+
+- Problem Space
+  - State
+    - Relevant world configuration.
+  - Action
+    - Action to modify the world and it's relevant configuration.
+
+*** Search
+**** Graph
+***** Node
+***** Edge
+*** Problem
+**** Space
+***** Reversible space
+Some spaces allow searching backwards, like a simple Maze.
+
+This isn't interesting on it's own, but becomes interesting when trying to
+parallelise path computation.
+
+While path traversal problems don't decompose as nicely as logic problems, it's
+still interesting to be able to solve them efficiently, as sometimes treating
+them as path traversal problems avoids the cost of reduction to another problem
+and reconstructing solutions from it.
+**** State
+**** Action
+
+** Algorithms
+Pathfinding is based on the natural idea of just tracking reachable states, and
+making sure we do so optimally by only reaching states that are the cheapest to
+reach.
+
+Implementing this naturally leads to Dijkstra's pathfinding algorithm, and then
+being clever about only wanting to reach specific goals and being able to
+"sense" how much can states help us towards that leads to A*, but here the
+sensing part and then proving optimality becomes non-trivial, although not hard
+to understand.
+
+*** Supporting a search
+To run a search we need to wrap some of the possibly infinite problem states
+into Search Nodes, which represent our known, reachable, and possibly relevant
+states for the search.
+
+The first nodes are the ones wrapping the starting state, and all we need to
+know about them is that it we reached them without doing anything, at zero cost.
+
+From there, we can reach some neighbouring states through some actions that we
+could perform at the initial state.
+# When reaching a new node, we need to remember how we reached it, so we need to
+# know it's parent node/state and action needed.
+
+**** Ingredients
+***** Open set
+Operations,
+- Figuring out if we have a node for a given State
+  - We can use a ~HashMap<State, Node::Ref>~
+- Adding Nodes from unseen States.
+  - We could use a ~Vec<Node>~ if ~Node::Ref~ was just an index, but this
+    incurs in re-allocations to keep Nodes contiguous while we don't really
+    need that.
+  - Instead we can use a ~Arena<Node>~ and keep ~Node::Ref~ a pointer. This
+    allows adding nodes without having to move the old ones.
+    - This bumps the size of ~Node::Ref~ to a pointer size, while using a
+      ~Vec<Node>~ allowed to use ~u32~ indices at the cost of re-allocating.
+- Finding the nodes that are cheapest to reach.
+  - This needs a ~Heap<Node::Rank, Node::Ref>~
+- Updating existing Nodes if we can reach them through a better path.
+  - Here we need to jump from a ~Node~ to the right heap-node so we can
+    update the heap.
+  - Usually finding on a ~Heap~ takes linear time since there's little
+    opportunities to cut the search space, but if we used an ~IntrusiveHeap~ we
+    can keep ~Nodes~ aware of their heap position.
+***** Closed set
+Operations,
+- Checking if a state was already closed.
+- Marking a new state as closed
+  - We can use a ~HashSet<State>~
+**** True ingredients
+***** Data structures
+- ~Node::Ref~ can simply be a ~&Node~.
+- ~Arena<Node>~. Using ~Vec<Node>~ incurs in re-allocations and saving space
+  with 32-bit indices also bounds us to 2^32 elements in our search tree.
+- ~IntrusiveHeap<Node::Rank, &Node>~
+- ~HashMap<State, (Node::Ref, bool)>~
+  - This covers the ~HashMap<State, Node::Ref)>~ needed by Open and the
+    ~HashSet<State>~ needed by Closed. New Nodes are open and only closed once,
+    so the ~Node::Ref~ should always be valid.
+  - Here we can steal the sign bit from ~&Node~ and ensure the ~HashMap~ value
+    is just one pointer wide.
+- ~Node::Rank~ would be either ~g~ for Dijkstra, and the ~(f, h)~ pair for A*.
+  - Sometimes intuition seems a bit easier on ~(f, -g)~ since ~g~ is seems more
+    tangible, but using ~h~ allows us to avoid re-computing the heuristic when
+    adjusting ~g~ without having to save ~g~ in the heap key or ~h~ in the Node.
+***** Classes
+****** Search
+- search_tree: ~SearchTree~
+- open: ~IntrusiveHeap<Node::Rank, &Node>~
+- node_map: ~HashMap<State, (&Node, bool)>~
+- problem: ~impl Problem~
+****** Search Tree
+- nodes: ~Arena<Node>~
+******* Node
+- parent: ~Option<(&Node, Action)>~
+- state: ~State~
+- g: ~Cost~
+- heap_index: ~IntrusiveHeap::Index~
+******** Ref
+- node: ~&Node~
+***** Details
+****** Search tree
+- You could drop the ~Action~ from ~Node::parent~ and simply re-expand ~States~
+  when reconstructing paths. Consider doing this if this impacts how many
+  ~Nodes~ fit on a cache-line.
+- If you know the search space has fewer than 2^32 nodes consider using ~u32~
+  instead of ~*Node~ to implement ~Node::Ref~
+****** Hashing
+- Not all State bits are equally noisy.
+  - e,g: Coordinates will typically have really low entropy in the higher bits.
+- We don't need to protect ourselves from hashing attacks.
+  - Good general-purpose hashing functions will care about this and spend extra
+    time making sure it's hard to predict buckets and craft data for a single or
+    few buckets, but we probably don't care about it.
+****** Niche optimisation in pointers
+On the node map implementing the State to Node map and Closed, the ~is_closed~
+bit on the value can live in the pointer's "sign-bit" that the OS would normally
+reserve to split kernel/user addresses. This is safe because this data doesn't
+cross the OS's kernel/user barrier.
+*** TODO Searching backwards
+I want to search in different threads and synchronise by sending top ~Node::Rank~
+values to detect possible overlaps, and then State hashes to a Conductor thread
+that will tell when to stop and merge both searches.
+
+I explicitly don't want to look how other people do this yet, I might be missing
+something, but it doesn't seem too hard (probably: and this was indeed really hard)
