@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="9" height="5" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="1">
+ <tileset firstgid="1" source="TileSet_V2.tsx"/>
+ <layer id="1" name="Maze" width="9" height="5">
+  <data encoding="csv">
+5,29,9,51,51,51,51,5,9,
+25,35,2,49,5,29,9,25,17,
+25,17,51,51,25,43,41,39,17,
+25,41,29,29,39,18,21,21,2,
+3,21,21,21,21,2,49,52,51
+</data>
+ </layer>
+</map>
