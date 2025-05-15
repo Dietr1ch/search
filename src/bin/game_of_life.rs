@@ -142,7 +142,6 @@ fn game_of_life() {
         .add_plugins(PanCamPlugin)
         .add_plugins(TilemapPlugin)
         .add_systems(Startup, startup)
-        // .add_systems(Update, camera::movement)
         .add_systems(Update, update)
         .run();
 }

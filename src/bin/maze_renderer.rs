@@ -1,20 +1,18 @@
+#[cfg(feature = "renderer")]
 use bevy::prelude::*;
+#[cfg(feature = "renderer")]
 use bevy_pancam::DirectionKeys;
+#[cfg(feature = "renderer")]
 use bevy_pancam::PanCam;
+#[cfg(feature = "renderer")]
 use bevy_pancam::PanCamPlugin;
 
-use rand::Rng;
-use rand_chacha::rand_core::SeedableRng;
-use rand_chacha::ChaCha8Rng;
-
 #[cfg(feature = "renderer")]
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugins(PanCamPlugin)
-        .add_systems(Startup, setup)
-        .run();
-}
+use rand::Rng;
+#[cfg(feature = "renderer")]
+use rand_chacha::ChaCha8Rng;
+#[cfg(feature = "renderer")]
+use rand_chacha::rand_core::SeedableRng;
 
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands) {
@@ -63,4 +61,22 @@ fn setup(mut commands: Commands) {
             ));
         }
     }
+}
+
+#[cfg(feature = "renderer")]
+fn maze_renderer() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(PanCamPlugin)
+        .add_systems(Startup, setup)
+        .run();
+}
+
+#[cfg(not(feature = "renderer"))]
+fn maze_renderer() {
+    println!("This requires the 'renderer' feature.");
+}
+
+fn main() {
+    maze_renderer();
 }

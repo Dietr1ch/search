@@ -725,6 +725,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_ecs_tilemap"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec11e943225eb172928a85f2183b665f7782743b00bca937fbab3736921a1666"
+dependencies = [
+ "bevy",
+ "log",
+]
+
+[[package]]
 name = "bevy_encase_derive"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3351,6 +3361,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
+name = "ldtk_rust"
+version = "0.6.2"
+source = "git+https://github.com/Dietr1ch/ldtk_rust?rev=32ff0e0#32ff0e078f4178b64189d7da9fea6640bdb7f274"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "lebe"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4835,6 +4854,7 @@ version = "0.1.0"
 dependencies = [
  "anstream",
  "bevy",
+ "bevy_ecs_tilemap",
  "bevy_pancam",
  "calliper",
  "chrono",
@@ -4851,12 +4871,16 @@ dependencies = [
  "image",
  "indoc",
  "itertools 0.14.0",
+ "ldtk_rust",
+ "log",
  "nonmax",
  "num-traits",
  "owo-colors",
  "rand 0.9.1",
  "rand_chacha 0.9.0",
  "rustc-hash 2.1.1",
+ "serde",
+ "serde_json",
  "shadow-rs",
  "size",
  "smallvec",

@@ -7,6 +7,7 @@ authors = [
 ]
 default-run = "main"
 build = "build.rs"
+resolver = "2"
 
 
 [features]
@@ -20,7 +21,7 @@ mem_profile = ["dep:dhat"]
 coz_profile = ["dep:coz"]
 # Add support for reverse search
 partial_reverse = []
-renderer = ["dep:bevy", "dep:bevy_pancam"]
+renderer = ["dep:bevy", "dep:bevy_ecs_tilemap", "dep:bevy_pancam", "dep:ldtk_rust", "dep:serde", "dep:serde_json"]
 
 
 # Profiles
@@ -61,6 +62,7 @@ strip=false
 [dependencies]
 anstream = "0.6.18"
 bevy = { version = "0.16.0", optional = true, features = ["wayland"] }
+bevy_ecs_tilemap = { version = "0.16.0", optional = true }
 bevy_pancam = { version = "0.18.0", optional = true }
 chrono = "0.4.41"
 clap = { version = "4.5.38", features = ["derive", "env"] }
@@ -73,12 +75,17 @@ human-duration = "0.1.0"
 image = "0.25.6"
 indoc = "2.0.6"
 itertools = "0.14.0"
+# ldtk_rust = { path = "../ldtk_rust", optional = true }
+ldtk_rust = { git = "https://github.com/Dietr1ch/ldtk_rust", rev = "32ff0e0", optional = true }
+log = "0.4.27"
 nonmax = "0.5.5"
 num-traits = "0.2.19"
 owo-colors = "4.2.0"
 rand = "0.9.1"
 rand_chacha = "0.9.0"
 rustc-hash = { version = "2.1.1", features = ["nightly"] }
+serde = { version = "1.0.219", optional = true }
+serde_json = { version = "1.0.140", optional = true }
 shadow-rs = { version = "1.1.1", features = ["metadata"] }
 size = "0.5.0"
 smallvec = { version = "1.15.0", features = ["const_new"] }

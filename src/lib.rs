@@ -12,6 +12,10 @@ pub mod debug;
 pub mod derank;
 pub mod heap_primitives;
 
+// Renderer
+#[cfg(feature = "renderer")]
+pub mod renderer;
+
 // Search space and problems
 // -------------------------
 pub mod problem;
