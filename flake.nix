@@ -101,6 +101,8 @@
               critcmp
 
               gnuplot_qt
+
+							ldtk
             ];
 
             env = {
