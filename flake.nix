@@ -45,7 +45,12 @@
       devShells = forEachSupportedSystem (
         { pkgs }:
         {
-          default = pkgs.mkShell {
+          default = pkgs.mkShell rec {
+            nativeBuildInputs = with pkgs; [
+              # Bevy (https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#nix)
+              pkg-config
+            ];
+
             buildInputs = with pkgs; [
               rustToolchain
 
@@ -57,6 +62,14 @@
               rustup
 
               rust-jemalloc-sys
+
+              # Bevy (https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#nix)
+              udev
+              alsa-lib-with-plugins
+              vulkan-loader
+
+              libxkbcommon
+              wayland
             ];
 
             packages = with pkgs; [
@@ -82,7 +95,7 @@
               just
 
               lldb
-              valgrind-light  # light: without gdb
+              valgrind-light # light: without gdb
 
               coz
               critcmp
@@ -91,6 +104,9 @@
             ];
 
             env = {
+              # Bevy (https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#nix)
+              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
+
               # Spelling
               DICTIONARY = "en_GB";
               DICPATH = "${pkgs.hunspell}/bin/hunspell";

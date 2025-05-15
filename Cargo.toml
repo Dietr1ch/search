@@ -20,6 +20,7 @@ mem_profile = ["dep:dhat"]
 coz_profile = ["dep:coz"]
 # Add support for reverse search
 partial_reverse = []
+renderer = ["dep:bevy"]
 
 
 # Profiles
@@ -34,6 +35,9 @@ overflow-checks = true
 panic = "unwind"
 strip=false
 split-debuginfo='packed'
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
 
 # Release
 # https://nnethercote.github.io/perf-book/build-configuration.html
@@ -56,6 +60,7 @@ strip=false
 # ============
 [dependencies]
 anstream = "0.6.18"
+bevy = { version = "0.16.0", optional = true, features = ["wayland"] }
 chrono = "0.4.41"
 clap = { version = "4.5.38", features = ["derive", "env"] }
 colorchoice-clap = "1.0.6"
