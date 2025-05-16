@@ -268,7 +268,7 @@ impl std::fmt::Display for Maze2DSpace {
         writeln!(f, "Maze2D({}x{}):", d.0, d.1)?;
         for line in self.map.iter().take(MAX_ELEMENTS_DISPLAYED) {
             for cell in line.iter().take(MAX_ELEMENTS_DISPLAYED) {
-                write!(f, "{}", cell)?;
+                write!(f, "{cell}")?;
             }
             writeln!(f)?;
         }
@@ -582,7 +582,7 @@ impl std::fmt::Display for Maze2DProblem {
                         write!(f, "G")?;
                     }
                     (false, false) => {
-                        write!(f, "{}", cell)?;
+                        write!(f, "{cell}")?;
                     }
                 }
             }

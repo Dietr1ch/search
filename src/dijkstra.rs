@@ -443,8 +443,8 @@ where
         debug_assert!(l < r, "Swap({l}, {r}) uses wrong argument order");
 
         let len = self.open.len();
-        debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
-        debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
+        debug_assert!(l < len, "Left  swap index {l} is OUT OF BOUNDS({len})");
+        debug_assert!(r < len, "Right swap index {r} is OUT OF BOUNDS({len})");
         self.open.swap(l, r);
         self.search_tree[self.open[l].node_index].heap_index = l;
         self.search_tree[self.open[r].node_index].heap_index = r;
@@ -464,8 +464,8 @@ where
         debug_assert!(l < r, "HalfSwapDown({l}, {r}) is wrong");
 
         let len = self.open.len();
-        debug_assert!(l < len, "Left  swap index {} is OUT OF BOUNDS({})", l, len);
-        debug_assert!(r < len, "Right swap index {} is OUT OF BOUNDS({})", r, len);
+        debug_assert!(l < len, "Left  swap index {l} is OUT OF BOUNDS({len})");
+        debug_assert!(r < len, "Right swap index {r} is OUT OF BOUNDS({len})");
         self.open.swap(l, r);
         self.search_tree[self.open[l].node_index].heap_index = l;
         debug_assert!(

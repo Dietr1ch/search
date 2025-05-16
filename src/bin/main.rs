@@ -60,11 +60,11 @@ fn main() -> std::io::Result<()> {
                 let starts = random_problem.starts().clone();
                 let goals = random_problem.goals().clone();
                 for start in &starts {
-                    writeln!(out, "  - {:?}", start)?;
+                    writeln!(out, "  - {start:?}")?;
                 }
                 writeln!(out, "- Goals:")?;
                 for goal in &goals {
-                    writeln!(out, "  - {:?}", goal)?;
+                    writeln!(out, "  - {goal:?}")?;
                 }
                 writeln!(out, "***** Solution")?;
                 let search =
@@ -83,8 +83,7 @@ fn main() -> std::io::Result<()> {
                 writeln!(
                     out,
                     "FIXME Failed to generate random problem with seed
-            {} with {} starts and {} goals",
-                    instance, num_starts, num_goals,
+            {instance} with {num_starts} starts and {num_goals} goals",
                 )?;
             }
         }

@@ -67,11 +67,11 @@ fn main() -> std::io::Result<()> {
                 let starts = random_problem.starts().clone();
                 let goals = random_problem.goals().clone();
                 for start in &starts {
-                    writeln!(out, "  - {:?}", start)?;
+                    writeln!(out, "  - {start:?}")?;
                 }
                 writeln!(out, "- Goals:")?;
                 for goal in &goals {
-                    writeln!(out, "  - {:?}", goal)?;
+                    writeln!(out, "  - {goal:?}")?;
                 }
                 writeln!(out, "***** Solution")?;
                 let search =
