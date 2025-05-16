@@ -11,7 +11,7 @@ report:
 	cargo run --bin 'report' --features 'inspect'
 
 bench:
-	mkdir data/benches/criterion/
+	mkdir -p data/benches/criterion/
 	cargo flamegraph \
 	  --bench sample_compare_maze2d \
 	  --output data/benches/criterion/maze2d.svg \
