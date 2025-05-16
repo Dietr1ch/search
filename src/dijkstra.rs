@@ -479,24 +479,25 @@ where
     }
 
     pub fn print_memory_stats(&self) {
+        use size::Size;
         use std::mem::size_of;
 
         println!("DijkstraSearch Stats:");
         let s = size_of::<SearchTreeNode<St, A, C>>();
         let l = self.search_tree.len();
-        println!("  - |Nodes|:   {} ({}B)", l, l * s);
+        println!("  - |Nodes|:   {} ({})", l, Size::from_bytes(l * s));
 
         let s = size_of::<DijkstraHeapNode<C>>();
         let l = self.open.len();
         let c = self.open.capacity();
-        println!("  - |Open|:   {} ({}B)", l, l * s);
-        println!("  - |Open|*:  {} ({}B)", c, c * s);
+        println!("  - |Open|:   {} ({})", l, Size::from_bytes(l * s));
+        println!("  - |Open|*:  {} ({})", c, Size::from_bytes(c * s));
 
         let s = size_of::<(St, SearchTreeIndex)>();
         let l = self.node_map.len();
         let c = self.node_map.capacity();
-        println!("  - |Index|:  {} ({}B)", l, l * s);
-        println!("  - |Index|*: {} ({}B)", c, c * s);
+        println!("  - |Index|:  {} ({})", l, Size::from_bytes(l * s));
+        println!("  - |Index|*: {} ({})", c, Size::from_bytes(c * s));
     }
 }
 
