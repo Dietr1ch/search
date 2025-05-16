@@ -699,6 +699,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f154ce46856750ed433c8649605bf7ed2de3bc35fd9d2a9f30cddd873c80cb08"
 
 [[package]]
+name = "hrsw"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15e4753d8a72070265df14196f6a8de6c7c4e3e8022da34ba539ca93d64ff7fe"
+
+[[package]]
+name = "human-duration"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37a429277d8afba0e1a2cf784b43f938dff72ce33e6aba477c3021997171c87b"
+
+[[package]]
 name = "iai"
 version = "0.1.1"
 source = "git+https://github.com/sigaloid/iai?rev=6c83e942#6c83e9429b86290f88d6ff30ca6c0d6014b5a5f3"
@@ -1554,6 +1566,8 @@ dependencies = [
  "criterion",
  "derive_more",
  "glob",
+ "hrsw",
+ "human-duration",
  "iai",
  "image",
  "indoc",

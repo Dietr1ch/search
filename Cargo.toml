@@ -55,6 +55,8 @@ colorchoice-clap = "1.0.6"
 criterion = "0.5"
 derive_more = { version = "2.0.1", features = ["display"] }
 glob = "0.3.2"
+hrsw = "0.1.2"
+human-duration = "0.1.0"
 image = "0.25.6"
 indoc = "2.0.6"
 itertools = "0.14.0"

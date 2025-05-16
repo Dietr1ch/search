@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use anstream::println;
 use clap::Parser;
+use hrsw::Stopwatch;
+use human_duration::human_duration;
 use owo_colors::OwoColorize;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
@@ -78,11 +80,20 @@ fn main() -> std::io::Result<()> {
                     AStarSearch::<Maze2DHeuristicManhattan, _, _, _, _, _>::new(random_problem);
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
+                let mut stopwatch = Stopwatch::new();
+                stopwatch.start();
                 for (i, path) in search.take(3).enumerate() {
+                    let elapsed = stopwatch.elapsed();
                     writeln!(out, "******* Path {i} {path}",)?;
+                    writeln!(out, "Length: {}", path.len())?;
+                    writeln!(out, "Elapsed time: {}", human_duration(&elapsed))?;
                     debug_assert!(starts.contains(&path.start.unwrap()));
                     debug_assert!(goals.contains(&path.end.unwrap()));
                 }
+                stopwatch.stop();
+                writeln!(out, "******* Total",)?;
+                let total_elapsed = stopwatch.elapsed();
+                writeln!(out, "Elapsed time: {}", human_duration(&total_elapsed))?;
             } else {
                 writeln!(
                     out,
