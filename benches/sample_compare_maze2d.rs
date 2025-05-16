@@ -58,7 +58,7 @@ fn compare_search(c: &mut Criterion) {
         let mut base_problem = Maze2DProblem::try_from(path).unwrap();
         let (x, y) = base_problem.space().dimensions();
 
-        for i in 0..3 {
+        for i in 0..5 {
             let instance_name = format!("{name}[{x}x{y}]:{i}");
             let mut rng = ChaCha8Rng::seed_from_u64(i);
 
