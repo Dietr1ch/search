@@ -66,6 +66,35 @@ fn compare_search(c: &mut Criterion) {
             let num_goals = 3;
 
             if let Some(problem) = base_problem.randomize(&mut rng, num_starts, num_goals) {
+                let mut astar_search = AStarSearch::<
+                    Maze2DHeuristicManhattan,
+                    Maze2DProblem,
+                    Maze2DSpace,
+                    Maze2DState,
+                    Maze2DAction,
+                    Maze2DCost,
+                >::new(problem.clone());
+
+                if let Some(path) = astar_search.find_next_goal() {
+                    println!("A* path: {} actions. Path: {}", path.len(), path);
+                    astar_search.print_memory_stats();
+
+                    let mut dijkstra_search = DijkstraSearch::<
+                        Maze2DProblem,
+                        Maze2DSpace,
+                        Maze2DState,
+                        Maze2DAction,
+                        Maze2DCost,
+                    >::new(problem.clone());
+                    if let Some(path) = dijkstra_search.find_next_goal() {
+                        println!("Dijkstra path: {} actions. Path: {}", path.len(), path);
+                    }
+                    dijkstra_search.print_memory_stats();
+                } else {
+                    println!("Failed to find a path.");
+                    astar_search.print_memory_stats();
+                }
+
                 group.bench_with_input(BenchmarkId::new("A*", &instance_name), &problem, |b, p| {
                     b.iter(|| astar(p.clone()))
                 });

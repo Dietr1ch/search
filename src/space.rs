@@ -65,6 +65,12 @@ where
         self.actions.is_empty()
     }
 
+    #[inline(always)]
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.actions.len()
+    }
+
     /// Runs sanity checks
     // TODO: Verify path in a Space
     #[inline(always)]
