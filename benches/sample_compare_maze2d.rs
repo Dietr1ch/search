@@ -78,17 +78,20 @@ fn compare_search(c: &mut Criterion) {
                     Maze2DCost,
                 >::new(problem.clone());
 
-                let mut solutions = 0;
+                let mut astar_solutions = 0;
                 // NOTE: This is just to avoid dropping the search :/
                 for _i in 0..NUM_SOLUTIONS {
                     if let Some(path) = astar_search.find_next_goal() {
-                        solutions += 1;
+                        astar_solutions += 1;
                         println!("A* path: {} actions. Path: {}", path.len(), path);
+                        astar_search.print_memory_stats();
                     }
                 }
-                astar_search.print_memory_stats();
+                if astar_solutions != NUM_SOLUTIONS {
+                    astar_search.print_memory_stats();
+                }
 
-                if solutions > 0 {
+                if astar_solutions > 0 {
                     let mut dijkstra_search = DijkstraSearch::<
                         Maze2DProblem,
                         Maze2DSpace,
@@ -98,12 +101,17 @@ fn compare_search(c: &mut Criterion) {
                     >::new(problem.clone());
 
                     // NOTE: This is just to avoid dropping the search :/
+                    let mut dijkstra_solutions = 0;
                     for _i in 0..NUM_SOLUTIONS {
                         if let Some(path) = dijkstra_search.find_next_goal() {
+                            dijkstra_solutions += 1;
                             println!("Dijkstra path: {} actions. Path: {}", path.len(), path);
+                            dijkstra_search.print_memory_stats();
                         }
                     }
-                    dijkstra_search.print_memory_stats();
+                    if dijkstra_solutions != NUM_SOLUTIONS {
+                        dijkstra_search.print_memory_stats();
+                    }
                 }
 
                 group.bench_with_input(BenchmarkId::new("A*", &instance_name), &problem, |b, p| {
