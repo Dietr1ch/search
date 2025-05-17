@@ -68,7 +68,10 @@ fn main() -> std::io::Result<()> {
         writeln!(out, "*** Map")?;
         writeln!(out, "#+begin_quote\n{space}\n#+end_quote")?;
         writeln!(out, "*** Problems")?;
-        let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
+        let mut p = Maze2DProblem::from(space);
+        writeln!(out, "**** Base problem")?;
+        writeln!(out, "{p}")?;
+        writeln!(out, "{p:?}")?;
 
         for instance in 0..args.num_instances {
             writeln!(out, "**** Problem {instance}")?;

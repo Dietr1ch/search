@@ -12,6 +12,14 @@ use crate::space::Space;
 use crate::space::State;
 
 const MAX_ELEMENTS_DISPLAYED: usize = 20;
+const RANDOM_STATE_MAX_TRIES: usize = 10_000;
+
+// Simple colours
+const WHITE: [u8; 3] = [u8::MAX, u8::MAX, u8::MAX];
+const BLACK: [u8; 3] = [u8::MIN, u8::MIN, u8::MIN];
+// const RED: [u8; 3] = [u8::MAX, u8::MIN, u8::MIN];
+const GREEN: [u8; 3] = [u8::MIN, u8::MAX, u8::MIN];
+const BLUE: [u8; 3] = [u8::MIN, u8::MIN, u8::MAX];
 
 pub(crate) type CoordIntrinsic = u32;
 pub type Coord = NonMaxU32;
@@ -156,13 +164,15 @@ impl Maze2DSpace {
     }
     pub fn random_state<R: rand::Rng>(&self, r: &mut R) -> Option<Maze2DState> {
         let (max_x, max_y) = self.dimensions();
+        let max_x = max_x as CoordIntrinsic;
+        let max_y = max_y as CoordIntrinsic;
 
-        for _tries in 0..1000 {
-            let x = r.random::<CoordIntrinsic>() % (max_x as CoordIntrinsic);
-            let y = r.random::<CoordIntrinsic>() % (max_y as CoordIntrinsic);
-            let cell: Maze2DCell = self.map[y as usize][x as usize];
-
-            if cell == Maze2DCell::Empty {
+        for _tries in 0..RANDOM_STATE_MAX_TRIES {
+            let x = r.random::<CoordIntrinsic>() % (max_x);
+            let y = r.random::<CoordIntrinsic>() % (max_y);
+            assert!(x < max_x);
+            assert!(y < max_y);
+            if self.map[y as usize][x as usize] == Maze2DCell::Empty {
                 return Maze2DState::new(x, y);
             }
         }
@@ -325,10 +335,10 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
             for x in 0..img.width() {
                 let px = img.get_pixel(x, y);
                 space.map[y as usize][x as usize] = match px.0 {
-                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Wall,
-                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Empty,
+                    BLACK => Maze2DCell::Wall,
+                    WHITE => Maze2DCell::Empty,
                     _ => Maze2DCell::Empty,
-                }
+                };
             }
         }
 
@@ -365,9 +375,8 @@ impl ObjectiveProblem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Ma
     ) -> Option<Maze2DProblem> {
         let mut starts = vec![];
         let mut goals = vec![];
-        const MAX_RANDOM_STATE_TRIES: usize = 1000;
 
-        for _tries in 0..MAX_RANDOM_STATE_TRIES {
+        for _tries in 0..RANDOM_STATE_MAX_TRIES {
             if let Some(random_state) = self.space().random_state::<R>(r) {
                 if starts.len() < num_starts as usize {
                     starts.push(random_state);
@@ -440,6 +449,19 @@ pub enum Maze2DProblemParseError {
     },
 }
 
+impl std::convert::From<Maze2DSpace> for Maze2DProblem {
+    /// Lifts a Space into an empty Problem.
+    ///
+    /// This problem is INVALID!
+    fn from(space: Maze2DSpace) -> Self {
+        Maze2DProblem {
+            space,
+            starts: vec![],
+            goals: vec![],
+        }
+    }
+}
+
 impl std::convert::TryFrom<&str> for Maze2DProblem {
     type Error = Maze2DProblemParseError;
 
@@ -497,6 +519,7 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
 
     fn try_from(p: &std::path::Path) -> Result<Self, Self::Error> {
         use image::ImageReader;
+        use image::Rgb;
 
         let img = ImageReader::open(p)
             .map_err(|e| Maze2DProblemParseError::IOError {
@@ -526,11 +549,13 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
 
         for y in 0..max_y {
             for x in 0..max_x {
-                let px = img.get_pixel(x, y);
-                p.space.map[y as usize][x as usize] = match px.0 {
-                    [u8::MIN, u8::MIN, u8::MIN] => Maze2DCell::Empty,
-                    [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
-                    [u8::MIN, u8::MAX, u8::MIN] => {
+                let px: &Rgb<u8> = img.get_pixel(x, y);
+                let px: [u8; 3] = px.0;
+
+                p.space.map[y as usize][x as usize] = match px {
+                    BLACK => Maze2DCell::Wall,
+                    WHITE => Maze2DCell::Empty,
+                    GREEN => {
                         // GREEN (goal)
                         p.goals.push(Maze2DState {
                             x: Coord::new(x).unwrap(),
@@ -538,7 +563,7 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
                         });
                         Maze2DCell::Empty
                     }
-                    [u8::MIN, u8::MIN, u8::MAX] => {
+                    BLUE => {
                         // BLUE (start)
                         p.starts.push(Maze2DState {
                             x: Coord::new(x).unwrap(),
