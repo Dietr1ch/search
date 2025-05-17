@@ -626,12 +626,16 @@ pub struct Maze2DHeuristicManhattan;
 
 #[inline(always)]
 fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
-    let [min_x, max_x] = std::cmp::minmax(a.x, b.x);
-    let [min_y, max_y] = std::cmp::minmax(a.y, b.y);
-    let (min_x, max_x) = (min_x.get(), max_x.get());
-    let (min_y, max_y) = (min_y.get(), max_y.get());
+    let [min_x, max_x] = std::cmp::minmax(a.x.get(), b.x.get());
+    let [min_y, max_y] = std::cmp::minmax(a.y.get(), b.y.get());
+    let delta_x = max_x - min_x;
+    let delta_y = max_y - min_y;
 
-    (max_x - min_x) + (max_y - min_y)
+    let [delta_min, delta_max] = std::cmp::minmax(delta_x, delta_y);
+
+    let diagonal_cost = delta_min * DIAGONAL_COST;
+    let orthogonal_cost = (delta_max - delta_min) * ORTHOGONAL_COST;
+    orthogonal_cost + diagonal_cost
 }
 
 impl ObjectiveHeuristic<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>
