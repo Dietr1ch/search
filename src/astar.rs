@@ -47,8 +47,23 @@ where
         }
     }
     /// Improves `g` in `Rank{f, h}` without recomputing `h`.
+    ///
+    /// Necessary with inconsistent or inadmissible heuristics.
     pub fn improve_g(&mut self, new_g: C) {
         self.f = new_g.saturating_add(&self.h);
+    }
+    /// Worsens `h` in `Rank{f, h}`.
+    ///
+    /// Necessary when dropping objectives (after finding them).
+    /// Returns whether the ranking worsened.
+    pub fn worsen_h(&mut self, new_h: C) -> bool {
+        if new_h > self.h {
+            let g = self.f - self.h;
+            self.h = new_h;
+            self.f = g.saturating_add(&new_h);
+            return true;
+        }
+        false
     }
 }
 
@@ -262,28 +277,58 @@ where
 
     #[inline(always)]
     pub fn remove_goal(&mut self, goal: &St) {
-        // (swap-)remove the goal from the remaining goals.
-        // NOTE: This changes the heuristic values!
-        // NOTE: It might be faster to update the entire heap than keep
-        // popping useless nodes (with same g-value, but now reaching
-        // neighbors with huge f-values).
+        // Remove the goal from the remaining goal set.
         self.remaining_goals_set.remove(goal);
+
+        // (swap-)remove the goal from the remaining goal list.
         self.remaining_goals_list.swap_remove(
             self.remaining_goals_list
                 .iter()
                 .position(|&s| s == *goal)
                 .unwrap(),
         );
+
+        // TODO: ConditionProblems need something different
+        if self.remaining_goals_list.is_empty() {
+            self.open.clear();
+            return;
+        }
+
+        // Update worsened heuristic and sift-down changed heap nodes.
+        let len = self.open.len();
+        for heap_index in (0..len).rev() {
+            let heap_node = &mut self.open[heap_index];
+            let node = &self.search_tree[heap_node.node_index];
+            let state = *node.state();
+
+            // `self.h` inlined to avoid overlapping self borrows
+            // TODO: ConditionProblems need something different
+            let mut h = C::max_value();
+            for g in &self.remaining_goals_list {
+                h = min(h, OH::h(&state, g))
+            }
+
+            // Update node
+            if heap_node.rank.worsen_h(h) {
+                let new_index = self._unsafe_sift_down(heap_index);
+                // Drop the node if it became useless.
+                if h == C::max_value() && down_left(new_index) >= len {
+                    self.open.swap_remove(new_index);
+                }
+            }
+        }
+
+        self.verify_heap();
     }
 
     #[inline(always)]
     #[must_use]
     pub(crate) fn h(&self, s: &St) -> C {
-        let mut c = C::max_value();
+        let mut h = C::max_value();
         for g in &self.remaining_goals_list {
-            c = min(c, OH::h(s, g))
+            h = min(h, OH::h(s, g))
         }
-        c
+        h
     }
 
     #[inline(always)]
@@ -470,6 +515,7 @@ where
     }
 
     /// Raises a node
+    /// Returns it's new index
     #[inline(always)]
     fn _unsafe_sift_up(&mut self, index: usize) -> usize {
         debug_assert!(
@@ -501,6 +547,42 @@ where
             parent = up(pos);
         }
         pos
+    }
+
+    /// Lowers a node
+    /// Returns it's new index
+    #[inline(always)]
+    fn _unsafe_sift_down(&mut self, mut index: usize) -> usize {
+        let len = self.open.len();
+        debug_assert!(
+            index < len,
+            "Node is way out of sync. Index out of bounds..."
+        );
+        debug_assert_eq!(
+            self.search_tree[self.open[index].node_index].heap_index, index,
+            "Node is out of sync."
+        );
+
+        loop {
+            // Find the best child
+            let mut child = down_left(index);
+            if child >= len {
+                break;
+            }
+
+            debug_assert_eq!(child + HEAP_ARITY, down_right(index) + 1);
+            child += derank(&self.open[child..min(child + HEAP_ARITY, len)]);
+
+            if self.open[index].rank <= self.open[child].rank {
+                break;
+            }
+
+            self._unsafe_swap(index, child);
+            debug_assert!(self.open[index].rank <= self.open[child].rank);
+
+            index = child;
+        }
+        index
     }
 
     // Swapping primitives
