@@ -12,6 +12,7 @@ build = "build.rs"
 [features]
 # Allows inspecting data structure internals
 inspect = []
+# Verifies invariants whenever they may be broken (slow)
 verify = []
 
 
