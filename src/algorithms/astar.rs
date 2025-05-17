@@ -671,3 +671,31 @@ where
         self.find_next_goal()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ranking_maze2d() {
+        use crate::problems::maze_2d::Maze2DCost;
+
+        let c0: Maze2DCost = 0u32;
+        let c1: Maze2DCost = 1u32;
+        let c2: Maze2DCost = 2u32;
+
+        let g = c2;
+        let h_low = c0;
+        let h_high = c1;
+        assert!(AStarRank::new(g, h_low) < AStarRank::new(g, h_high));
+        assert!(AStarRank::new(g, h_high) == AStarRank::new(g, h_high));
+        assert!(AStarRank::new(g, h_high) > AStarRank::new(g, h_low));
+
+        // Same f-value, needs tie-breaking on h
+        let low = AStarRank::new(c2, c0);
+        let high = AStarRank::new(c0, c2);
+        assert!(low < high);
+        assert!(low.f == high.f);
+        assert!(low.h < high.h);
+    }
+}

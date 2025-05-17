@@ -538,3 +538,23 @@ where
         self.find_next_goal()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ranking_maze2d() {
+        use crate::problems::maze_2d::Maze2DCost;
+
+        let c0: Maze2DCost = 0u32;
+        let c1: Maze2DCost = 1u32;
+        let c2: Maze2DCost = 2u32;
+
+        assert!(DijkstraRank::new(c0) < DijkstraRank::new(c2));
+        assert!(DijkstraRank::new(c2) == DijkstraRank::new(c2));
+        assert!(DijkstraRank::new(c2) > DijkstraRank::new(c1));
+
+        assert!(DijkstraRank::new(c0) < DijkstraRank::new(c1));
+    }
+}
