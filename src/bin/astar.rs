@@ -42,6 +42,9 @@ pub struct Args {
     #[arg(long, default_value_t = 3u16)]
     pub instance_goals: u16,
 
+    #[arg(long, default_value_t = 1usize)]
+    pub num_solutions: usize,
+
     #[command(flatten)]
     color: colorchoice_clap::Color,
 }
@@ -87,7 +90,7 @@ fn main() -> std::io::Result<()> {
 
                 let mut stopwatch = Stopwatch::new();
                 stopwatch.start();
-                for (i, path) in search.take(3).enumerate() {
+                for (i, path) in search.take(args.num_solutions).enumerate() {
                     let elapsed = stopwatch.elapsed();
                     writeln!(out, "******* Path {i} {path}",)?;
                     writeln!(out, "Length: {}", path.len())?;
