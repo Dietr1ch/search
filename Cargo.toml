@@ -14,6 +14,8 @@ build = "build.rs"
 inspect = []
 # Verifies invariants whenever they may be broken (slow)
 verify = []
+# Uses DHAT to profile memory
+mem_profile = ["dep:dhat"]
 
 
 # Profiles
@@ -72,6 +74,7 @@ size = "0.5.0"
 smallvec = { version = "1.15.0", features = ["const_new"] }
 thiserror = "2.0.12"
 typed-arena = "2.0.2"
+dhat = { version = "0.3.3", optional = true }
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = { version = "0.6", features = ["stats"] }

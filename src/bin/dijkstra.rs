@@ -16,6 +16,10 @@ use search::problem::ObjectiveProblem;
 use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DSpace;
 
+#[cfg(feature = "mem_profile")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+#[cfg(not(feature = "mem_profile"))]
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
