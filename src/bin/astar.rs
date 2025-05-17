@@ -10,12 +10,12 @@ use owo_colors::OwoColorize;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 
-use search::astar::AStarSearch;
-use search::maze_2d::Maze2DHeuristicManhattan;
-use search::maze_2d::Maze2DProblem;
-use search::maze_2d::Maze2DSpace;
+use search::algorithms::astar::AStarSearch;
 use search::problem::BaseProblem;
 use search::problem::ObjectiveProblem;
+use search::problems::maze_2d::Maze2DHeuristicManhattan;
+use search::problems::maze_2d::Maze2DProblem;
+use search::problems::maze_2d::Maze2DSpace;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;

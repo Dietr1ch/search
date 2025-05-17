@@ -18,10 +18,7 @@ pub mod search;
 pub mod space;
 
 // Problems
-// --------
-pub mod maze_2d;
+pub mod problems;
 
 // Algorithms
-// ----------
-pub mod astar;
-pub mod dijkstra;
+pub mod algorithms;
