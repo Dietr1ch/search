@@ -91,7 +91,7 @@ fn main() -> std::io::Result<()> {
                     writeln!(out, "  - {goal:?}")?;
                 }
                 writeln!(out, "***** Solution")?;
-                let search = DijkstraSearch::<_, _, _, _, _>::new(random_problem);
+                let mut search = DijkstraSearch::<_, _, _, _, _>::new(random_problem);
                 writeln!(
                     out,
                     "****** Dijkstra run\n#+begin_src ron\n{search:?}\n#+end_src"
@@ -99,18 +99,24 @@ fn main() -> std::io::Result<()> {
 
                 let mut stopwatch = Stopwatch::new();
                 stopwatch.start();
-                for (i, path) in search.take(args.num_solutions).enumerate() {
-                    let elapsed = stopwatch.elapsed();
-                    writeln!(out, "******* Path {i} {path}",)?;
-                    writeln!(out, "Length: {}", path.len())?;
-                    writeln!(out, "Elapsed time: {}", human_duration(&elapsed))?;
-                    debug_assert!(starts.contains(&path.start.unwrap()));
-                    debug_assert!(goals.contains(&path.end.unwrap()));
+                for i in 0..args.num_solutions {
+                    if let Some(path) = search.find_next_goal() {
+                        let elapsed = stopwatch.elapsed();
+                        debug_assert!(starts.contains(&path.start.unwrap()));
+                        debug_assert!(goals.contains(&path.end.unwrap()));
+                        writeln!(out, "******* Path {i} {path}",)?;
+                        writeln!(out, "Length: {}", path.len())?;
+                        writeln!(out, "Elapsed time: {}", human_duration(&elapsed))?;
+                        search.write_memory_stats(&mut out)?;
+                    } else {
+                        break;
+                    }
                 }
                 stopwatch.stop();
                 writeln!(out, "******* Total",)?;
                 let total_elapsed = stopwatch.elapsed();
                 writeln!(out, "Elapsed time: {}", human_duration(&total_elapsed))?;
+                search.write_memory_stats(&mut out)?;
             } else {
                 writeln!(
                     out,
