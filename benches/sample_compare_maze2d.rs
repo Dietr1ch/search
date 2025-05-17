@@ -17,6 +17,8 @@ use search::maze_2d::Maze2DState;
 use search::problem::BaseProblem;
 use search::problem::ObjectiveProblem;
 
+const NUM_SOLUTIONS: usize = 2;
+
 fn dijkstra(problem: Maze2DProblem) -> u64 {
     let search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
@@ -24,7 +26,7 @@ fn dijkstra(problem: Maze2DProblem) -> u64 {
         );
 
     let mut solutions = 0u64;
-    for _path in search.take(1) {
+    for _path in search.take(NUM_SOLUTIONS) {
         solutions += 1;
     }
     solutions
@@ -41,7 +43,7 @@ fn astar(problem: Maze2DProblem) -> u64 {
     >::new(problem);
 
     let mut solutions = 0u64;
-    for _path in search.take(1) {
+    for _path in search.take(NUM_SOLUTIONS) {
         solutions += 1;
     }
     solutions
@@ -76,10 +78,17 @@ fn compare_search(c: &mut Criterion) {
                     Maze2DCost,
                 >::new(problem.clone());
 
-                if let Some(path) = astar_search.find_next_goal() {
-                    println!("A* path: {} actions. Path: {}", path.len(), path);
-                    astar_search.print_memory_stats();
+                let mut solutions = 0;
+                // NOTE: This is just to avoid dropping the search :/
+                for _i in 0..NUM_SOLUTIONS {
+                    if let Some(path) = astar_search.find_next_goal() {
+                        solutions += 1;
+                        println!("A* path: {} actions. Path: {}", path.len(), path);
+                    }
+                }
+                astar_search.print_memory_stats();
 
+                if solutions > 0 {
                     let mut dijkstra_search = DijkstraSearch::<
                         Maze2DProblem,
                         Maze2DSpace,
@@ -87,13 +96,14 @@ fn compare_search(c: &mut Criterion) {
                         Maze2DAction,
                         Maze2DCost,
                     >::new(problem.clone());
-                    if let Some(path) = dijkstra_search.find_next_goal() {
-                        println!("Dijkstra path: {} actions. Path: {}", path.len(), path);
+
+                    // NOTE: This is just to avoid dropping the search :/
+                    for _i in 0..NUM_SOLUTIONS {
+                        if let Some(path) = dijkstra_search.find_next_goal() {
+                            println!("Dijkstra path: {} actions. Path: {}", path.len(), path);
+                        }
                     }
                     dijkstra_search.print_memory_stats();
-                } else {
-                    println!("Failed to find a path.");
-                    astar_search.print_memory_stats();
                 }
 
                 group.bench_with_input(BenchmarkId::new("A*", &instance_name), &problem, |b, p| {
