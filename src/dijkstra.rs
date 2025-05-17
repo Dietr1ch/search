@@ -3,9 +3,10 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use rustc_hash::FxHashMap;
+use rustc_hash::FxHashSet;
 
 use crate::derank::derank;
-use crate::problem::Problem;
+use crate::problem::ObjectiveProblem;
 use crate::search::SearchTree;
 use crate::search::SearchTreeIndex;
 use crate::search::SearchTreeNode;
@@ -80,9 +81,9 @@ impl<C: Cost> Ord for DijkstraHeapNode<C> {
 }
 
 #[derive(Debug)]
-pub struct DijkstraSearch<P, Sp, St, A, C>
+pub struct DijkstraSearch<OP, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -115,37 +116,43 @@ where
     /// It's the same size as the Search Tree.
     node_map: FxHashMap<St, SearchTreeIndex>,
 
-    problem: P,
+    remaining_goals_set: FxHashSet<St>,
+
+    problem: OP,
 
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
 }
 
-impl<P, Sp, St, A, C> DijkstraSearch<P, Sp, St, A, C>
+impl<OP, Sp, St, A, C> DijkstraSearch<OP, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
     C: Cost,
 {
     #[must_use]
-    pub fn new(p: P) -> Self {
+    pub fn new(op: OP) -> Self {
+        let starts = op.starts().to_vec();
+        let goals = op.goals().to_vec();
+
         let mut search = Self {
             search_tree: SearchTree::<St, A, C>::new(),
             open: vec![],
             node_map: FxHashMap::default(),
+            remaining_goals_set: FxHashSet::from_iter(goals.iter().cloned()),
 
-            problem: p,
+            problem: op,
 
             _phantom_space: PhantomData,
             _phantom_action: PhantomData,
         };
 
-        for s in search.problem.starts().clone() {
+        for s in starts {
             let g: C = C::zero();
             let parent: Option<(SearchTreeIndex, A)> = None;
-            search.push_new(&s, parent, g);
+            search.push_new(s, parent, g);
         }
 
         search
@@ -197,19 +204,24 @@ where
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
 
-                        self.push_new(&s, Some((node_index, a)), new_g);
+                        self.push_new(s, Some((node_index, a)), new_g);
                     }
                 }
             }
 
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
-            if self.problem.is_goal(&state) {
+            if self.is_goal(&state) {
                 return Some(self.search_tree.path(self.problem.space(), node_index));
             }
         }
 
         None
+    }
+
+    #[inline(always)]
+    pub fn is_goal(&mut self, s: &St) -> bool {
+        self.remaining_goals_set.contains(s)
     }
 
     #[inline(always)]
@@ -258,9 +270,9 @@ where
     }
 
     #[inline(always)]
-    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C) {
+    fn push_new(&mut self, s: St, parent: Option<(SearchTreeIndex, A)>, g: C) {
         self.verify_heap();
-        debug_assert!(!self.is_closed(s));
+        debug_assert!(!self.is_closed(&s));
 
         // NOTE: search_tree and open have indices to each other.
         // Compute next heap index to allow creating SearchTreeNode
@@ -269,14 +281,14 @@ where
         // 1. Add SearchTreeNode to search_tree
         let node_index: SearchTreeIndex = self
             .search_tree
-            .push(SearchTreeNode::<St, A, C>::new(heap_index, *s, parent, g));
+            .push(SearchTreeNode::<St, A, C>::new(heap_index, s, parent, g));
         let node = &mut self.search_tree[node_index];
         debug_assert_eq!(node.heap_index, heap_index);
         debug_assert_eq!(node.g, g);
 
         // 2. Add entry to node_map
         debug_assert!(!node_index.is_closed());
-        self.node_map.insert(*s, node_index);
+        self.node_map.insert(s, node_index);
 
         // 3. Add AStarHeapNode to open using it's SearchTreeIndex
         self.open.push(DijkstraHeapNode {
@@ -501,9 +513,9 @@ where
     }
 }
 
-impl<P, Sp, St, A, C> Iterator for DijkstraSearch<P, Sp, St, A, C>
+impl<OP, Sp, St, A, C> Iterator for DijkstraSearch<OP, Sp, St, A, C>
 where
-    P: Problem<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,

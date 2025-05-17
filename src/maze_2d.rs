@@ -1,14 +1,13 @@
-use rustc_hash::FxHashSet;
 use std::hash::Hash;
 
 use derive_more::Display;
 use nonmax::NonMaxU32;
 
-use crate::problem::Problem;
-use crate::problem::ProblemHeuristic;
+use crate::problem::BaseProblem;
+use crate::problem::ObjectiveProblem;
 use crate::space::Action;
 use crate::space::Cost;
-use crate::space::Heuristic;
+use crate::space::ObjectiveHeuristic;
 use crate::space::Space;
 use crate::space::State;
 
@@ -341,17 +340,20 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
 pub struct Maze2DProblem {
     space: Maze2DSpace,
     starts: Vec<Maze2DState>,
-    goals: FxHashSet<Maze2DState>,
+    goals: Vec<Maze2DState>,
 }
 
-impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem {
+impl BaseProblem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem {
     fn space(&self) -> &Maze2DSpace {
         &self.space
     }
-    fn starts(&self) -> &Vec<Maze2DState> {
+    fn starts(&self) -> &[Maze2DState] {
         &self.starts
     }
-    fn goals(&self) -> &FxHashSet<Maze2DState> {
+}
+
+impl ObjectiveProblem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProblem {
+    fn goals(&self) -> &[Maze2DState] {
         &self.goals
     }
 
@@ -362,7 +364,7 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
         num_goals: u16,
     ) -> Option<Maze2DProblem> {
         let mut starts = vec![];
-        let mut goals = FxHashSet::<Maze2DState>::default();
+        let mut goals = vec![];
         const MAX_RANDOM_STATE_TRIES: usize = 1000;
 
         for _tries in 0..MAX_RANDOM_STATE_TRIES {
@@ -370,7 +372,7 @@ impl Problem<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost> for Maze2DProbl
                 if starts.len() < num_starts as usize {
                     starts.push(random_state);
                 } else if goals.len() < num_goals as usize {
-                    goals.insert(random_state);
+                    goals.push(random_state);
                 } else {
                     return Some(Maze2DProblem {
                         space: self.space.clone(),
@@ -458,7 +460,7 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
         let mut problem = Maze2DProblem {
             space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
-            goals: FxHashSet::default(),
+            goals: vec![],
         };
 
         for (y, line) in lines.iter().enumerate() {
@@ -475,7 +477,7 @@ impl std::convert::TryFrom<&str> for Maze2DProblem {
                         Maze2DCell::Empty
                     }
                     Maze2DProblemCell::Goal => {
-                        problem.goals.insert(Maze2DState {
+                        problem.goals.push(Maze2DState {
                             x: Coord::new(x as CoordIntrinsic).unwrap(),
                             y: Coord::new(y as CoordIntrinsic).unwrap(),
                         });
@@ -517,7 +519,7 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
         let mut p = Maze2DProblem {
             space: Maze2DSpace::new_empty_with_dimensions(max_x, max_y),
             starts: vec![],
-            goals: FxHashSet::<Maze2DState>::default(),
+            goals: vec![],
         };
         let max_x = max_x as CoordIntrinsic;
         let max_y = max_y as CoordIntrinsic;
@@ -530,7 +532,7 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
                     [u8::MAX, u8::MAX, u8::MAX] => Maze2DCell::Wall,
                     [u8::MIN, u8::MAX, u8::MIN] => {
                         // GREEN (goal)
-                        p.goals.insert(Maze2DState {
+                        p.goals.push(Maze2DState {
                             x: Coord::new(x).unwrap(),
                             y: Coord::new(y).unwrap(),
                         });
@@ -607,27 +609,10 @@ fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
     (max_x - min_x) + (max_y - min_y)
 }
 
-impl<P, Sp, A> ProblemHeuristic<P, Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
-where
-    P: Problem<Sp, Maze2DState, A, Maze2DCost>,
-    Sp: Space<Maze2DState, A, Maze2DCost>,
-    A: Action,
+impl ObjectiveHeuristic<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>
+    for Maze2DHeuristicManhattan
 {
-    #[inline(always)]
-    fn h(p: &P, s: &Maze2DState) -> Maze2DCost {
-        let mut min_c = Maze2DCost::MAX;
-        for g in p.goals() {
-            min_c = std::cmp::min(min_c, manhattan_distance(s, g));
-        }
-        min_c
-    }
-}
-
-impl<Sp, A> Heuristic<Sp, Maze2DState, A, Maze2DCost> for Maze2DHeuristicManhattan
-where
-    Sp: Space<Maze2DState, A, Maze2DCost>,
-    A: Action,
-{
+    /// Heuristic checking against remaining goals
     #[inline(always)]
     fn h(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
         manhattan_distance(a, b)

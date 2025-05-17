@@ -13,7 +13,7 @@ use search::maze_2d::Maze2DHeuristicManhattan;
 use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DSpace;
 use search::maze_2d::Maze2DState;
-use search::problem::Problem;
+use search::problem::ObjectiveProblem;
 
 fn get_instance() -> Maze2DProblem {
     let path = PathBuf::from("data/problems/Maze2D/0.png");

@@ -3,15 +3,16 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use rustc_hash::FxHashMap;
+use rustc_hash::FxHashSet;
 
 use crate::derank::derank;
-use crate::problem::Problem;
-use crate::problem::ProblemHeuristic;
+use crate::problem::ObjectiveProblem;
 use crate::search::SearchTree;
 use crate::search::SearchTreeIndex;
 use crate::search::SearchTreeNode;
 use crate::space::Action;
 use crate::space::Cost;
+use crate::space::ObjectiveHeuristic;
 use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
@@ -102,10 +103,10 @@ impl<C: Cost> Ord for AStarHeapNode<C> {
 }
 
 #[derive(Debug)]
-pub struct AStarSearch<PH, P, Sp, St, A, C>
+pub struct AStarSearch<OH, OP, Sp, St, A, C>
 where
-    PH: ProblemHeuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
+    OH: ObjectiveHeuristic<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
@@ -138,39 +139,50 @@ where
     /// It's the same size as the Search Tree.
     node_map: FxHashMap<St, SearchTreeIndex>,
 
-    problem: P,
+    // A list of remaining goals. Used to compute objective heuristics.
+    remaining_goals_list: Vec<St>,
+    // A set of remaining goals. Used for goal checks.
+    // NOTE: With short sets the list should be fine.
+    remaining_goals_set: FxHashSet<St>,
 
-    _phantom_heuristic: PhantomData<PH>,
+    problem: OP,
+
+    _phantom_heuristic: PhantomData<OH>,
     _phantom_space: PhantomData<Sp>,
     _phantom_action: PhantomData<A>,
 }
 
-impl<PH, P, Sp, St, A, C> AStarSearch<PH, P, Sp, St, A, C>
+impl<OH, OP, Sp, St, A, C> AStarSearch<OH, OP, Sp, St, A, C>
 where
-    PH: ProblemHeuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
+    OH: ObjectiveHeuristic<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,
     C: Cost,
 {
     #[must_use]
-    pub fn new(p: P) -> Self {
+    pub fn new(op: OP) -> Self {
+        let starts = op.starts().to_vec();
+        let goals = op.goals().to_vec();
+
         let mut search = Self {
             search_tree: SearchTree::<St, A, C>::new(),
             open: vec![],
             node_map: FxHashMap::default(),
+            remaining_goals_list: goals.clone(),
+            remaining_goals_set: FxHashSet::from_iter(goals.iter().cloned()),
 
-            problem: p,
+            problem: op,
 
             _phantom_heuristic: PhantomData,
             _phantom_space: PhantomData,
             _phantom_action: PhantomData,
         };
 
-        for s in search.problem.starts().clone() {
+        for s in starts {
             let g: C = C::zero();
-            let h: C = PH::h(&search.problem, &s);
+            let h: C = search.h(&s);
             let parent: Option<(SearchTreeIndex, A)> = None;
             search.push_new(&s, parent, g, h);
         }
@@ -225,7 +237,7 @@ where
                         // No, let's create a new Node for it.
                         let c: C = self.problem.space().cost(&s, &a);
                         let neigh_g = g + c;
-                        let neigh_h = PH::h(&self.problem, &s);
+                        let neigh_h = self.h(&s);
 
                         self.push_new(&s, Some((node_index, a)), neigh_g, neigh_h);
                     }
@@ -234,12 +246,44 @@ where
 
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
-            if self.problem.is_goal(&state) {
+            if self.is_goal(&state) {
+                self.remove_goal(&state);
                 return Some(self.search_tree.path(self.problem.space(), node_index));
             }
         }
 
         None
+    }
+
+    #[inline(always)]
+    pub fn is_goal(&mut self, s: &St) -> bool {
+        self.remaining_goals_set.contains(s)
+    }
+
+    #[inline(always)]
+    pub fn remove_goal(&mut self, goal: &St) {
+        // (swap-)remove the goal from the remaining goals.
+        // NOTE: This changes the heuristic values!
+        // NOTE: It might be faster to update the entire heap than keep
+        // popping useless nodes (with same g-value, but now reaching
+        // neighbors with huge f-values).
+        self.remaining_goals_set.remove(goal);
+        self.remaining_goals_list.swap_remove(
+            self.remaining_goals_list
+                .iter()
+                .position(|&s| s == *goal)
+                .unwrap(),
+        );
+    }
+
+    #[inline(always)]
+    #[must_use]
+    pub(crate) fn h(&self, s: &St) -> C {
+        let mut c = C::max_value();
+        for g in &self.remaining_goals_list {
+            c = min(c, OH::h(s, g))
+        }
+        c
     }
 
     #[inline(always)]
@@ -528,10 +572,10 @@ where
     }
 }
 
-impl<PH, P, Sp, St, A, C> Iterator for AStarSearch<PH, P, Sp, St, A, C>
+impl<OH, OP, Sp, St, A, C> Iterator for AStarSearch<OH, OP, Sp, St, A, C>
 where
-    PH: ProblemHeuristic<P, Sp, St, A, C>,
-    P: Problem<Sp, St, A, C>,
+    OH: ObjectiveHeuristic<Sp, St, A, C>,
+    OP: ObjectiveProblem<Sp, St, A, C>,
     Sp: Space<St, A, C>,
     St: State,
     A: Action,

@@ -194,9 +194,8 @@ where
     }
 }
 
-// TODO: Figure out how to use a general heuristic. Do we require sub-goaling?
-/// A general heuristic useful on any problem instance.
-pub trait Heuristic<Sp, St, A, C>: std::fmt::Debug
+/// A general heuristic useful to move between any pair of states.
+pub trait ObjectiveHeuristic<Sp, St, A, C>: std::fmt::Debug
 where
     Sp: Space<St, A, C>,
     St: State,
@@ -205,6 +204,21 @@ where
 {
     #[must_use]
     fn h(_a: &St, _b: &St) -> C {
+        C::zero()
+    }
+}
+
+/// A more specific heuristic to move into a set of states satisfying some
+/// particular condition.
+pub trait ConditionHeuristic<Sp, St, A, C>: std::fmt::Debug
+where
+    Sp: Space<St, A, C>,
+    St: State,
+    A: Action,
+    C: Cost,
+{
+    #[must_use]
+    fn h(_s: &St) -> C {
         C::zero()
     }
 }

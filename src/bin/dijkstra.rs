@@ -13,7 +13,8 @@ use rand_chacha::rand_core::SeedableRng;
 use search::dijkstra::DijkstraSearch;
 use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DSpace;
-use search::problem::Problem;
+use search::problem::BaseProblem;
+use search::problem::ObjectiveProblem;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -70,8 +71,8 @@ fn main() -> std::io::Result<()> {
             {
                 writeln!(out, "***** Instance")?;
                 writeln!(out, "- Starts:")?;
-                let starts = random_problem.starts().clone();
-                let goals = random_problem.goals().clone();
+                let starts = random_problem.starts().to_vec();
+                let goals = random_problem.goals().to_vec();
                 for start in &starts {
                     writeln!(out, "  - {start:?}")?;
                 }

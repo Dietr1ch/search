@@ -12,7 +12,8 @@ use search::astar::AStarSearch;
 use search::maze_2d::Maze2DHeuristicManhattan;
 use search::maze_2d::Maze2DProblem;
 use search::maze_2d::Maze2DSpace;
-use search::problem::Problem;
+use search::problem::BaseProblem;
+use search::problem::ObjectiveProblem;
 
 #[global_allocator]
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
@@ -57,8 +58,8 @@ fn main() -> std::io::Result<()> {
             if let Some(random_problem) = p.randomize(&mut rng, num_starts, num_goals) {
                 writeln!(out, "***** Instance")?;
                 writeln!(out, "- Starts:")?;
-                let starts = random_problem.starts().clone();
-                let goals = random_problem.goals().clone();
+                let starts = random_problem.starts().to_vec();
+                let goals = random_problem.goals().to_vec();
                 for start in &starts {
                     writeln!(out, "  - {start:?}")?;
                 }
