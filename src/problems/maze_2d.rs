@@ -622,28 +622,42 @@ impl std::fmt::Display for Maze2DProblem {
 
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct Maze2DHeuristicManhattan;
-
-#[inline(always)]
-fn manhattan_distance(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
-    let [min_x, max_x] = std::cmp::minmax(a.x.get(), b.x.get());
-    let [min_y, max_y] = std::cmp::minmax(a.y.get(), b.y.get());
-    let delta_x = max_x - min_x;
-    let delta_y = max_y - min_y;
-
-    let [delta_min, delta_max] = std::cmp::minmax(delta_x, delta_y);
-
-    let diagonal_cost = delta_min * DIAGONAL_COST;
-    let orthogonal_cost = (delta_max - delta_min) * ORTHOGONAL_COST;
-    orthogonal_cost + diagonal_cost
-}
+pub struct Maze2DHeuristicManhattanDistance;
 
 impl ObjectiveHeuristic<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>
-    for Maze2DHeuristicManhattan
+    for Maze2DHeuristicManhattanDistance
 {
-    /// Heuristic checking against remaining goals
+    /// The distance of following straight lines
     #[inline(always)]
     fn h(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
-        manhattan_distance(a, b)
+        let [min_x, max_x] = std::cmp::minmax(a.x.get(), b.x.get());
+        let [min_y, max_y] = std::cmp::minmax(a.y.get(), b.y.get());
+        let delta_x = max_x - min_x;
+        let delta_y = max_y - min_y;
+
+        (delta_x + delta_y) * ORTHOGONAL_COST
+    }
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "inspect", derive(Clone))]
+pub struct Maze2DHeuristicDiagonalDistance;
+
+impl ObjectiveHeuristic<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>
+    for Maze2DHeuristicDiagonalDistance
+{
+    /// The distance of maximising useful diagonals
+    #[inline(always)]
+    fn h(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
+        let [min_x, max_x] = std::cmp::minmax(a.x.get(), b.x.get());
+        let [min_y, max_y] = std::cmp::minmax(a.y.get(), b.y.get());
+        let delta_x = max_x - min_x;
+        let delta_y = max_y - min_y;
+
+        let [delta_min, delta_max] = std::cmp::minmax(delta_x, delta_y);
+
+        let diagonal_cost = delta_min * DIAGONAL_COST;
+        let orthogonal_cost = (delta_max - delta_min) * ORTHOGONAL_COST;
+        orthogonal_cost + diagonal_cost
     }
 }

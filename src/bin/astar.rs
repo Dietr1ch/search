@@ -13,7 +13,7 @@ use rand_chacha::rand_core::SeedableRng;
 use search::algorithms::astar::AStarSearch;
 use search::problem::BaseProblem;
 use search::problem::ObjectiveProblem;
-use search::problems::maze_2d::Maze2DHeuristicManhattan;
+use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
 use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DSpace;
 
@@ -87,8 +87,9 @@ fn main() -> std::io::Result<()> {
                     writeln!(out, "  - {goal:?}")?;
                 }
                 writeln!(out, "***** Solution")?;
-                let mut search =
-                    AStarSearch::<Maze2DHeuristicManhattan, _, _, _, _, _>::new(random_problem);
+                let mut search = AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(
+                    random_problem,
+                );
                 writeln!(out, "****** A* run\n#+begin_src ron\n{search:?}\n#+end_src")?;
 
                 let mut stopwatch = Stopwatch::new();

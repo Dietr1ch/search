@@ -23,7 +23,7 @@ use search::problems::maze_2d::Coord;
 use search::problems::maze_2d::Maze2DAction;
 use search::problems::maze_2d::Maze2DCell;
 use search::problems::maze_2d::Maze2DCost;
-use search::problems::maze_2d::Maze2DHeuristicManhattan;
+use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
 use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DProblemCell;
 use search::problems::maze_2d::Maze2DSpace;
@@ -151,7 +151,7 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
     print_size(out, SearchTreeIndex::fake_new())?;
     print_size(out, (s0, SearchTreeIndex::fake_new()))?;
     let mut search = AStarSearch::<
-        Maze2DHeuristicManhattan,
+        Maze2DHeuristicDiagonalDistance,
         Maze2DProblem,
         Maze2DSpace,
         Maze2DState,

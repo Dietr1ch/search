@@ -12,7 +12,7 @@ use search::problem::BaseProblem;
 use search::problem::ObjectiveProblem;
 use search::problems::maze_2d::Maze2DAction;
 use search::problems::maze_2d::Maze2DCost;
-use search::problems::maze_2d::Maze2DHeuristicManhattan;
+use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
 use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DSpace;
 use search::problems::maze_2d::Maze2DState;
@@ -34,7 +34,7 @@ fn dijkstra(problem: Maze2DProblem) -> u64 {
 
 fn astar(problem: Maze2DProblem) -> u64 {
     let search = AStarSearch::<
-        Maze2DHeuristicManhattan,
+        Maze2DHeuristicDiagonalDistance,
         Maze2DProblem,
         Maze2DSpace,
         Maze2DState,
@@ -70,7 +70,7 @@ fn compare_search(c: &mut Criterion) {
 
             if let Some(problem) = base_problem.randomize(&mut rng, num_starts, num_goals) {
                 let mut astar_search = AStarSearch::<
-                    Maze2DHeuristicManhattan,
+                    Maze2DHeuristicDiagonalDistance,
                     Maze2DProblem,
                     Maze2DSpace,
                     Maze2DState,

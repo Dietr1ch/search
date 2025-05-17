@@ -36,7 +36,7 @@
 | ~SearchTreeIndex~                                            |          8 |          8 |
 | ~(Maze2DState, SearchTreeIndex)~                             |         16 |          4 |
 | ~Option<Path<Maze2DState, Maze2DAction, u32>>~               |         48 |          1 |
-| ~AStarSearch<Maze2DHeuristicManhattan, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |
+| ~AStarSearch<Maze2DHeuristicDiagonalDistance, Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, u32>~ |        192 |          0 |
 *** Dijkstra
 **** Sizes
 | Struct                                                       | Size       | Items/64B  |

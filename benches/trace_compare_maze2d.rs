@@ -10,7 +10,7 @@ use search::algorithms::dijkstra::DijkstraSearch;
 use search::problem::ObjectiveProblem;
 use search::problems::maze_2d::Maze2DAction;
 use search::problems::maze_2d::Maze2DCost;
-use search::problems::maze_2d::Maze2DHeuristicManhattan;
+use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
 use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DSpace;
 use search::problems::maze_2d::Maze2DState;
@@ -43,7 +43,7 @@ fn run_dijkstra(problem: Maze2DProblem) -> u64 {
 
 fn run_astar(problem: Maze2DProblem) -> u64 {
     let search = AStarSearch::<
-        Maze2DHeuristicManhattan,
+        Maze2DHeuristicDiagonalDistance,
         Maze2DProblem,
         Maze2DSpace,
         Maze2DState,
