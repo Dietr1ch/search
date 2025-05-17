@@ -17,7 +17,6 @@ use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 /// The ranking tuple for A*
 ///
 /// We prefer better f-values, and tie break for lower h.
@@ -26,12 +25,15 @@ use crate::space::State;
 /// raw h value helps to avoid recomputing it later.
 ///
 // ```
-// use search::astar::AStarRank;
+// use search::algorithms::astar::AStarRank;
 // use search::space::Cost;
 //
-// impl Cost for u16 {}
-// assert!(AStarRank::<u16>::new(2, 0) < AStarRank::<u16>::new(2, 1));
+// let l0 = LittleCost::new(0);
+// let l1 = LittleCost::new(1);
+// let l2 = LittleCost::new(2);
+// assert!(AStarRank::new(l2, l0) < AStarRank::new(l2, l1));
 // ```
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AStarRank<C: Cost> {
     f: C,
     h: C,
@@ -67,7 +69,7 @@ where
     }
 }
 
-const HEAP_ARITY: usize = 2;
+const HEAP_ARITY: usize = 8usize;
 #[inline(always)]
 #[must_use]
 fn up(i: usize) -> usize {
@@ -91,6 +93,7 @@ pub struct AStarHeapNode<C>
 where
     C: Cost,
 {
+    /// The rank of this node that defines how good it is.
     pub rank: AStarRank<C>,
     /// The index of this node in the Node Arena
     pub node_index: SearchTreeIndex,
@@ -242,7 +245,6 @@ where
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            // know neigh.h
                             neigh.reach((node_index, a), new_g);
                             self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
@@ -467,6 +469,7 @@ where
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
 
         let len = self.open.len();
+        let last = self.open.len() - 1;
 
         // Initialize bubble-down indices
         let mut hole = 0;
@@ -474,11 +477,11 @@ where
         debug_assert!(hole < len, "The hole IS NOT a valid index");
         debug_assert!(child < len, "Left child IS NOT a valid index");
         debug_assert!(hole < child);
-        let last = self.open.len() - 1;
 
         loop {
-            debug_assert!(hole < self.open.len(), "The hole IS NOT a valid index");
-            debug_assert!(child < self.open.len(), "Left child IS NOT a valid index");
+            debug_assert!(hole < len, "The hole IS NOT a valid index");
+            debug_assert!(child < len, "Left child IS NOT a valid index");
+
             // Find the best child
             child = down_left(hole);
             debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
@@ -623,7 +626,7 @@ where
         self.search_tree[self.open[l].node_index].heap_index = l;
         debug_assert!(
             self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
-            "Half-assed swap down must be unfairly pushing a node down. {self:?}"
+            "Half-assed swap down must be unfairly pushing a node down."
         );
         debug_assert!(
             self.search_tree[self.open[r].node_index].heap_index < r,

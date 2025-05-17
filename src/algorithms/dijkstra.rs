@@ -16,6 +16,18 @@ use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
 
+/// The ranking value for Dijkstra
+///
+/// We prefer better g-values.
+///
+// ```
+// use search::algorithms::dijkstra::DijkstraRank;
+// use search::space::Cost;
+//
+// let l0 = LittleCost::new(0);
+// let l1 = LittleCost::new(1);
+// assert!(DijkstraRank::new(l0) < DijkstraRank::new(l1));
+// ```
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DijkstraRank<C: Cost> {
     g: C,
@@ -96,10 +108,10 @@ where
     /// not need contiguous memory.
     search_tree: SearchTree<St, A, C>,
 
-    /// An intrusive heap of `(AStarRank, SearchTreeIndex)` that keeps the
+    /// An intrusive heap of `(DijkstraRank, SearchTreeIndex)` that keeps the
     /// referenced node updated (`SearchTreeNode::heap_index`).
     /// This allows re-ranking a `SearchTreeNode` in the heap without a linear
-    /// search for its `(AStarRank, SearchTreeIndex)` entry.
+    /// search for its `(DijkstraRank, SearchTreeIndex)` entry.
     ///
     /// ```pseudocode
     /// for (i, hn) in self.open.enumerate():
@@ -109,7 +121,7 @@ where
 
     /// Amalgamation of,
     /// - The `HashMap<St, &mut SearchTreeNode>`, but using `SearchTreeIndex`
-    ///   - To find existing Search Nodes from their State.
+    ///   - To find existing Search Nodes from their `State`.
     /// - The "Closed Set" `HashSet<St>`
     ///   - To recall whether we had already explored a state.
     ///
@@ -152,7 +164,7 @@ where
         for s in starts {
             let g: C = C::zero();
             let parent: Option<(SearchTreeIndex, A)> = None;
-            search.push_new(s, parent, g);
+            search.push_new(&s, parent, g);
         }
 
         search
@@ -186,6 +198,7 @@ where
                             // an optimal path to a new goal.
                             continue;
                         }
+
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
                         let neigh = &mut self.search_tree[*neigh_index];
@@ -195,7 +208,7 @@ where
                         if new_g < neigh.g {
                             // Found better path to existing node
                             neigh.reach((node_index, a), new_g);
-                            self.open[neigh.heap_index].rank = DijkstraRank::new(neigh.g);
+                            self.open[neigh.heap_index].rank = DijkstraRank::new(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
@@ -204,7 +217,7 @@ where
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
 
-                        self.push_new(s, Some((node_index, a)), new_g);
+                        self.push_new(&s, Some((node_index, a)), new_g);
                     }
                 }
             }
@@ -236,7 +249,7 @@ where
     fn mark_closed(&mut self, s: &St) {
         match self.node_map.get_mut(s) {
             Some(node_index) => {
-                if node_index.is_closed() {
+                if !node_index.is_closed() {
                     node_index.set_closed();
                 }
             }
@@ -270,9 +283,9 @@ where
     }
 
     #[inline(always)]
-    fn push_new(&mut self, s: St, parent: Option<(SearchTreeIndex, A)>, g: C) {
+    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C) {
         self.verify_heap();
-        debug_assert!(!self.is_closed(&s));
+        debug_assert!(!self.is_closed(s));
 
         // NOTE: search_tree and open have indices to each other.
         // Compute next heap index to allow creating SearchTreeNode
@@ -281,16 +294,16 @@ where
         // 1. Add SearchTreeNode to search_tree
         let node_index: SearchTreeIndex = self
             .search_tree
-            .push(SearchTreeNode::<St, A, C>::new(heap_index, s, parent, g));
+            .push(SearchTreeNode::<St, A, C>::new(heap_index, *s, parent, g));
         let node = &mut self.search_tree[node_index];
         debug_assert_eq!(node.heap_index, heap_index);
         debug_assert_eq!(node.g, g);
 
         // 2. Add entry to node_map
         debug_assert!(!node_index.is_closed());
-        self.node_map.insert(s, node_index);
+        self.node_map.insert(*s, node_index);
 
-        // 3. Add AStarHeapNode to open using it's SearchTreeIndex
+        // 3. Add DijkstraHeapNode to open using it's SearchTreeIndex
         self.open.push(DijkstraHeapNode {
             rank: DijkstraRank::new(g),
             node_index,
@@ -301,12 +314,12 @@ where
     }
 
     #[inline(always)]
-    #[cfg(not(feature = "inspect"))]
+    #[cfg(not(feature = "verify"))]
     pub(crate) fn verify_heap(&self) {
         // All good... (hopefully)
     }
     #[inline(always)]
-    #[cfg(feature = "inspect")]
+    #[cfg(feature = "verify")]
     pub(crate) fn verify_heap(&self) {
         // Every node,
         for (i, e) in self.open.iter().enumerate() {
@@ -365,6 +378,8 @@ where
         // Initialize bubble-down indices
         let mut hole = 0;
         let mut child = down_left(hole); // Initially left child, reused to track the best child
+        debug_assert!(hole < len, "The hole IS NOT a valid index");
+        debug_assert!(child < len, "Left child IS NOT a valid index");
         debug_assert!(hole < child);
 
         loop {
@@ -375,12 +390,8 @@ where
             child = down_left(hole);
             debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
             child += derank(&self.open[child..min(child + HEAP_ARITY, len)]);
-            // for i in 1..HEAP_ARITY {
-            //     let c = child + i;
-            //     if c < len && self.open[c].rank < self.open[child].rank {
-            //         child = c;
-            //     }
-            // }
+
+            debug_assert!(self.open[hole].rank <= self.open[child].rank);
 
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, child);
@@ -411,6 +422,7 @@ where
     }
 
     /// Raises a node
+    /// Returns it's new index
     #[inline(always)]
     fn _unsafe_sift_up(&mut self, index: usize) -> usize {
         debug_assert!(
