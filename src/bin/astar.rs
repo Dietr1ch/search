@@ -50,6 +50,9 @@ pub struct Args {
 }
 
 fn main() -> std::io::Result<()> {
+    #[cfg(feature = "coz_profile")]
+    coz::thread_init();
+
     let args = Args::parse();
     args.color.write_global();
     println!("Logging to {:?}", args.output.yellow());

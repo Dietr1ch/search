@@ -137,6 +137,9 @@ where
         space: &Sp,
         mut node_index: SearchTreeIndex,
     ) -> Path<St, A, C> {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("PathReconstruction");
+
         let e = &self[node_index];
         let mut path = Path::<St, A, C>::new_from_start(*e.state());
 

@@ -210,10 +210,16 @@ where
 
     #[must_use]
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("FindNextGoal");
+
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
         // TODO: See if pop_node() would be the same or faster that pop()
         while let Some(node_index) = self.pop() {
+            #[cfg(feature = "coz_profile")]
+            coz::scope!("NodeExpansion");
+
             let state = *self.search_tree[node_index].state();
             let g: C = self.search_tree[node_index].g;
             debug_assert!(!self.is_closed(&state));
@@ -226,9 +232,14 @@ where
 
             // Expand state
             for (s, a) in self.problem.space().neighbours(&state) {
+                #[cfg(feature = "coz_profile")]
+                coz::scope!("ReachNode");
+
                 // Have we seen this State?
                 match self.node_map.get(&s) {
                     Some(neigh_index) => {
+                        #[cfg(feature = "coz_profile")]
+                        coz::scope!("ReachExistingNode");
                         if neigh_index.is_closed() {
                             // Yes, and we expanded the State already.
                             // NOTE: Could be a goal we had already found through a
@@ -251,6 +262,8 @@ where
                         }
                     }
                     None => {
+                        #[cfg(feature = "coz_profile")]
+                        coz::scope!("ReachNewNode");
                         // No, let's create a new Node for it.
                         let c: C = self.problem.space().cost(&s, &a);
                         let neigh_g = g + c;
@@ -264,6 +277,8 @@ where
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
             if self.is_goal(&state) {
+                #[cfg(feature = "coz_profile")]
+                coz::progress!("GoalFound");
                 self.remove_goal(&state);
                 return Some(self.search_tree.path(self.problem.space(), node_index));
             }
@@ -279,6 +294,9 @@ where
 
     #[inline(always)]
     pub fn remove_goal(&mut self, goal: &St) {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("RemoveGoal");
+
         // Remove the goal from the remaining goal set.
         self.remaining_goals_set.remove(goal);
 
@@ -367,6 +385,9 @@ where
     #[inline(always)]
     #[must_use]
     fn pop(&mut self) -> Option<SearchTreeIndex> {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("Pop");
+
         match self.open.len() {
             0 | 1 => self.open.pop().map(|n| n.node_index),
             _ => {
@@ -443,6 +464,9 @@ where
     /// be swapped with the very last element of the array and popped
     /// Temporarily breaks invariants around the node sifting down unfairly.
     fn _unsafe_pop_non_trivial_heap(&mut self) -> SearchTreeIndex {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("PopNonTrivial");
+
         debug_assert!(!self.open.is_empty(), "You can't pop from an empty heap");
         debug_assert!(
             self.open.len() != 1,
@@ -469,7 +493,7 @@ where
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
 
         let len = self.open.len();
-        let last = self.open.len() - 1;
+        let last = len - 1;
 
         // Initialize bubble-down indices
         let mut hole = 0;

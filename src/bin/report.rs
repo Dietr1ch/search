@@ -193,6 +193,9 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
 }
 
 fn main() -> std::io::Result<()> {
+    #[cfg(feature = "coz_profile")]
+    coz::thread_init();
+
     let args = Args::parse();
     args.color.write_global();
     println!("Writting report to {:?}", args.type_report.green());

@@ -24,13 +24,21 @@ clean_bench:
 	  target/criterion
 
 profile_astar:
-	cargo build --bin 'astar' --profile 'bench'
-	coz run --- ./target/release/astar --num-instances 100 data/problems/Maze2D/*.png
+	cargo build --bin 'astar' --profile 'bench' --features 'coz_profile'
+	coz run \
+	  --- \
+	  ./target/release/astar \
+	  --num-instances 1000 \
+	  data/problems/Maze2D/*.png
 	coz plot
 
 profile_dijkstra:
-	cargo build --bin 'dijkstra' --profile 'bench'
-	coz run --- ./target/release/dijkstra --num-instances 100 data/problems/Maze2D/*.png
+	cargo build --bin 'dijkstra' --profile 'bench' --features 'coz_profile'
+	coz run \
+	  --- \
+	  ./target/release/dijkstra \
+	  --num-instances 100 \
+	  data/problems/Maze2D/*.png
 	coz plot
 
 profile_trace_maze2d:

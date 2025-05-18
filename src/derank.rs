@@ -248,6 +248,9 @@ fn derank_16<T: PartialOrd>(a: &[T]) -> usize {
 #[inline(always)]
 #[must_use]
 pub fn derank<T: PartialOrd>(a: &[T]) -> usize {
+    #[cfg(feature = "coz_profile")]
+    coz::scope!("ArgminNetwork");
+
     match a.len() {
         1 => 0usize,
         2 => derank_2(a),

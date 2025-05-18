@@ -230,6 +230,9 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
     ///
     /// NOTE: These states can only be used with the current Maze
     fn neighbours(&self, state: &Maze2DState) -> Vec<(Maze2DState, Maze2DAction)> {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("StateExpansion");
+
         let mut v = Vec::<(Maze2DState, Maze2DAction)>::with_capacity(8);
         let (max_x, max_y) = self.dimensions();
         debug_assert!(max_x < CoordIntrinsic::MAX as usize);
