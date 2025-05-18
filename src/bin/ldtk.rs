@@ -12,8 +12,6 @@
 
 #[cfg(feature = "renderer")]
 use bevy::prelude::*;
-#[cfg(feature = "renderer")]
-use bevy_ecs_tilemap::*;
 
 #[cfg(feature = "renderer")]
 use search::renderer::ldtk;
@@ -76,7 +74,7 @@ fn ldtk_demo() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-            TilemapPlugin,
+            bevy_ecs_tilemap::TilemapPlugin,
             ldtk::LdtkPlugin,
             bevy_pancam::PanCamPlugin,
         ))
