@@ -19,7 +19,7 @@ where
 
 /// A problem where the goal is to reach some specific goal states.
 ///
-/// NOTE: An heuristic here is a function St -> St -> C
+/// NOTE: An heuristic here is a function `St -> St -> C`
 /// NOTE: After finding a goal, the search fringe can be updated to direct the
 /// search towards the remaining goals.
 pub trait ObjectiveProblem<Sp, St, A, C>: BaseProblem<Sp, St, A, C>
@@ -44,7 +44,7 @@ where
 
 /// A problem where the goal is to reach states satisfying certain condition.
 ///
-/// NOTE: An heuristic here is a function St -> C
+/// NOTE: An heuristic here is a function `St -> C`
 /// NOTE: Finding multiple goals here tends to be more expensive as the search
 /// cannot be steered away from goals already found.
 pub trait ConditionProblem<Sp, St, A, C>: BaseProblem<Sp, St, A, C>

@@ -198,7 +198,7 @@ fn main() -> std::io::Result<()> {
 
     let args = Args::parse();
     args.color.write_global();
-    println!("Writting report to {:?}", args.type_report.green());
+    println!("Writing report to {:?}", args.type_report.green());
 
     let file = File::create(&args.type_report)?;
     let mut r = BufWriter::new(file);
