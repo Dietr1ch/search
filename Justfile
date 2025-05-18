@@ -1,14 +1,22 @@
 build:
-	cargo build --all-targets --keep-going
+	cargo build \
+	  --all-targets \
+	  --keep-going
 
 run:
-	cargo run  -- data/problems/Maze2D/*.png
+	cargo run \
+	  -- \
+	  data/problems/Maze2D/*.png
 
 test:
-	cargo test --all-targets --all-features
+	cargo test \
+	  --all-targets \
+	  --all-features
 
 report:
-	cargo run --bin 'report' --features 'inspect'
+	cargo run \
+	  --bin 'report' \
+	  --features 'inspect'
 
 bench:
 	mkdir -p data/benches/criterion/
@@ -24,17 +32,27 @@ clean_bench:
 	  target/criterion
 
 profile_astar:
-	cargo build --bin 'astar' --profile 'bench' --features 'coz_profile'
+	cargo build \
+	  --bin 'astar' \
+	  --profile 'bench' \
+	  --features 'coz_profile'
 	coz run \
+	  --source-scope src/% \
+	  --output data/profiles/astar/profile.coz \
 	  --- \
 	  ./target/release/astar \
-	  --num-instances 1000 \
+	  --num-instances 10000 \
 	  data/problems/Maze2D/*.png
 	coz plot
 
 profile_dijkstra:
-	cargo build --bin 'dijkstra' --profile 'bench' --features 'coz_profile'
+	cargo build \
+	  --bin 'dijkstra' \
+	  --profile 'bench' \
+	  --features 'coz_profile'
 	coz run \
+	  --source-scope src/% \
+	  --output data/profiles/dijkstra/profile.coz \
 	  --- \
 	  ./target/release/dijkstra \
 	  --num-instances 100 \
