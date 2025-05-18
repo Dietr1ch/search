@@ -201,10 +201,6 @@ where
     A: Action,
     C: Cost,
 {
-    /// Reverse action
-    #[must_use]
-    fn reverse(&self, a: &A) -> A;
-
     /// States that can reach a certain state.
     #[must_use]
     fn reverse_neighbours(&self, s: &St) -> Vec<(St, A)>;
