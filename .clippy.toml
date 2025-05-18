@@ -1,0 +1,4 @@
+# https://doc.rust-lang.org/stable/clippy/configuration.html
+
+# Prefer rustc_hash's FxHashMap and FxHashSet to lower hashing overhead.
+disallowed-types = ["std::collections::HashMap", "std::collections::HashSet"]
