@@ -1,3 +1,4 @@
+use core::intrinsics::unlikely;
 use std::cmp::min;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -276,7 +277,7 @@ where
 
             // NOTE: This should be done before expanding if we could yield or
             // only want the path to the first goal.
-            if self.is_goal(&state) {
+            if unlikely(self.is_goal(&state)) {
                 #[cfg(feature = "coz_profile")]
                 coz::progress!("GoalFound");
                 self.remove_goal(&state);

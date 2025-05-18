@@ -1,4 +1,5 @@
 #![feature(cmp_minmax)]
+#![feature(core_intrinsics)]
 #![feature(non_null_from_ref)]
 
 use shadow_rs::shadow;
