@@ -186,7 +186,7 @@ where
 
         let mut search = Self {
             search_tree: SearchTree::<St, A, C>::new(),
-            open: vec![],
+            open: Vec::with_capacity(2048),
             node_map: FxHashMap::default(),
             remaining_goals_list: goals.clone(),
             remaining_goals_set: FxHashSet::from_iter(goals.iter().cloned()),
