@@ -21,7 +21,7 @@ mem_profile = ["dep:dhat"]
 coz_profile = ["dep:coz"]
 # Add support for reverse search
 partial_reverse = []
-renderer = ["dep:bevy", "dep:bevy_ecs_tilemap", "dep:bevy_pancam", "dep:ldtk_rust", "dep:serde", "dep:serde_json"]
+renderer = ["dep:bevy", "dep:bevy_args", "dep:bevy_ecs_tilemap", "dep:bevy_pancam", "dep:ldtk_rust", "dep:serde", "dep:serde_json"]
 
 
 # Profiles
@@ -62,6 +62,7 @@ strip=false
 [dependencies]
 anstream = "0.6.18"
 bevy = { version = "0.16.0", optional = true, features = ["wayland"] }
+bevy_args = { version = "1.8.0", optional = true }
 bevy_ecs_tilemap = { version = "0.16.0", optional = true }
 bevy_pancam = { version = "0.18.0", optional = true }
 chrono = "0.4.41"

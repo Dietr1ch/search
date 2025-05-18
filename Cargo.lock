@@ -540,6 +540,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_args"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac904a740526b144edf9fc089976b300736f6e5a46e1d6a314bc2adb22788536"
+dependencies = [
+ "bevy",
+ "clap",
+ "console_error_panic_hook",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "bevy_asset"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4854,6 +4869,7 @@ version = "0.1.0"
 dependencies = [
  "anstream",
  "bevy",
+ "bevy_args",
  "bevy_ecs_tilemap",
  "bevy_pancam",
  "calliper",

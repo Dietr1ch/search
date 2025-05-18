@@ -4,6 +4,8 @@ use clap::Parser;
 use rand::Rng;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
+use serde::Deserialize;
+use serde::Serialize;
 
 use search::algorithms::astar::AStarSearch;
 use search::problem::BaseProblem;
@@ -15,7 +17,9 @@ use search::problems::maze_2d::Maze2DProblem;
 use bevy::prelude::*;
 
 #[cfg(feature = "renderer")]
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, args: Res<Args>) {
+    println!("Setup args: {:?}", *args);
+
     commands.spawn((
         Camera2d,
         bevy_pancam::PanCam {
@@ -64,15 +68,30 @@ fn setup(mut commands: Commands) {
 }
 
 #[cfg(feature = "renderer")]
-fn maze_renderer(mut problems: Vec<Maze2DProblem>) {
-    for (i, p) in problems.iter().enumerate() {
-        let search = AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(p.clone());
-        for path in search {
-            println!("Problem {i}:\n{}", path);
-        }
-    }
+fn maze_renderer() {
+    // for (i, p) in problems.iter().enumerate() {
+    //     let search = AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(p.clone());
+    //     for path in search {
+    //         println!("Problem {i}:\n{}", path);
+    //     }
+    // }
+
+    // let mut problems = vec![];
+    // for p in &args.problems {
+    //     let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
+    //     for instance in 0..args.num_instances {
+    //         let mut rng = ChaCha8Rng::seed_from_u64(instance);
+
+    //         if let Some(random_problem) =
+    //             p.randomize(&mut rng, args.instance_starts, args.instance_goals)
+    //         {
+    //             problems.push(random_problem);
+    //         }
+    //     }
+    // }
 
     App::new()
+        .add_plugins(bevy_args::BevyArgsPlugin::<Args>::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(bevy_pancam::PanCamPlugin)
         .add_systems(Startup, setup)
@@ -81,7 +100,7 @@ fn maze_renderer(mut problems: Vec<Maze2DProblem>) {
 }
 
 #[cfg(not(feature = "renderer"))]
-fn maze_renderer(_problems: Vec<Maze2DProblem>) {
+fn maze_renderer() {
     println!("This requires the 'renderer' feature.");
 }
 
@@ -93,9 +112,9 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 /// Command line arguments
-#[derive(Parser, Debug)]
+#[derive(Default, Debug, Resource, Serialize, Deserialize, Parser)]
 #[clap(long_version = search::build::CLAP_LONG_VERSION)]
-#[command(version, about, long_about = None)]
+#[command(version, about="A simple Maze renderer", long_about = None)]
 pub struct Args {
     #[arg()]
     pub problems: Vec<PathBuf>,
@@ -109,33 +128,15 @@ pub struct Args {
 
     #[arg(long, default_value_t = 1usize)]
     pub num_solutions: usize,
-
-    #[command(flatten)]
-    color: colorchoice_clap::Color,
+    // #[command(flatten)]
+    // color: colorchoice_clap::Color,
 }
 
 fn main() -> std::io::Result<()> {
     #[cfg(feature = "coz_profile")]
     coz::thread_init();
 
-    let args = Args::parse();
-    args.color.write_global();
-
-    let mut problems = vec![];
-    for p in &args.problems {
-        let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
-        for instance in 0..args.num_instances {
-            let mut rng = ChaCha8Rng::seed_from_u64(instance);
-
-            if let Some(random_problem) =
-                p.randomize(&mut rng, args.instance_starts, args.instance_goals)
-            {
-                problems.push(random_problem);
-            }
-        }
-    }
-
-    maze_renderer(problems);
+    maze_renderer();
 
     Ok(())
 }
