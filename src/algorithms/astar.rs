@@ -655,6 +655,9 @@ where
         writeln!(out, "  - |Index|:  {} ({})", l, Size::from_bytes(l * s))?;
         writeln!(out, "  - |Index|*: {} ({})", c, Size::from_bytes(c * s))?;
 
+        let expanded_nodes = self.search_tree.len() - self.open.len();
+        writeln!(out, "  - Expanded nodes: {expanded_nodes}")?;
+
         Ok(())
     }
     pub fn print_memory_stats(&self) {
