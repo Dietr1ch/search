@@ -221,8 +221,6 @@ pub struct Args {
 
     #[arg(long, default_value_t = 1usize)]
     pub num_solutions: usize,
-    // #[command(flatten)]
-    // color: colorchoice_clap::Color,
 }
 
 fn main() -> std::io::Result<()> {
