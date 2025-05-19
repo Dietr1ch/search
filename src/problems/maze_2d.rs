@@ -27,8 +27,8 @@ pub type Coord = NonMaxU32;
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq, Hash)]
 #[display("({x},{y})")]
 pub struct Maze2DState {
-    pub(crate) x: Coord,
-    pub(crate) y: Coord,
+    pub x: Coord,
+    pub y: Coord,
 }
 
 impl Maze2DState {
@@ -129,7 +129,7 @@ impl std::convert::TryFrom<char> for Maze2DCell {
 
 #[derive(Clone)]
 pub struct Maze2DSpace {
-    pub(crate) map: Vec<Vec<Maze2DCell>>,
+    pub map: Vec<Vec<Maze2DCell>>,
 }
 
 impl Maze2DSpace {

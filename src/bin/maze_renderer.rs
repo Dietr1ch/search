@@ -10,6 +10,7 @@ use serde::Serialize;
 use search::algorithms::astar::AStarSearch;
 use search::problem::BaseProblem;
 use search::problem::ObjectiveProblem;
+use search::problems::maze_2d::Maze2DCell;
 use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
 use search::problems::maze_2d::Maze2DProblem;
 
@@ -18,7 +19,7 @@ use bevy::prelude::*;
 
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands, args: Res<Args>) {
-    println!("Setup args: {:?}", *args);
+    println!("Args: {:?}", *args);
 
     commands.spawn((
         Camera2d,
@@ -43,21 +44,35 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         },
     ));
 
-    let seed = 0u64;
-    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let problem = Maze2DProblem::try_from(args.problem.as_path()).unwrap();
+    let (max_x, max_y) = problem.space().dimensions();
 
     let n = 20;
     let spacing = 50.;
     let offset = spacing * n as f32 / 2.;
     let custom_size = Some(Vec2::new(spacing, spacing));
-    for x in 0..n {
-        for y in 0..n {
+
+    // Colours
+    let wall_colour = Color::hsl(0., 0.0, 0.2);
+    let empty_colour = Color::hsl(0., 0.0, 0.8);
+    let start_colour = Color::hsl(240., 0.6, 0.8);
+    let goal_colour = Color::hsl(120., 0.6, 0.8);
+
+    let last_y = max_y - 1;
+    for y in 0..max_y {
+        for x in 0..max_x {
+            let cell = problem.space().map[last_y - y][x];
             let x = x as f32 * spacing - offset;
             let y = y as f32 * spacing - offset;
-            let color = Color::hsl(240., rng.random::<f32>() * 0.3, rng.random::<f32>() * 0.3);
+
+            let colour = match cell {
+                Maze2DCell::Wall => wall_colour,
+                Maze2DCell::Empty => empty_colour,
+            };
+
             commands.spawn((
                 Sprite {
-                    color,
+                    color: colour,
                     custom_size,
                     ..default()
                 },
@@ -65,31 +80,38 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             ));
         }
     }
+
+    let last_y = last_y as u32;
+    for s in problem.starts() {
+        println!("Start: {s}");
+        let x = s.x.get() as f32 * spacing - offset;
+        let y = (last_y - s.y.get()) as f32 * spacing - offset;
+        commands.spawn((
+            Sprite {
+                color: start_colour,
+                custom_size,
+                ..default()
+            },
+            Transform::from_xyz(x, y, 0.),
+        ));
+    }
+    for g in problem.goals() {
+        println!("Goal: {g}");
+        let x = g.x.get() as f32 * spacing - offset;
+        let y = (last_y - g.y.get()) as f32 * spacing - offset;
+        commands.spawn((
+            Sprite {
+                color: goal_colour,
+                custom_size,
+                ..default()
+            },
+            Transform::from_xyz(x, y, 0.),
+        ));
+    }
 }
 
 #[cfg(feature = "renderer")]
 fn maze_renderer() {
-    // for (i, p) in problems.iter().enumerate() {
-    //     let search = AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(p.clone());
-    //     for path in search {
-    //         println!("Problem {i}:\n{}", path);
-    //     }
-    // }
-
-    // let mut problems = vec![];
-    // for p in &args.problems {
-    //     let mut p = Maze2DProblem::try_from(p.as_path()).unwrap();
-    //     for instance in 0..args.num_instances {
-    //         let mut rng = ChaCha8Rng::seed_from_u64(instance);
-
-    //         if let Some(random_problem) =
-    //             p.randomize(&mut rng, args.instance_starts, args.instance_goals)
-    //         {
-    //             problems.push(random_problem);
-    //         }
-    //     }
-    // }
-
     App::new()
         .add_plugins(bevy_args::BevyArgsPlugin::<Args>::default())
         .add_plugins(DefaultPlugins)
@@ -117,7 +139,10 @@ static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 #[command(version, about="A simple Maze renderer", long_about = None)]
 pub struct Args {
     #[arg()]
-    pub problems: Vec<PathBuf>,
+    pub problem: PathBuf,
+
+    #[arg(long, default_value_t = 0u64)]
+    pub random_seed: u64,
 
     #[arg(long, default_value_t = 3u64)]
     pub num_instances: u64,
