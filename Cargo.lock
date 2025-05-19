@@ -4901,6 +4901,7 @@ dependencies = [
  "size",
  "smallvec",
  "thiserror 2.0.12",
+ "thousands",
  "tikv-jemallocator",
  "typed-arena",
 ]

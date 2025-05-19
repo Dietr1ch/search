@@ -94,6 +94,7 @@ thiserror = "2.0.12"
 typed-arena = "2.0.2"
 dhat = { version = "0.3.3", optional = true }
 coz = { version = "0.1.3", optional = true }
+thousands = "0.2.0"
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = { version = "0.6", features = ["stats"] }

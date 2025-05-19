@@ -662,26 +662,56 @@ where
     pub fn write_memory_stats<W: std::io::Write>(&self, mut out: W) -> std::io::Result<()> {
         use size::Size;
         use std::mem::size_of;
+        use thousands::Separable;
 
         writeln!(out, "AStarSearch Stats:")?;
         let s = size_of::<SearchTreeNode<St, A, C>>();
         let l = self.search_tree.len();
-        writeln!(out, "  - |Nodes|:   {} ({})", l, Size::from_bytes(l * s))?;
+        writeln!(
+            out,
+            "  - |Nodes|:   {} ({})",
+            l.separate_with_commas(),
+            Size::from_bytes(l * s)
+        )?;
 
         let s = size_of::<AStarHeapNode<C>>();
         let l = self.open.len();
         let c = self.open.capacity();
-        writeln!(out, "  - |Open|:   {} ({})", l, Size::from_bytes(l * s))?;
-        writeln!(out, "  - |Open|*:  {} ({})", c, Size::from_bytes(c * s))?;
+        writeln!(
+            out,
+            "  - |Open|:   {} ({})",
+            l.separate_with_commas(),
+            Size::from_bytes(l * s)
+        )?;
+        writeln!(
+            out,
+            "  - |Open|*:  {} ({})",
+            c.separate_with_commas(),
+            Size::from_bytes(c * s)
+        )?;
 
         let s = size_of::<(St, SearchTreeIndex)>();
         let l = self.node_map.len();
         let c = self.node_map.capacity();
-        writeln!(out, "  - |Index|:  {} ({})", l, Size::from_bytes(l * s))?;
-        writeln!(out, "  - |Index|*: {} ({})", c, Size::from_bytes(c * s))?;
+        writeln!(
+            out,
+            "  - |Index|:  {} ({})",
+            l.separate_with_commas(),
+            Size::from_bytes(l * s)
+        )?;
+        writeln!(
+            out,
+            "  - |Index|*: {} ({})",
+            c.separate_with_commas(),
+            Size::from_bytes(c * s)
+        )?;
 
         let expanded_nodes = self.search_tree.len() - self.open.len();
-        writeln!(out, "  - Expanded nodes: {expanded_nodes}")?;
+        writeln!(
+            out,
+            "  - Expanded nodes: {}",
+            expanded_nodes.separate_with_commas()
+        )?;
 
         Ok(())
     }
