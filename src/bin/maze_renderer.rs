@@ -20,7 +20,8 @@ use search::{
 use bevy::prelude::*;
 
 const ZLEVEL_BACKGROUND: f32 = 0.0f32;
-const ZLEVEL_PATH: f32 = 1.0f32;
+const ZLEVEL_PROBLEM: f32 = 1.0f32;
+const ZLEVEL_PATH: f32 = 2.0f32;
 
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands, args: Res<Args>) {
@@ -72,9 +73,22 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     // Colours
     let wall_colour = Color::hsl(0., 0.0, 0.2);
     let empty_colour = Color::hsl(0., 0.0, 0.8);
-    let start_colour = Color::hsl(240., 0.6, 0.8);
-    let goal_colour = Color::hsl(120., 0.6, 0.8);
-    let path_colour = Color::hsl(0., 0.6, 0.8);
+    // Sprites
+    let start_sprite = Sprite {
+        color: Color::hsl(240., 0.6, 0.8),
+        custom_size,
+        ..default()
+    };
+    let goal_sprite = Sprite {
+        color: Color::hsl(120., 0.6, 0.8),
+        custom_size,
+        ..default()
+    };
+    let path_sprite = Sprite {
+        color: Color::hsl(0., 0.6, 0.8),
+        custom_size: half_size,
+        ..default()
+    };
 
     let last_y = max_y - 1;
     log::info!("Rendering maze...");
@@ -106,12 +120,8 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         let x = s.x.get() as f32 * spacing - offset;
         let y = (last_y - s.y.get()) as f32 * spacing - offset;
         commands.spawn((
-            Sprite {
-                color: start_colour,
-                custom_size,
-                ..default()
-            },
-            Transform::from_xyz(x, y, ZLEVEL_PATH),
+            start_sprite.clone(),
+            Transform::from_xyz(x, y, ZLEVEL_PROBLEM),
         ));
     }
     log::info!("Rendering goals...");
@@ -119,12 +129,8 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         let x = g.x.get() as f32 * spacing - offset;
         let y = (last_y - g.y.get()) as f32 * spacing - offset;
         commands.spawn((
-            Sprite {
-                color: goal_colour,
-                custom_size,
-                ..default()
-            },
-            Transform::from_xyz(x, y, ZLEVEL_PATH),
+            goal_sprite.clone(),
+            Transform::from_xyz(x, y, ZLEVEL_PROBLEM),
         ));
     }
 
@@ -153,14 +159,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             log::info!("Rendering path...");
             let x = s.x.get() as f32 * spacing - offset;
             let y = (last_y - s.y.get()) as f32 * spacing - offset;
-            commands.spawn((
-                Sprite {
-                    color: path_colour,
-                    custom_size: half_size,
-                    ..default()
-                },
-                Transform::from_xyz(x, y, ZLEVEL_PATH),
-            ));
+            commands.spawn((path_sprite.clone(), Transform::from_xyz(x, y, ZLEVEL_PATH)));
 
             for a in &path.actions {
                 if let Some(new_state) = problem.space().apply(&s, a) {
@@ -169,14 +168,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
 
                     let x = s.x.get() as f32 * spacing - offset;
                     let y = (last_y - s.y.get()) as f32 * spacing - offset;
-                    commands.spawn((
-                        Sprite {
-                            color: path_colour,
-                            custom_size: half_size,
-                            ..default()
-                        },
-                        Transform::from_xyz(x, y, ZLEVEL_PATH),
-                    ));
+                    commands.spawn((path_sprite.clone(), Transform::from_xyz(x, y, ZLEVEL_PATH)));
                 }
             }
             debug_assert_eq!(s, path.end.unwrap());
