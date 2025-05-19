@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use clap::Parser;
 use hrsw::Stopwatch;
 use human_duration::human_duration;
+use rand_chacha::ChaCha8Rng;
+use rand_chacha::rand_core::SeedableRng;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -42,7 +44,19 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         },
     ));
 
-    let problem = Maze2DProblem::try_from(args.problem.as_path()).unwrap();
+    let mut problem = Maze2DProblem::try_from(args.problem.as_path()).unwrap();
+    if problem.goals().is_empty() {
+        log::info!("No problem given, attempting to generate a random one.");
+        let mut rng = ChaCha8Rng::seed_from_u64(args.random_seed);
+        problem = problem
+            .randomize(&mut rng, args.instance_starts, args.instance_goals)
+            .unwrap();
+        log::info!(
+            "Generated a problem with {} starts and {} goals.",
+            args.instance_starts,
+            args.instance_goals,
+        );
+    }
     let (max_x, max_y) = problem.space().dimensions();
 
     // Render
@@ -60,6 +74,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let path_colour = Color::hsl(0., 0.6, 0.8);
 
     let last_y = max_y - 1;
+    log::info!("Rendering maze...");
     for y in 0..max_y {
         for x in 0..max_x {
             let cell = problem.space().map[last_y - y][x];
@@ -83,6 +98,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     }
 
     let last_y = last_y as u32;
+    log::info!("Rendering starts...");
     for s in problem.starts() {
         let x = s.x.get() as f32 * spacing - offset;
         let y = (last_y - s.y.get()) as f32 * spacing - offset;
@@ -95,6 +111,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             Transform::from_xyz(x, y, 0.),
         ));
     }
+    log::info!("Rendering goals...");
     for g in problem.goals() {
         let x = g.x.get() as f32 * spacing - offset;
         let y = (last_y - g.y.get()) as f32 * spacing - offset;
@@ -109,6 +126,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     }
 
     // Find solution
+    log::info!("Solving problem...");
     let mut search =
         AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(problem.clone());
 
@@ -127,8 +145,9 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         } else {
             log::info!("Path: (cost={})", path.cost);
             let mut s = path.start.unwrap();
-            log::info!("- {}", s);
+            log::info!("- {}..{}", s, path.end.unwrap());
 
+            log::info!("Rendering path...");
             let x = s.x.get() as f32 * spacing - offset;
             let y = (last_y - s.y.get()) as f32 * spacing - offset;
             commands.spawn((
@@ -143,7 +162,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             for a in &path.actions {
                 if let Some(new_state) = problem.space().apply(&s, &a) {
                     s = new_state;
-                    log::info!("- {} => {}", a, s);
+                    log::trace!("- {} => {}", a, s);
 
                     let x = s.x.get() as f32 * spacing - offset;
                     let y = (last_y - s.y.get()) as f32 * spacing - offset;
@@ -160,6 +179,8 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             debug_assert_eq!(s, path.end.unwrap());
         }
     }
+
+    log::info!("Done!");
 }
 
 #[cfg(feature = "renderer")]
