@@ -1,18 +1,18 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use rand::Rng;
-use rand_chacha::ChaCha8Rng;
-use rand_chacha::rand_core::SeedableRng;
+use hrsw::Stopwatch;
+use human_duration::human_duration;
 use serde::Deserialize;
 use serde::Serialize;
 
-use search::algorithms::astar::AStarSearch;
-use search::problem::BaseProblem;
-use search::problem::ObjectiveProblem;
-use search::problems::maze_2d::Maze2DCell;
-use search::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
-use search::problems::maze_2d::Maze2DProblem;
+#[cfg(feature = "renderer")]
+use search::{
+    algorithms::astar::AStarSearch,
+    problem::{BaseProblem, ObjectiveProblem},
+    problems::maze_2d::{Maze2DCell, Maze2DHeuristicDiagonalDistance, Maze2DProblem},
+    space::Space,
+};
 
 #[cfg(feature = "renderer")]
 use bevy::prelude::*;
@@ -45,16 +45,19 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let problem = Maze2DProblem::try_from(args.problem.as_path()).unwrap();
     let (max_x, max_y) = problem.space().dimensions();
 
+    // Render
     let n = 20;
     let spacing = 50.;
     let offset = spacing * n as f32 / 2.;
     let custom_size = Some(Vec2::new(spacing, spacing));
+    let half_size = Some(Vec2::new(spacing / 2., spacing / 2.));
 
     // Colours
     let wall_colour = Color::hsl(0., 0.0, 0.2);
     let empty_colour = Color::hsl(0., 0.0, 0.8);
     let start_colour = Color::hsl(240., 0.6, 0.8);
     let goal_colour = Color::hsl(120., 0.6, 0.8);
+    let path_colour = Color::hsl(0., 0.6, 0.8);
 
     let last_y = max_y - 1;
     for y in 0..max_y {
@@ -103,6 +106,59 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             },
             Transform::from_xyz(x, y, 0.),
         ));
+    }
+
+    // Find solution
+    let mut search =
+        AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(problem.clone());
+
+    let stopwatch = Stopwatch::new();
+    let path = search.find_next_goal();
+    let elapsed = stopwatch.elapsed();
+
+    if let Some(path) = path {
+        log::info!("Path {path}");
+        log::info!("- Length: {}", path.len());
+        log::info!("- Elapsed time: {}", human_duration(&elapsed));
+        search.write_memory_stats(std::io::stdout().lock()).unwrap();
+
+        if path.is_empty() {
+            log::info!("Empty path, the problem is trivial");
+        } else {
+            log::info!("Path: (cost={})", path.cost);
+            let mut s = path.start.unwrap();
+            log::info!("- {}", s);
+
+            let x = s.x.get() as f32 * spacing - offset;
+            let y = (last_y - s.y.get()) as f32 * spacing - offset;
+            commands.spawn((
+                Sprite {
+                    color: path_colour,
+                    custom_size: half_size,
+                    ..default()
+                },
+                Transform::from_xyz(x, y, 0.),
+            ));
+
+            for a in &path.actions {
+                if let Some(new_state) = problem.space().apply(&s, &a) {
+                    s = new_state;
+                    log::info!("- {} => {}", a, s);
+
+                    let x = s.x.get() as f32 * spacing - offset;
+                    let y = (last_y - s.y.get()) as f32 * spacing - offset;
+                    commands.spawn((
+                        Sprite {
+                            color: path_colour,
+                            custom_size: half_size,
+                            ..default()
+                        },
+                        Transform::from_xyz(x, y, 0.),
+                    ));
+                }
+            }
+            debug_assert_eq!(s, path.end.unwrap());
+        }
     }
 }
 
