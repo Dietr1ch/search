@@ -19,6 +19,9 @@ use search::{
 #[cfg(feature = "renderer")]
 use bevy::prelude::*;
 
+const ZLEVEL_BACKGROUND: f32 = 0.0f32;
+const ZLEVEL_PATH: f32 = 1.0f32;
+
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands, args: Res<Args>) {
     commands.spawn((
@@ -92,7 +95,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
                     custom_size,
                     ..default()
                 },
-                Transform::from_xyz(x, y, 0.),
+                Transform::from_xyz(x, y, ZLEVEL_BACKGROUND),
             ));
         }
     }
@@ -108,7 +111,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
                 custom_size,
                 ..default()
             },
-            Transform::from_xyz(x, y, 0.),
+            Transform::from_xyz(x, y, ZLEVEL_PATH),
         ));
     }
     log::info!("Rendering goals...");
@@ -121,7 +124,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
                 custom_size,
                 ..default()
             },
-            Transform::from_xyz(x, y, 0.),
+            Transform::from_xyz(x, y, ZLEVEL_PATH),
         ));
     }
 
@@ -156,7 +159,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
                     custom_size: half_size,
                     ..default()
                 },
-                Transform::from_xyz(x, y, 0.),
+                Transform::from_xyz(x, y, ZLEVEL_PATH),
             ));
 
             for a in &path.actions {
@@ -172,7 +175,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
                             custom_size: half_size,
                             ..default()
                         },
-                        Transform::from_xyz(x, y, 0.),
+                        Transform::from_xyz(x, y, ZLEVEL_PATH),
                     ));
                 }
             }
