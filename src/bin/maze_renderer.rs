@@ -19,8 +19,6 @@ use bevy::prelude::*;
 
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands, args: Res<Args>) {
-    println!("Args: {:?}", *args);
-
     commands.spawn((
         Camera2d,
         bevy_pancam::PanCam {
@@ -83,7 +81,6 @@ fn setup(mut commands: Commands, args: Res<Args>) {
 
     let last_y = last_y as u32;
     for s in problem.starts() {
-        println!("Start: {s}");
         let x = s.x.get() as f32 * spacing - offset;
         let y = (last_y - s.y.get()) as f32 * spacing - offset;
         commands.spawn((
@@ -96,7 +93,6 @@ fn setup(mut commands: Commands, args: Res<Args>) {
         ));
     }
     for g in problem.goals() {
-        println!("Goal: {g}");
         let x = g.x.get() as f32 * spacing - offset;
         let y = (last_y - g.y.get()) as f32 * spacing - offset;
         commands.spawn((
