@@ -214,6 +214,10 @@ where
         #[cfg(feature = "coz_profile")]
         coz::scope!("FindNextGoal");
 
+        if self.remaining_goals_set.is_empty() {
+            return None;
+        }
+
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
         // TODO: See if pop_node() would be the same or faster that pop()
