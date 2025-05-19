@@ -327,7 +327,6 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
                 p: p.to_path_buf(),
                 e,
             })?
-            .grayscale()
             .into_rgb8();
 
         let max_x = img.width() as usize;
@@ -340,7 +339,10 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DSpace {
                 space.map[y as usize][x as usize] = match px.0 {
                     BLACK => Maze2DCell::Wall,
                     WHITE => Maze2DCell::Empty,
-                    _ => Maze2DCell::Empty,
+                    _ => {
+                        log::warn!("Unexpected colour {px:?} at ({x},{y})");
+                        Maze2DCell::Empty
+                    }
                 };
             }
         }
@@ -534,7 +536,6 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
                 p: p.to_path_buf(),
                 e,
             })?
-            .grayscale()
             .into_rgb8();
 
         let max_x = img.width() as usize;
@@ -574,7 +575,10 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
                         });
                         Maze2DCell::Empty
                     }
-                    _ => Maze2DCell::Empty,
+                    _ => {
+                        log::warn!("Unexpected colour {px:?} at ({x},{y})");
+                        Maze2DCell::Empty
+                    }
                 }
             }
         }
