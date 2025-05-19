@@ -1,6 +1,7 @@
 build:
 	cargo build \
 	  --all-targets \
+	  --all-features \
 	  --keep-going
 
 run:
