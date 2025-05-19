@@ -10,6 +10,9 @@
 //!
 //! For a more comprehensive LDtk solution, consider [bevy_ecs_ldtk](https://github.com/Trouv/bevy_ecs_ldtk), which uses bevy_ecs_tilemap internally.
 
+use std::io::ErrorKind;
+
+use bevy::asset::{AssetPath, LoadContext};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::{
     TilemapBundle,
@@ -17,11 +20,8 @@ use bevy_ecs_tilemap::{
     map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
     tiles::{TileBundle, TilePos, TileStorage, TileTextureIndex},
 };
-use std::{collections::HashMap, io::ErrorKind};
+use rustc_hash::FxHashMap;
 use thiserror::Error;
-
-use bevy::asset::{AssetLoader, AssetPath, LoadContext, io::Reader};
-use bevy::reflect::TypePath;
 
 #[derive(Default)]
 pub struct LdtkPlugin;
@@ -34,10 +34,10 @@ impl Plugin for LdtkPlugin {
     }
 }
 
-#[derive(TypePath, Asset)]
+#[derive(bevy::reflect::TypePath, Asset)]
 pub struct LdtkMap {
     pub project: ldtk_rust::Project,
-    pub tilesets: HashMap<i64, Handle<Image>>,
+    pub tilesets: FxHashMap<i64, Handle<Image>>,
 }
 
 #[derive(Default, Component)]
@@ -65,14 +65,14 @@ pub enum LdtkAssetLoaderError {
     Io(#[from] std::io::Error),
 }
 
-impl AssetLoader for LdtkLoader {
+impl bevy::asset::AssetLoader for LdtkLoader {
     type Asset = LdtkMap;
     type Settings = ();
     type Error = LdtkAssetLoaderError;
 
     async fn load(
         &self,
-        reader: &mut dyn Reader,
+        reader: &mut dyn bevy::asset::io::Reader,
         _settings: &Self::Settings,
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
@@ -159,7 +159,7 @@ pub fn process_loaded_tile_maps(
                 commands.entity(entity).despawn_related::<Children>();
 
                 // Pull out tilesets and their definitions into a new hashmap
-                let mut tilesets = HashMap::new();
+                let mut tilesets = FxHashMap::default();
                 ldtk_map.project.defs.tilesets.iter().for_each(|tileset| {
                     tilesets.insert(
                         tileset.uid,

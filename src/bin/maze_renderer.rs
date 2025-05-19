@@ -163,9 +163,9 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             ));
 
             for a in &path.actions {
-                if let Some(new_state) = problem.space().apply(&s, &a) {
+                if let Some(new_state) = problem.space().apply(&s, a) {
                     s = new_state;
-                    log::trace!("- {} => {}", a, s);
+                    log::trace!("- {a} => {s}");
 
                     let x = s.x.get() as f32 * spacing - offset;
                     let y = (last_y - s.y.get()) as f32 * spacing - offset;
