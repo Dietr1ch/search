@@ -89,6 +89,11 @@ fn down_right(i: usize) -> usize {
     crate::heap_primitives::index_last_children::<HEAP_ARITY>(i)
 }
 
+/// A heap node for A*
+///
+/// Heap nodes carry just ranking information and a reference/index to the
+/// actual search nodes. This allows heap operations to move as little data as
+/// possible.
 // TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
@@ -98,24 +103,29 @@ where
 {
     /// The rank of this node that defines how good it is.
     pub rank: AStarRank<C>,
-    /// The index of this node in the Node Arena
+    /// The index of this node in the Node Arena. Ignored when ranking.
     pub node_index: SearchTreeIndex,
 }
 
+/// PartialEq is forwarded to self.rank's PartialEq
 impl<C: Cost> PartialEq for AStarHeapNode<C> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.rank.eq(&other.rank)
     }
 }
+/// Eq just says our PartialEq is also reflexive (∀a. a==a).
+/// https://doc.rust-lang.org/std/cmp/trait.Eq.html
 impl<C: Cost> Eq for AStarHeapNode<C> {}
 
+/// PartialOrd is forwarded to Ord::cmp
 impl<C: Cost> PartialOrd for AStarHeapNode<C> {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.rank.cmp(&other.rank))
     }
 }
+/// Ord is forwarded to self.rank's Ord
 impl<C: Cost> Ord for AStarHeapNode<C> {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
