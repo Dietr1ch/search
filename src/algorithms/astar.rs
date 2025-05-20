@@ -123,6 +123,13 @@ impl<C: Cost> Ord for AStarHeapNode<C> {
     }
 }
 
+/// A* search implementation for Objective Problems.
+///
+/// This initialises the search and offers an Iterator that goes around
+/// different solutions.
+///
+/// Having a list of objectives allows to drop the ones already reached when
+/// reaching multiple goals.
 #[derive(Debug)]
 pub struct AStarSearch<OH, OP, Sp, St, A, C>
 where
@@ -173,6 +180,7 @@ where
     _phantom_action: PhantomData<A>,
 }
 
+/// A* search implementation for Objective Problems.
 impl<OH, OP, Sp, St, A, C> AStarSearch<OH, OP, Sp, St, A, C>
 where
     OH: ObjectiveHeuristic<Sp, St, A, C>,
@@ -182,6 +190,7 @@ where
     A: Action,
     C: Cost,
 {
+    /// Initialises the Search
     #[must_use]
     pub fn new(op: OP) -> Self {
         let starts = op.starts().to_vec();
@@ -211,6 +220,10 @@ where
         search
     }
 
+    /// Runs the search until the first goal is found.
+    ///
+    /// It removes the goal from the remaining goals to help focus the search on
+    /// the remaining goals.
     #[must_use]
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         #[cfg(feature = "coz_profile")]
@@ -294,11 +307,15 @@ where
         None
     }
 
+    /// Checks if a state is an undiscovered goal.
     #[inline(always)]
     pub fn is_goal(&mut self, s: &St) -> bool {
         self.remaining_goals_set.contains(s)
     }
 
+    /// Removes a state from the remaining goals.
+    ///
+    /// Updates the heap to re-rank states.
     #[inline(always)]
     pub fn remove_goal(&mut self, goal: &St) {
         #[cfg(feature = "coz_profile")]
@@ -315,7 +332,9 @@ where
                 .unwrap(),
         );
 
-        // TODO: ConditionProblems need something different
+        // TODO: ConditionProblems need something different.
+        // NOTE: We know the problem is a ObjectiveProblem, but it may also be a
+        //       ConditionProblem.
         if self.remaining_goals_list.is_empty() {
             self.open.clear();
             return;
