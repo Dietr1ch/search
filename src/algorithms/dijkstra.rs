@@ -152,7 +152,7 @@ where
 
     /// Set of remaining goal states.
     ///
-    /// Used to cut search earlier.
+    /// Used to cut the search earlier.
     remaining_goals_set: FxHashSet<St>,
 
     problem: OP,

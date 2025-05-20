@@ -178,10 +178,12 @@ where
     /// It's the same size as the Search Tree.
     node_map: FxHashMap<St, SearchTreeIndex>,
 
-    // A list of remaining goals. Used to compute objective heuristics.
+    /// A list of remaining goals.
+    /// Used to compute objective heuristics.
     remaining_goals_list: Vec<St>,
-    // A set of remaining goals. Used for goal checks.
-    // NOTE: With short sets the list should be fine.
+    /// A set of remaining goals. Used for goal checks and to cut the search
+    /// earlier.
+    /// NOTE: With short sets the list should be fine.
     remaining_goals_set: FxHashSet<St>,
 
     problem: OP,
