@@ -5,7 +5,9 @@ use hrsw::Stopwatch;
 use human_duration::human_duration;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
+#[cfg(feature = "renderer")]
 use serde::Deserialize;
+#[cfg(feature = "renderer")]
 use serde::Serialize;
 
 #[cfg(feature = "renderer")]
@@ -202,6 +204,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 /// Command line arguments
+#[cfg(feature = "renderer")]
 #[derive(Default, Debug, Resource, Serialize, Deserialize, Parser)]
 #[clap(long_version = search::build::CLAP_LONG_VERSION)]
 #[command(version, about="A simple Maze renderer", long_about = None)]

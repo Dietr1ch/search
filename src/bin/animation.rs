@@ -1,10 +1,25 @@
+#[cfg(feature = "renderer")]
 use bevy::prelude::*;
 
+#[cfg(feature = "renderer")]
 fn startup(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
 
-fn main() {
+#[cfg(feature = "renderer")]
+fn pause_animation(
+    mut query: Query<&mut bevy_ecs_tilemap::tiles::AnimatedTile>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if keys.just_pressed(KeyCode::KeyP) {
+        for mut anim in &mut query {
+            anim.speed = if anim.speed == 0.0 { 1.0 } else { 0.0 }
+        }
+    }
+}
+
+#[cfg(feature = "renderer")]
+fn animation_demo() {
     App::new()
         .add_plugins(
             DefaultPlugins
@@ -34,13 +49,11 @@ fn main() {
         .run();
 }
 
-fn pause_animation(
-    mut query: Query<&mut bevy_ecs_tilemap::tiles::AnimatedTile>,
-    keys: Res<ButtonInput<KeyCode>>,
-) {
-    if keys.just_pressed(KeyCode::KeyP) {
-        for mut anim in &mut query {
-            anim.speed = if anim.speed == 0.0 { 1.0 } else { 0.0 }
-        }
-    }
+#[cfg(not(feature = "renderer"))]
+fn animation_demo() {
+    println!("This requires the 'renderer' feature.");
+}
+
+fn main() {
+    animation_demo();
 }
