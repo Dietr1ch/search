@@ -11,14 +11,14 @@ struct TilemapMetadata {
 }
 
 const BACKGROUND_METADATA: TilemapMetadata = TilemapMetadata {
-    path: "tiles.png", // ://assets/tiles.png
+    path: "examples/animation/tiles.png", // ://assets/examples/animation/tiles.png
     size: TilemapSize { x: 20, y: 20 },
     tile_size: TilemapTileSize { x: 16.0, y: 16.0 },
     grid_size: TilemapGridSize { x: 16.0, y: 16.0 },
 };
 
 const FLOWERS_METADATA: TilemapMetadata = TilemapMetadata {
-    path: "flower_sheet.png", // ://assets/flower_sheet.png
+    path: "examples/animation/flower_sheet.png", // ://assets/examples/animation/flower_sheet.png
     size: TilemapSize { x: 20, y: 20 },
     tile_size: TilemapTileSize { x: 32.0, y: 32.0 },
     grid_size: TilemapGridSize { x: 16.0, y: 16.0 },
