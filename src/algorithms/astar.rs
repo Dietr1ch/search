@@ -309,7 +309,7 @@ where
 
     /// Checks if a state is an undiscovered goal.
     #[inline(always)]
-    pub fn is_goal(&mut self, s: &St) -> bool {
+    fn is_goal(&mut self, s: &St) -> bool {
         self.remaining_goals_set.contains(s)
     }
 
@@ -317,7 +317,7 @@ where
     ///
     /// Updates the heap to re-rank states.
     #[inline(always)]
-    pub fn remove_goal(&mut self, goal: &St) {
+    fn remove_goal(&mut self, goal: &St) {
         #[cfg(feature = "coz_profile")]
         coz::scope!("RemoveGoal");
 
@@ -369,7 +369,7 @@ where
 
     #[inline(always)]
     #[must_use]
-    pub(crate) fn h(&self, s: &St) -> C {
+    fn h(&self, s: &St) -> C {
         let mut h = C::max_value();
         for g in &self.remaining_goals_list {
             h = min(h, OH::h(s, g))
@@ -380,7 +380,7 @@ where
     /// Checks if a Search Node is already Closed (was expanded and explored)
     #[inline(always)]
     #[must_use]
-    pub(crate) fn is_closed(&self, s: &St) -> bool {
+    fn is_closed(&self, s: &St) -> bool {
         match self.node_map.get(s) {
             Some(node_index) => node_index.is_closed(),
             None => false,
@@ -404,7 +404,7 @@ where
 
     #[inline(always)]
     #[must_use]
-    pub fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
+    fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
         match self.pop() {
             Some(i) => Some(&mut self.search_tree[i]),
             None => None,
