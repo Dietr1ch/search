@@ -42,6 +42,11 @@ where
     pub fn new(g: C) -> Self {
         Self { g }
     }
+    /// Improves `g`
+    pub fn improve_g(&mut self, new_g: C) {
+        debug_assert!(self.g > new_g);
+        self.g = new_g;
+    }
 }
 
 const HEAP_ARITY: usize = 8usize;
@@ -61,6 +66,11 @@ fn down_right(i: usize) -> usize {
     crate::heap_primitives::index_last_children::<HEAP_ARITY>(i)
 }
 
+/// A heap node for Dijkstra
+///
+/// Heap nodes carry just ranking information and a reference/index to the
+/// actual search nodes. This allows heap operations to move as little data as
+/// possible.
 // TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
@@ -70,24 +80,29 @@ where
 {
     /// The rank of this node that defines how good it is.
     pub rank: DijkstraRank<C>,
-    /// The index of this node in the Node Arena
+    /// The index of this node in the Node Arena. Ignored when ranking.
     pub node_index: SearchTreeIndex,
 }
 
+/// PartialEq is forwarded to self.rank's PartialEq
 impl<C: Cost> PartialEq for DijkstraHeapNode<C> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.rank.eq(&other.rank)
     }
 }
+/// Eq just says our PartialEq is also reflexive (∀a. a==a).
+/// https://doc.rust-lang.org/std/cmp/trait.Eq.html
 impl<C: Cost> Eq for DijkstraHeapNode<C> {}
 
+/// PartialOrd is forwarded to Ord::cmp
 impl<C: Cost> PartialOrd for DijkstraHeapNode<C> {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.rank.cmp(&other.rank))
     }
 }
+/// Ord is forwarded to self.rank's Ord
 impl<C: Cost> Ord for DijkstraHeapNode<C> {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
@@ -95,6 +110,10 @@ impl<C: Cost> Ord for DijkstraHeapNode<C> {
     }
 }
 
+/// Dijkstra search implementation for Objective Problems.
+///
+/// This initialises the search and offers an Iterator that goes around
+/// different solutions.
 #[derive(Debug)]
 pub struct DijkstraSearch<OP, Sp, St, A, C>
 where
@@ -131,6 +150,9 @@ where
     /// It's the same size as the Search Tree.
     node_map: FxHashMap<St, SearchTreeIndex>,
 
+    /// Set of remaining goal states.
+    ///
+    /// Used to cut search earlier.
     remaining_goals_set: FxHashSet<St>,
 
     problem: OP,
@@ -147,6 +169,7 @@ where
     A: Action,
     C: Cost,
 {
+    /// Initialises the Search
     #[must_use]
     pub fn new(op: OP) -> Self {
         let starts = op.starts().to_vec();
@@ -173,6 +196,7 @@ where
         search
     }
 
+    /// Runs the search until the first goal is found.
     #[must_use]
     pub fn find_next_goal(&mut self) -> Option<Path<St, A, C>> {
         #[cfg(feature = "coz_profile")]
@@ -203,6 +227,7 @@ where
             for (s, a) in self.problem.space().neighbours(&state) {
                 #[cfg(feature = "coz_profile")]
                 coz::scope!("ReachNode");
+
                 // Have we seen this State?
                 match self.node_map.get(&s) {
                     Some(neigh_index) => {
@@ -225,7 +250,7 @@ where
                         if new_g < neigh.g {
                             // Found better path to existing node
                             neigh.reach((node_index, a), new_g);
-                            self.open[neigh.heap_index].rank = DijkstraRank::new(new_g);
+                            self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
                     }
@@ -253,19 +278,23 @@ where
         None
     }
 
+    /// Checks if a state is an undiscovered goal.
     #[inline(always)]
-    pub fn is_goal(&mut self, s: &St) -> bool {
+    fn is_goal(&mut self, s: &St) -> bool {
         self.remaining_goals_set.contains(s)
     }
 
+    /// Checks if a Search Node is already Closed (was expanded and explored)
     #[inline(always)]
     #[must_use]
-    pub(crate) fn is_closed(&self, s: &St) -> bool {
+    fn is_closed(&self, s: &St) -> bool {
         match self.node_map.get(s) {
             Some(node_index) => node_index.is_closed(),
             None => false,
         }
     }
+
+    /// Marks a Search Node as Closed (expanded)
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
         match self.node_map.get_mut(s) {
@@ -280,15 +309,7 @@ where
         }
     }
 
-    #[inline(always)]
-    #[must_use]
-    pub fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
-        match self.pop() {
-            Some(i) => Some(&mut self.search_tree[i]),
-            None => None,
-        }
-    }
-
+    /// Pops a node from the Heap, returning its SearchTree index.
     #[inline(always)]
     #[must_use]
     fn pop(&mut self) -> Option<SearchTreeIndex> {

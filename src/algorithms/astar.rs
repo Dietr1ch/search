@@ -55,6 +55,7 @@ where
     ///
     /// Necessary with inconsistent or inadmissible heuristics.
     pub fn improve_g(&mut self, new_g: C) {
+        debug_assert!(self.f > new_g.saturating_add(&self.h)); // We don't have g, but f. `(self.g > new_g) /+ h`
         self.f = new_g.saturating_add(&self.h);
     }
     /// Worsens `h` in `Rank{f, h}`.
