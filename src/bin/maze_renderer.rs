@@ -1,9 +1,15 @@
+#[cfg(feature = "renderer")]
 use std::path::PathBuf;
 
+#[cfg(feature = "renderer")]
 use clap::Parser;
+#[cfg(feature = "renderer")]
 use hrsw::Stopwatch;
+#[cfg(feature = "renderer")]
 use human_duration::human_duration;
+#[cfg(feature = "renderer")]
 use rand_chacha::ChaCha8Rng;
+#[cfg(feature = "renderer")]
 use rand_chacha::rand_core::SeedableRng;
 #[cfg(feature = "renderer")]
 use serde::Deserialize;
@@ -20,10 +26,6 @@ use search::{
 
 #[cfg(feature = "renderer")]
 use bevy::prelude::*;
-
-const ZLEVEL_BACKGROUND: f32 = 0.0f32;
-const ZLEVEL_PROBLEM: f32 = 1.0f32;
-const ZLEVEL_PATH: f32 = 2.0f32;
 
 #[cfg(feature = "renderer")]
 fn setup(mut commands: Commands, args: Res<Args>) {
@@ -66,6 +68,10 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let (max_x, max_y) = problem.space().dimensions();
 
     // Render
+    const ZLEVEL_BACKGROUND: f32 = 0.0f32;
+    const ZLEVEL_PROBLEM: f32 = 1.0f32;
+    const ZLEVEL_PATH: f32 = 2.0f32;
+
     let n = 20;
     let spacing = 50.;
     let offset = spacing * n as f32 / 2.;
