@@ -271,6 +271,7 @@ where
             if unlikely(self.is_goal(&state)) {
                 #[cfg(feature = "coz_profile")]
                 coz::progress!("GoalFound");
+                self.remove_goal(&state);
                 return Some(self.search_tree.path(self.problem.space(), node_index));
             }
         }
@@ -282,6 +283,16 @@ where
     #[inline(always)]
     fn is_goal(&mut self, s: &St) -> bool {
         self.remaining_goals_set.contains(s)
+    }
+
+    /// Removes a state from the remaining goals.
+    #[inline(always)]
+    fn remove_goal(&mut self, goal: &St) {
+        #[cfg(feature = "coz_profile")]
+        coz::scope!("RemoveGoal");
+
+        // Remove the goal from the remaining goal set.
+        self.remaining_goals_set.remove(goal);
     }
 
     /// Checks if a Search Node is already Closed (was expanded and explored)
