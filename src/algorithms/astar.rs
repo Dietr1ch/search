@@ -412,15 +412,6 @@ where
         }
     }
 
-    #[inline(always)]
-    #[must_use]
-    fn pop_node(&mut self) -> Option<&mut SearchTreeNode<St, A, C>> {
-        match self.pop() {
-            Some(i) => Some(&mut self.search_tree[i]),
-            None => None,
-        }
-    }
-
     /// Pops a node from the Heap, returning its SearchTree index.
     #[inline(always)]
     #[must_use]
