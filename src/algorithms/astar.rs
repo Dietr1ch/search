@@ -1,3 +1,5 @@
+//! Implementation of the A* path-finding algorithm.
+
 use core::intrinsics::unlikely;
 use std::cmp::min;
 use std::fmt::Debug;
@@ -356,6 +358,7 @@ where
         h
     }
 
+    /// Checks if a Search Node is already Closed (was expanded and explored)
     #[inline(always)]
     #[must_use]
     pub(crate) fn is_closed(&self, s: &St) -> bool {
@@ -364,6 +367,8 @@ where
             None => false,
         }
     }
+
+    /// Marks a Search Node as Closed (expanded)
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
         match self.node_map.get_mut(s) {
@@ -387,6 +392,7 @@ where
         }
     }
 
+    /// Pops a node from the Heap, returning its SearchTree index.
     #[inline(always)]
     #[must_use]
     fn pop(&mut self) -> Option<SearchTreeIndex> {

@@ -1,3 +1,5 @@
+//! Implementation of Dijkstra's path-finding algorithm.
+
 use core::intrinsics::unlikely;
 use std::cmp::min;
 use std::fmt::Debug;

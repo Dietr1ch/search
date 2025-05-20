@@ -1,3 +1,8 @@
+//! Implementation of a finite 2D maze.
+//!
+//! This presents a 2D world `&[&[Cell; WIDTH]; HEIGHT]` where each Cell is
+//! either free (`Empty`) or blocked (`Wall`).
+
 use std::hash::Hash;
 
 use derive_more::Display;
