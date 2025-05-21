@@ -51,7 +51,8 @@ fn down_right(i: usize) -> usize {
 /// If you do this manually, you use the index to a vector/arena as your
 /// reference to the "remote" node, but how do we get that with a nice API?
 /// It looks like something with a `IndexMut` implementation from this index
-/// into the "remote" Node.
+/// into the "remote" Node, but a bit more specific so we specify the Index and
+/// the Element/Output types.
 #[derive(Debug)]
 pub struct IntrusiveHeap<N>
 where
