@@ -83,17 +83,17 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let empty_colour = Color::hsl(0., 0.0, 0.8);
     // Sprites
     let start_sprite = Sprite {
-        color: Color::hsl(240., 0.6, 0.8),
+        color: Color::hsl(240., 0.8, 0.8),
         custom_size,
         ..default()
     };
     let goal_sprite = Sprite {
-        color: Color::hsl(120., 0.6, 0.8),
+        color: Color::hsl(120., 0.8, 0.8),
         custom_size,
         ..default()
     };
     let path_sprite = Sprite {
-        color: Color::hsl(0., 0.6, 0.8),
+        color: Color::hsl(0., 0.8, 0.8),
         custom_size: half_size,
         ..default()
     };
