@@ -36,9 +36,12 @@ overflow-checks = true
 panic = "unwind"
 strip=false
 split-debuginfo='packed'
-# Enable a large amount of optimization in the dev profile for dependencies.
+# Use release profile for dependencies
 [profile.dev.package."*"]
 opt-level = 3
+debug-assertions = false
+overflow-checks = false
+strip=true
 
 # Release
 # https://nnethercote.github.io/perf-book/build-configuration.html
@@ -50,11 +53,23 @@ debug-assertions = false
 overflow-checks = false
 strip=true
 panic = "abort"
+# Use release profile for dependencies
+[profile.release.package."*"]
+opt-level = 3
+debug-assertions = false
+overflow-checks = false
+strip=true
 
 [profile.bench]
 inherits = "release"
 debug = true
 strip=false
+# Use release profile for dependencies
+[profile.bench.package."*"]
+opt-level = 3
+debug-assertions = false
+overflow-checks = false
+strip=true
 
 
 # Dependencies
