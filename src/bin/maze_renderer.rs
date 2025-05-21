@@ -189,10 +189,12 @@ fn setup(mut commands: Commands, args: Res<Args>) {
 #[cfg(feature = "renderer")]
 fn maze_renderer() {
     App::new()
-        .add_plugins(bevy_args::BevyArgsPlugin::<Args>::default())
-        .add_plugins(DefaultPlugins)
-        .add_plugins(bevy_pancam::PanCamPlugin)
-        .add_plugins(search::renderer::plugins::VersionInfo)
+        .add_plugins((
+            bevy_args::BevyArgsPlugin::<Args>::default(),
+            DefaultPlugins,
+            bevy_pancam::PanCamPlugin,
+            search::renderer::plugins::VersionInfo,
+        ))
         .add_systems(Startup, setup)
         .run();
 }

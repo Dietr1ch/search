@@ -21,7 +21,7 @@ fn pause_animation(
 #[cfg(feature = "renderer")]
 fn animation_demo() {
     App::new()
-        .add_plugins(
+        .add_plugins((
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -31,22 +31,23 @@ fn animation_demo() {
                     ..default()
                 })
                 .set(ImagePlugin::default_nearest()),
-        )
-        .add_plugins(bevy::diagnostic::LogDiagnosticsPlugin::default())
-        .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
-        .add_plugins(bevy_ecs_tilemap::TilemapPlugin)
-        .add_plugins(search::renderer::plugins::VersionInfo)
-        .add_systems(Startup, startup)
+            bevy::diagnostic::LogDiagnosticsPlugin::default(),
+            bevy::diagnostic::FrameTimeDiagnosticsPlugin::default(),
+            bevy_ecs_tilemap::TilemapPlugin,
+            search::renderer::plugins::VersionInfo,
+        ))
         .add_systems(
             Startup,
-            search::renderer::plugins::animation::create_background,
+            (
+                startup,
+                search::renderer::plugins::animation::create_background,
+                search::renderer::plugins::animation::create_animated_flowers,
+            ),
         )
         .add_systems(
-            Startup,
-            search::renderer::plugins::animation::create_animated_flowers,
+            Update,
+            (search::renderer::helpers::camera::movement, pause_animation),
         )
-        .add_systems(Update, search::renderer::helpers::camera::movement)
-        .add_systems(Update, pause_animation)
         .run();
 }
 
