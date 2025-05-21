@@ -15,23 +15,6 @@ pub trait IntrusiveHeapNode: Debug + Ord {
     fn get_heap_index(&self) -> HeapIndex;
 }
 
-const HEAP_ARITY: usize = 8usize;
-#[inline(always)]
-#[must_use]
-fn up(i: usize) -> usize {
-    crate::heap_primitives::index_parent::<HEAP_ARITY>(i)
-}
-#[inline(always)]
-#[must_use]
-fn down_left(i: usize) -> usize {
-    crate::heap_primitives::index_first_children::<HEAP_ARITY>(i)
-}
-#[inline(always)]
-#[must_use]
-fn down_right(i: usize) -> usize {
-    crate::heap_primitives::index_last_children::<HEAP_ARITY>(i)
-}
-
 /// "Intrusive" Heap
 ///
 /// NOTE: Intrusive data structures deal with mostly-opaque elements that carry
@@ -54,14 +37,14 @@ fn down_right(i: usize) -> usize {
 /// into the "remote" Node, but a bit more specific so we specify the Index and
 /// the Element/Output types.
 #[derive(Debug)]
-pub struct IntrusiveHeap<N>
+pub struct IntrusiveHeap<N, const A: usize>
 where
     N: IntrusiveHeapNode,
 {
     heap: Vec<N>,
 }
 
-impl<N> IntrusiveHeap<N>
+impl<N, const A: usize> IntrusiveHeap<N, A>
 where
     N: IntrusiveHeapNode,
 {
@@ -123,7 +106,7 @@ where
             if i == 0 {
                 continue;
             }
-            let p = up(i);
+            let p = Self::parent(i);
             debug_assert!(
                 self.heap[p] <= self.heap[i],
                 "Node[{p}]={:?} !<= child [{i}]={:?}. Out of heap of len={}",
@@ -175,7 +158,7 @@ where
 
         // Initialize bubble-down indices
         let mut hole = 0;
-        let mut child = down_left(hole); // Initially left child, reused to track the best child
+        let mut child = Self::first_children(hole); // Initially left child, reused to track the best child
         debug_assert!(hole < len, "The hole IS NOT a valid index");
         debug_assert!(child < len, "Left child IS NOT a valid index");
         debug_assert!(hole < child);
@@ -185,9 +168,9 @@ where
             debug_assert!(child < len, "Left child IS NOT a valid index");
 
             // Find the best child
-            child = down_left(hole);
-            debug_assert_eq!(child + HEAP_ARITY, down_right(hole) + 1);
-            child += derank(&self.heap[child..min(child + HEAP_ARITY, len)]);
+            child = Self::first_children(hole);
+            debug_assert_eq!(child + A, Self::last_children(hole) + 1);
+            child += derank(&self.heap[child..min(child + A, len)]);
 
             debug_assert!(self.heap[hole] <= self.heap[child]);
 
@@ -196,14 +179,14 @@ where
 
             // Update bubble-down indices
             hole = child;
-            child = down_left(hole); // New left child
+            child = Self::first_children(hole); // New left child
             if child >= self.heap.len() {
                 break;
             }
         }
         // NOTE: So far the hole made it to the last level, but it may not be at the end of the array.
         debug_assert!(hole <= last, "The hole={hole} is < last={last}");
-        debug_assert!(hole > up(last), "The hole={hole} is < last={last}");
+        debug_assert!(hole > Self::parent(last), "The hole={hole} is < last={last}");
         if hole != last {
             // Swap and update internal indices
             self._unsafe_half_swap_down(hole, last);
@@ -230,7 +213,7 @@ where
         }
 
         let mut pos = index;
-        let mut parent = up(pos);
+        let mut parent = Self::parent(pos);
         while self.heap[parent] > self.heap[pos] {
             // Nodes are different and swapped. Swap the nodes to fix the order.
             self._unsafe_swap(parent, pos);
@@ -241,7 +224,7 @@ where
                 return parent;
             }
             pos = parent;
-            parent = up(pos);
+            parent = Self::parent(pos);
         }
         pos
     }
@@ -258,13 +241,13 @@ where
 
         loop {
             // Find the best child
-            let mut child = down_left(index);
+            let mut child = Self::first_children(index);
             if child >= len {
                 break;
             }
 
-            debug_assert_eq!(child + HEAP_ARITY, down_right(index) + 1);
-            child += derank(&self.heap[child..min(child + HEAP_ARITY, len)]);
+            debug_assert_eq!(child + A, Self::last_children(index) + 1);
+            child += derank(&self.heap[child..min(child + A, len)]);
 
             if self.heap[index] <= self.heap[child] {
                 break;
@@ -324,9 +307,25 @@ where
             "Node half-assed swapped down should still point to it's original index."
         );
     }
+
+		#[inline(always)]
+		#[must_use]
+		fn parent(i: usize) -> usize {
+				crate::heap_primitives::index_parent::<A>(i)
+		}
+		#[inline(always)]
+		#[must_use]
+		fn first_children(i: usize) -> usize {
+				crate::heap_primitives::index_first_children::<A>(i)
+		}
+		#[inline(always)]
+		#[must_use]
+		fn last_children(i: usize) -> usize {
+				crate::heap_primitives::index_last_children::<A>(i)
+		}
 }
 
-impl<N> Default for IntrusiveHeap<N>
+impl<N, const A: usize> Default for IntrusiveHeap<N, A>
 where
     N: IntrusiveHeapNode,
 {
@@ -335,7 +334,7 @@ where
     }
 }
 
-impl<N> std::ops::Index<HeapIndex> for IntrusiveHeap<N>
+impl<N, const A: usize> std::ops::Index<HeapIndex> for IntrusiveHeap<N, A>
 where
     N: IntrusiveHeapNode,
 {
@@ -346,7 +345,7 @@ where
     }
 }
 
-impl<N> std::ops::IndexMut<HeapIndex> for IntrusiveHeap<N>
+impl<N, const A: usize> std::ops::IndexMut<HeapIndex> for IntrusiveHeap<N, A>
 where
     N: IntrusiveHeapNode,
 {
@@ -385,7 +384,7 @@ mod tests {
 
     #[test]
     fn heap_works() {
-        let mut heap = IntrusiveHeap::<TestNode>::new();
+        let mut heap = IntrusiveHeap::<TestNode, 8>::new();
 
         let n = TestNode::new("aoeu".to_string());
         heap.push(n.clone());
@@ -394,7 +393,8 @@ mod tests {
 
     #[test]
     fn heap_sorts() {
-        let mut heap = IntrusiveHeap::<TestNode>::new();
+				const ARITY: usize = 8;
+        let mut heap = IntrusiveHeap::<TestNode, ARITY>::new();
 
         assert_eq!(heap.push(TestNode::new("c".to_string())), 0usize);
         assert_eq!(heap.push(TestNode::new("e".to_string())), 1usize);
