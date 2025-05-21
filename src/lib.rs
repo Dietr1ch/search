@@ -1,3 +1,5 @@
+#![allow(internal_features)]
+
 #![feature(cmp_minmax)]
 #![feature(core_intrinsics)]
 #![feature(non_null_from_ref)]

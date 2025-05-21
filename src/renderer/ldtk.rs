@@ -10,8 +10,6 @@
 //!
 //! For a more comprehensive LDtk solution, consider [bevy_ecs_ldtk](https://github.com/Trouv/bevy_ecs_ldtk), which uses bevy_ecs_tilemap internally.
 
-use std::io::ErrorKind;
-
 use bevy::asset::{AssetPath, LoadContext};
 use bevy::prelude::*;
 use bevy_ecs_tilemap::{
@@ -80,8 +78,7 @@ impl bevy::asset::AssetLoader for LdtkLoader {
         reader.read_to_end(&mut bytes).await?;
 
         let project: ldtk_rust::Project = serde_json::from_slice(&bytes).map_err(|e| {
-            std::io::Error::new(
-                ErrorKind::Other,
+            std::io::Error::other(
                 format!("Could not read contents of Ldtk map: {e}"),
             )
         })?;
