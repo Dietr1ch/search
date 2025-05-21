@@ -192,8 +192,8 @@ fn maze_renderer() {
         .add_plugins(bevy_args::BevyArgsPlugin::<Args>::default())
         .add_plugins(DefaultPlugins)
         .add_plugins(bevy_pancam::PanCamPlugin)
+        .add_plugins(search::renderer::plugins::VersionInfo)
         .add_systems(Startup, setup)
-        .add_systems(Startup, search::renderer::plugins::version::startup)
         .run();
 }
 

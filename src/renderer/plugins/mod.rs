@@ -1,2 +1,4 @@
 pub mod animation;
-pub mod version;
+mod version;
+
+pub use version::VersionInfo;

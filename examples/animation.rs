@@ -35,6 +35,7 @@ fn animation_demo() {
         .add_plugins(bevy::diagnostic::LogDiagnosticsPlugin::default())
         .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default())
         .add_plugins(bevy_ecs_tilemap::TilemapPlugin)
+        .add_plugins(search::renderer::plugins::VersionInfo)
         .add_systems(Startup, startup)
         .add_systems(
             Startup,

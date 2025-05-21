@@ -77,9 +77,9 @@ fn ldtk_demo() {
             bevy_ecs_tilemap::TilemapPlugin,
             ldtk::LdtkPlugin,
             bevy_pancam::PanCamPlugin,
+						search::renderer::plugins::VersionInfo,
         ))
         .add_systems(Startup, startup)
-        .add_systems(Startup, search::renderer::plugins::version::startup)
         .add_systems(Update, keyboard_input_system)
         .run();
 }
