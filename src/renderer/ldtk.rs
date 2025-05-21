@@ -78,9 +78,7 @@ impl bevy::asset::AssetLoader for LdtkLoader {
         reader.read_to_end(&mut bytes).await?;
 
         let project: ldtk_rust::Project = serde_json::from_slice(&bytes).map_err(|e| {
-            std::io::Error::other(
-                format!("Could not read contents of Ldtk map: {e}"),
-            )
+            std::io::Error::other(format!("Could not read contents of Ldtk map: {e}"))
         })?;
         let dependencies: Vec<(i64, AssetPath)> = project
             .defs

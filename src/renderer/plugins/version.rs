@@ -6,7 +6,7 @@ pub struct VersionInfo;
 
 impl Plugin for VersionInfo {
     fn build(&self, app: &mut App) {
-				app.add_systems(Startup, show_version);
+        app.add_systems(Startup, show_version);
     }
 }
 
