@@ -8,6 +8,16 @@ use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
 
+/// The least-significant bit.
+const LEAST_SIGNIFICANT_BIT: usize = 1usize;
+/// The bit used to track `is_closed: bool` within pointers.
+///
+/// We abuse alignment of `SearchTreeNode` to sneak a `bool` into our pointers
+/// (`SearchTreeIndex`) to them. This is guaranteed to be free since
+/// `SearchTreeNode::<St, A, C>::heap_index` makes the type wider than a Byte
+/// already.
+const IS_CLOSED_BIT: usize = LEAST_SIGNIFICANT_BIT;
+
 /// A reference to a `SearchTreeNode<St, A, C>`.
 ///
 /// It's more like a `(&SearchTreeNode<St, A, C>, bool)` underneath to help track
@@ -33,11 +43,11 @@ impl SearchTreeIndex {
     }
 
     pub fn is_closed(&self) -> bool {
-        self.index & 1usize == 1usize
+        self.index & IS_CLOSED_BIT == IS_CLOSED_BIT
     }
     pub fn set_closed(&mut self) {
         debug_assert!(!self.is_closed());
-        self.index |= 1usize;
+        self.index |= IS_CLOSED_BIT;
     }
 
     #[inline(always)]
@@ -183,7 +193,7 @@ where
     fn index(&self, index: SearchTreeIndex) -> &Self::Output {
         // TODO: Wrap this into something slightly safer
         unsafe {
-            let index = index.index & !1usize;
+            let index = index.index & !IS_CLOSED_BIT;
             &*(index as *mut SearchTreeNode<St, A, C>)
         }
     }
@@ -199,7 +209,7 @@ where
     fn index_mut(&mut self, index: SearchTreeIndex) -> &mut SearchTreeNode<St, A, C> {
         // TODO: Wrap this into something slightly safer
         unsafe {
-            let index = index.index & !1usize;
+            let index = index.index & !IS_CLOSED_BIT;
             &mut *(index as *mut SearchTreeNode<St, A, C>)
         }
     }
