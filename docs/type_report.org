@@ -1,6 +1,6 @@
 :PROPERTIES:
 :VERSION: "0.1.0"
-:GIT_BRANCH: "master"
+:GIT_BRANCH: "dev/omit_parent_action"
 :BUILD_IS_DEBUG: false
 :GIT_STATUS: CLEAN
 :END:

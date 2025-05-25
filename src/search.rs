@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::marker::PhantomData;
 
 use typed_arena::Arena;
 
@@ -66,10 +67,11 @@ where
     A: Action,
     C: Cost,
 {
-    pub(crate) parent: Option<(SearchTreeIndex, A)>,
+    pub(crate) parent: Option<SearchTreeIndex>,
     pub(crate) state: St,
     pub(crate) g: C,
     pub(crate) heap_index: usize,
+    _phantom_action: PhantomData<A>,
 }
 
 impl<St, A, C> SearchTreeNode<St, A, C>
@@ -78,17 +80,18 @@ where
     A: Action,
     C: Cost,
 {
-    pub fn new(heap_index: usize, s: St, parent: Option<(SearchTreeIndex, A)>, g: C) -> Self {
+    pub fn new(heap_index: usize, s: St, parent: Option<SearchTreeIndex>, g: C) -> Self {
         Self {
             parent,
             state: s,
             g,
             heap_index,
+						_phantom_action: PhantomData,
         }
     }
 
     /// Gives this Node a better path through a new parent.
-    pub fn reach(&mut self, new_parent: (SearchTreeIndex, A), g: C) {
+    pub fn reach(&mut self, new_parent: SearchTreeIndex, g: C) {
         debug_assert!(g < self.g);
         self.parent = Some(new_parent);
         self.g = g;
@@ -146,13 +149,24 @@ where
         let e = &self[node_index];
         let mut path = Path::<St, A, C>::new_from_start(*e.state());
 
-        while let Some((parent_index, a)) = self[node_index].parent {
+        while let Some(parent_index) = self[node_index].parent {
+            let n = &self[node_index];
             let p = &self[parent_index];
-            let s = p.state();
-            let c: C = space.cost(s, &a);
-            debug_assert!(c != C::zero());
 
-            path.append((*s, a), c);
+            let mut action: Option<A> = None;
+            let mut cost: Option<C> = None;
+            for (sib, a) in space.neighbours(p.state()) {
+                if sib == *n.state() {
+                    action = Some(a);
+										let c = space.cost(p.state(), &a);
+										debug_assert!(c != C::zero());
+										cost = Some(c);
+                }
+            }
+            let action = action.unwrap();
+            let cost = cost.unwrap();
+
+            path.append((*p.state(), action), cost);
             debug_assert!(node_index != parent_index);
             node_index = parent_index;
         }

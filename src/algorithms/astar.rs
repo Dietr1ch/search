@@ -226,7 +226,7 @@ where
         for s in starts {
             let g: C = C::zero();
             let h: C = search.h(&s);
-            let parent: Option<(SearchTreeIndex, A)> = None;
+            let parent: Option<SearchTreeIndex> = None;
             search.push_new(&s, parent, g, h);
         }
 
@@ -289,7 +289,7 @@ where
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            neigh.reach((node_index, a), new_g);
+                            neigh.reach(node_index, new_g);
                             self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
@@ -302,7 +302,7 @@ where
                         let neigh_g = g + c;
                         let neigh_h = self.h(&s);
 
-                        self.push_new(&s, Some((node_index, a)), neigh_g, neigh_h);
+                        self.push_new(&s, Some(node_index), neigh_g, neigh_h);
                     }
                 }
             }
@@ -358,7 +358,7 @@ where
         for heap_index in (0..len).rev() {
             let heap_node = &mut self.open[heap_index];
             let node = &self.search_tree[heap_node.node_index];
-            let state = *node.state();
+            let state: St = *node.state();
 
             // `self.h` inlined to avoid overlapping self borrows
             // TODO: ConditionProblems need something different
@@ -434,7 +434,7 @@ where
     }
 
     #[inline(always)]
-    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C, h: C) {
+    fn push_new(&mut self, s: &St, parent: Option<SearchTreeIndex>, g: C, h: C) {
         self.verify_heap();
         debug_assert!(!self.is_closed(s));
 

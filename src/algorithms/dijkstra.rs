@@ -189,7 +189,7 @@ where
 
         for s in starts {
             let g: C = C::zero();
-            let parent: Option<(SearchTreeIndex, A)> = None;
+            let parent: Option<SearchTreeIndex> = None;
             search.push_new(&s, parent, g);
         }
 
@@ -249,7 +249,7 @@ where
                         let new_g = g + c;
                         if new_g < neigh.g {
                             // Found better path to existing node
-                            neigh.reach((node_index, a), new_g);
+                            neigh.reach(node_index, new_g);
                             self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
@@ -261,7 +261,7 @@ where
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
 
-                        self.push_new(&s, Some((node_index, a)), new_g);
+                        self.push_new(&s, Some(node_index), new_g);
                     }
                 }
             }
@@ -339,7 +339,7 @@ where
     }
 
     #[inline(always)]
-    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C) {
+    fn push_new(&mut self, s: &St, parent: Option<SearchTreeIndex>, g: C) {
         self.verify_heap();
         debug_assert!(!self.is_closed(s));
 
