@@ -147,8 +147,9 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let mut search =
         AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(problem.clone());
 
-    let stopwatch = Stopwatch::new();
+    let mut stopwatch = Stopwatch::new_started();
     let path = search.find_next_goal();
+    stopwatch.stop();
     let elapsed = stopwatch.elapsed();
 
     if let Some(path) = path {

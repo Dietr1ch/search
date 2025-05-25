@@ -100,8 +100,7 @@ fn main() -> std::io::Result<()> {
                     "****** Dijkstra run\n#+begin_src ron\n{search:?}\n#+end_src"
                 )?;
 
-                let mut stopwatch = Stopwatch::new();
-                stopwatch.start();
+                let mut stopwatch = Stopwatch::new_started();
                 for i in 0..args.num_solutions {
                     if let Some(path) = search.find_next_goal() {
                         let elapsed = stopwatch.elapsed();
@@ -116,8 +115,8 @@ fn main() -> std::io::Result<()> {
                     }
                 }
                 stopwatch.stop();
-                writeln!(out, "******* Total",)?;
                 let total_elapsed = stopwatch.elapsed();
+                writeln!(out, "******* Total",)?;
                 writeln!(out, "Elapsed time: {}", human_duration(&total_elapsed))?;
                 search.write_memory_stats(&mut out)?;
             } else {
