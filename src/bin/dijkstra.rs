@@ -94,7 +94,7 @@ fn main() -> std::io::Result<()> {
                     writeln!(out, "  - {goal:?}")?;
                 }
                 writeln!(out, "***** Solution")?;
-                let mut search = DijkstraSearch::<_, _, _, _, _>::new(random_problem);
+                let mut search = DijkstraSearch::new(random_problem);
                 writeln!(
                     out,
                     "****** Dijkstra run\n#+begin_src ron\n{search:?}\n#+end_src"
