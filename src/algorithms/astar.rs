@@ -116,7 +116,7 @@ impl<C: Cost> PartialEq for AStarHeapNode<C> {
     }
 }
 /// Eq just says our PartialEq is also reflexive (∀a. a==a).
-/// https://doc.rust-lang.org/std/cmp/trait.Eq.html
+/// `https://doc.rust-lang.org/std/cmp/trait.Eq.html`
 impl<C: Cost> Eq for AStarHeapNode<C> {}
 
 /// PartialOrd is forwarded to Ord::cmp
