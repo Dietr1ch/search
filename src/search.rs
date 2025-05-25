@@ -93,14 +93,7 @@ where
         self.parent = Some(new_parent);
         self.g = g;
     }
-}
 
-impl<St, A, C> SearchTreeNode<St, A, C>
-where
-    St: State,
-    A: Action,
-    C: Cost,
-{
     pub(crate) fn state(&self) -> &St {
         &self.state
     }
