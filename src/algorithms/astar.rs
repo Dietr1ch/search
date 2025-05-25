@@ -794,4 +794,27 @@ mod tests {
         assert!(low.f == high.f);
         assert!(low.h < high.h);
     }
+
+    #[test]
+    fn solve_maze2d() {
+        use std::path::PathBuf;
+
+        use crate::problem::BaseProblem;
+        use crate::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
+        use crate::problems::maze_2d::Maze2DProblem;
+
+        // Solve two-paths.png (://data/problems/Maze2D/two-paths.png)
+        let problem =
+            Maze2DProblem::try_from(PathBuf::from("data/problems/Maze2D/two-paths.png").as_path())
+                .unwrap();
+        let starts = problem.starts().to_vec();
+        let goals = problem.goals().to_vec();
+        let mut search =
+            AStarSearch::<Maze2DHeuristicDiagonalDistance, _, _, _, _, _>::new(problem);
+        let path = search.find_next_goal().unwrap();
+
+        assert!(starts.contains(&path.start.unwrap()));
+        assert!(goals.contains(&path.end.unwrap()));
+        assert_eq!(path.cost, 1805);
+    }
 }
