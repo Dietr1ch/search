@@ -225,6 +225,7 @@ where
             _phantom_space: PhantomData,
             _phantom_action: PhantomData,
         };
+				search.nodes.reserve(1024*1024);
 
         for s in starts {
             let g: C = C::zero();
