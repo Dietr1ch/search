@@ -1,8 +1,12 @@
+use std::time::Duration;
+
 use criterion::BenchmarkId;
 use criterion::Criterion;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use glob::glob;
+use hrsw::Stopwatch;
+use human_duration::human_duration;
 use rand_chacha::ChaCha8Rng;
 use rand_chacha::rand_core::SeedableRng;
 
@@ -18,6 +22,10 @@ use search::problems::maze_2d::Maze2DSpace;
 use search::problems::maze_2d::Maze2DState;
 
 const NUM_SOLUTIONS: usize = 2;
+/// Maximum time willing to wait for a single benchmark instance.
+/// Experiments are carried out at least 5s and at least 100 times, so running a
+/// 1s instance takes 1m40s.
+const MAX_INSTANCE_TIME: Duration = Duration::from_secs(1);
 
 fn dijkstra(problem: Maze2DProblem) -> u64 {
     let search =
@@ -79,6 +87,7 @@ fn compare_search(c: &mut Criterion) {
                 >::new(problem.clone());
 
                 let mut astar_solutions = 0;
+                let mut astar_stopwatch = Stopwatch::new_started();
                 // NOTE: This is just to avoid dropping the search :/
                 for _i in 0..NUM_SOLUTIONS {
                     if let Some(path) = astar_search.find_next_goal() {
@@ -87,8 +96,17 @@ fn compare_search(c: &mut Criterion) {
                         astar_search.print_memory_stats();
                     }
                 }
+                astar_stopwatch.stop();
+                let astar_total_elapsed = astar_stopwatch.elapsed();
                 if astar_solutions != NUM_SOLUTIONS {
                     astar_search.print_memory_stats();
+                }
+                if astar_total_elapsed > MAX_INSTANCE_TIME {
+                    log::warn!(
+                        "Skipping {instance_name} as it takes too long with A* ({})",
+                        human_duration(&astar_total_elapsed)
+                    );
+                    continue;
                 }
 
                 if astar_solutions > 0 {
@@ -102,6 +120,7 @@ fn compare_search(c: &mut Criterion) {
 
                     // NOTE: This is just to avoid dropping the search :/
                     let mut dijkstra_solutions = 0;
+                    let mut dijkstra_stopwatch = Stopwatch::new_started();
                     for _i in 0..NUM_SOLUTIONS {
                         if let Some(path) = dijkstra_search.find_next_goal() {
                             dijkstra_solutions += 1;
@@ -109,8 +128,17 @@ fn compare_search(c: &mut Criterion) {
                             dijkstra_search.print_memory_stats();
                         }
                     }
+                    dijkstra_stopwatch.stop();
+                    let dijkstra_total_elapsed = dijkstra_stopwatch.elapsed();
                     if dijkstra_solutions != NUM_SOLUTIONS {
                         dijkstra_search.print_memory_stats();
+                    }
+                    if dijkstra_total_elapsed > MAX_INSTANCE_TIME {
+                        log::warn!(
+                            "Skipping {instance_name} as it takes too long with Dijkstra ({})",
+                            human_duration(&dijkstra_total_elapsed)
+                        );
+                        continue;
                     }
                 }
 
