@@ -137,6 +137,10 @@ required-features = ["inspect"]
 # Sampling benchmarks
 ## criterion
 [[bench]]
+name = "sample_astar_maze2d"  # ./benches/sample_astar_maze2d.rs
+harness = false
+
+[[bench]]
 name = "sample_compare_maze2d"  # ./benches/sample_compare_maze2d.rs
 harness = false
 
