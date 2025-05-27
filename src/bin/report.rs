@@ -28,8 +28,7 @@ use search::problems::maze_2d::Maze2DProblem;
 use search::problems::maze_2d::Maze2DProblemCell;
 use search::problems::maze_2d::Maze2DSpace;
 use search::problems::maze_2d::Maze2DState;
-use search::search::SearchTreeIndex;
-use search::search::SearchTreeNode;
+use search::search::Node;
 
 /// Command line arguments
 #[derive(Parser, Debug)]
@@ -136,20 +135,21 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    // search_tree: Arena<SearchTreeNode>
-    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
+    // nodes: HashMap<State, Node>
+    let node = Node::<Maze2DState, Maze2DCost>::new(None, 0, 0usize);
     print_size(out, node)?;
+    let node = Node::<Maze2DState, Maze2DCost>::new(None, 0, 0usize);
+    print_size(out, (s0, node))?;
     // heap: Vec<(Rank, SearchTreeIndex)>
     print_size(
         out,
         AStarHeapNode {
             rank: AStarRank::new(0, 0),
-            node_index: SearchTreeIndex::fake_new(),
+            state: s0,
         },
     )?;
-    // node_map: HashMap<State, SearchTreeIndex>
-    print_size(out, SearchTreeIndex::fake_new())?;
-    print_size(out, (s0, SearchTreeIndex::fake_new()))?;
+
+		// Path + Search
     let mut search = AStarSearch::<
         Maze2DHeuristicDiagonalDistance,
         Maze2DProblem,
@@ -168,20 +168,23 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    // search_tree: Arena<SearchTreeNode>
-    let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
+
+    // nodes: HashMap<State, Node>
+    let node = Node::<Maze2DState, Maze2DCost>::new(None, 0, 0usize);
     print_size(out, node)?;
+    let node = Node::<Maze2DState, Maze2DCost>::new(None, 0, 0usize);
+    print_size(out, (s0, node))?;
+
     // heap: Vec<(Rank, SearchTreeIndex)>
     print_size(
         out,
         DijkstraHeapNode {
             rank: DijkstraRank::new(0),
-            node_index: SearchTreeIndex::fake_new(),
+            state: s0,
         },
     )?;
-    // node_map: HashMap<State, SearchTreeIndex>
-    print_size(out, SearchTreeIndex::fake_new())?;
-    print_size(out, (s0, SearchTreeIndex::fake_new()))?;
+
+		// Path + Search
     let mut search =
         DijkstraSearch::<Maze2DProblem, Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>::new(
             problem.clone(),

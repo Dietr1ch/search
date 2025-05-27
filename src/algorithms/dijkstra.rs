@@ -7,12 +7,11 @@ use std::marker::PhantomData;
 
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHashSet;
+use nonmax::NonMaxUsize;
 
 use crate::derank::derank;
 use crate::problem::ObjectiveProblem;
-use crate::search::SearchTree;
-use crate::search::SearchTreeIndex;
-use crate::search::SearchTreeNode;
+use crate::search::Node;
 use crate::space::Action;
 use crate::space::Cost;
 use crate::space::Path;
@@ -41,6 +40,9 @@ where
 {
     pub fn new(g: C) -> Self {
         Self { g }
+    }
+    pub fn g(&self) -> C {
+        self.g
     }
     /// Improves `g`
     pub fn improve_g(&mut self, new_g: C) {
@@ -74,18 +76,25 @@ fn down_right(i: usize) -> usize {
 // TODO: Make public only with the "inspect" feature
 #[derive(Debug)]
 #[cfg_attr(feature = "inspect", derive(Clone))]
-pub struct DijkstraHeapNode<C>
+pub struct DijkstraHeapNode<St, C>
 where
     C: Cost,
 {
     /// The rank of this node that defines how good it is.
     pub rank: DijkstraRank<C>,
     /// The index of this node in the Node Arena. Ignored when ranking.
-    pub node_index: SearchTreeIndex,
+    pub state: St,
+}
+
+impl<St: State, C: Cost> DijkstraHeapNode<St, C> {
+    #[inline(always)]
+    fn g(&self) -> C {
+        self.rank.g()
+    }
 }
 
 /// PartialEq is forwarded to self.rank's PartialEq
-impl<C: Cost> PartialEq for DijkstraHeapNode<C> {
+impl<St: State, C: Cost> PartialEq for DijkstraHeapNode<St, C> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.rank.eq(&other.rank)
@@ -93,17 +102,17 @@ impl<C: Cost> PartialEq for DijkstraHeapNode<C> {
 }
 /// Eq just says our PartialEq is also reflexive (∀a. a==a).
 /// `https://doc.rust-lang.org/std/cmp/trait.Eq.html`
-impl<C: Cost> Eq for DijkstraHeapNode<C> {}
+impl<St: State, C: Cost> Eq for DijkstraHeapNode<St, C> {}
 
 /// PartialOrd is forwarded to Ord::cmp
-impl<C: Cost> PartialOrd for DijkstraHeapNode<C> {
+impl<St: State, C: Cost> PartialOrd for DijkstraHeapNode<St, C> {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.rank.cmp(&other.rank))
     }
 }
 /// Ord is forwarded to self.rank's Ord
-impl<C: Cost> Ord for DijkstraHeapNode<C> {
+impl<St: State, C: Cost> Ord for DijkstraHeapNode<St, C> {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.rank.cmp(&other.rank)
@@ -123,13 +132,6 @@ where
     A: Action,
     C: Cost,
 {
-    /// All the Search Nodes. Naturally forms a Search Forest as each node may
-    /// have a parent Node.
-    ///
-    /// Could be backed by an Arena since this collection only grows and does
-    /// not need contiguous memory.
-    search_tree: SearchTree<St, A, C>,
-
     /// An intrusive heap of `(DijkstraRank, SearchTreeIndex)` that keeps the
     /// referenced node updated (`SearchTreeNode::heap_index`).
     /// This allows re-ranking a `SearchTreeNode` in the heap without a linear
@@ -139,16 +141,8 @@ where
     /// for (i, hn) in self.open.enumerate():
     ///   assert_eq(self.search_tree[hn.node_index].heap_index, i)
     /// ```
-    open: Vec<DijkstraHeapNode<C>>,
-
-    /// Amalgamation of,
-    /// - The `HashMap<St, &mut SearchTreeNode>`, but using `SearchTreeIndex`
-    ///   - To find existing Search Nodes from their `State`.
-    /// - The "Closed Set" `HashSet<St>`
-    ///   - To recall whether we had already explored a state.
-    ///
-    /// It's the same size as the Search Tree.
-    node_map: FxHashMap<St, SearchTreeIndex>,
+    open: Vec<DijkstraHeapNode<St, C>>,
+    nodes: FxHashMap<St, Node<St, C>>,
 
     /// Set of remaining goal states.
     ///
@@ -176,9 +170,8 @@ where
         let goals = op.goals().to_vec();
 
         let mut search = Self {
-            search_tree: SearchTree::<St, A, C>::new(),
             open: Vec::with_capacity(2048),
-            node_map: FxHashMap::default(),
+            nodes: FxHashMap::default(),
             remaining_goals_set: FxHashSet::from_iter(goals.iter().cloned()),
 
             problem: op,
@@ -189,7 +182,7 @@ where
 
         for s in starts {
             let g: C = C::zero();
-            let parent: Option<(SearchTreeIndex, A)> = None;
+            let parent: Option<St> = None;
             search.push_new(&s, parent, g);
         }
 
@@ -209,12 +202,12 @@ where
         // Check remaining un-explored nodes
         // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
         // TODO: See if pop_node() would be the same or faster that pop()
-        while let Some(node_index) = self.pop() {
+        while let Some(heap_node) = self.pop() {
             #[cfg(feature = "coz_profile")]
             coz::scope!("NodeExpansion");
 
-            let state = *self.search_tree[node_index].state();
-            let g: C = self.search_tree[node_index].g;
+            let state = heap_node.state;
+            let g: C = heap_node.g();
             debug_assert!(!self.is_closed(&state));
 
             // NOTE: We can do a goal-check and return here if we only need one
@@ -229,11 +222,11 @@ where
                 coz::scope!("ReachNode");
 
                 // Have we seen this State?
-                match self.node_map.get(&s) {
-                    Some(neigh_index) => {
+                match self.nodes.get_mut(&s) {
+                    Some(neigh_node) => {
                         #[cfg(feature = "coz_profile")]
                         coz::scope!("ReachExistingNode");
-                        if neigh_index.is_closed() {
+                        if neigh_node.is_closed {
                             // Yes, and we expanded the State already.
                             // NOTE: Could be a goal we had already found through a
                             // sub-optimal path. Currently we only search for
@@ -243,13 +236,12 @@ where
 
                         // Yes, but it's still unexplored. Update the existing
                         // Node if needed.
-                        let neigh = &mut self.search_tree[*neigh_index];
-                        let neigh_heap_index = neigh.heap_index;
+                        let neigh_heap_index = neigh_node.heap_index.get() as usize;
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
-                        if new_g < neigh.g {
+                        if new_g < neigh_node.g {
                             // Found better path to existing node
-                            neigh.reach((node_index, a), new_g);
+                            neigh_node.reach(state, new_g);
                             self.open[neigh_heap_index].rank.improve_g(new_g);
                             self._unsafe_sift_up(neigh_heap_index);
                         }
@@ -261,7 +253,7 @@ where
                         let c: C = self.problem.space().cost(&s, &a);
                         let new_g = g + c;
 
-                        self.push_new(&s, Some((node_index, a)), new_g);
+                        self.push_new(&s, Some(state), new_g);
                     }
                 }
             }
@@ -272,11 +264,37 @@ where
                 #[cfg(feature = "coz_profile")]
                 coz::progress!("GoalFound");
                 self.remove_goal(&state);
-                return Some(self.search_tree.path(self.problem.space(), node_index));
+                return Some(self.path(state));
             }
         }
 
         None
+    }
+
+    fn path(&self, state: St) -> Path<St, A, C> {
+        let mut s = state;
+        let mut path = Path::<St, A, C>::new_from_start(s);
+
+        while let Some(parent_state) = self.nodes.get(&s).unwrap().parent {
+            let mut a = None;
+            for (sib, sib_a) in self.problem.space().neighbours(&parent_state) {
+                if sib == s {
+                    a = Some(sib_a);
+                    break;
+                }
+            }
+            let a = a.unwrap();
+
+            let c: C = self.problem.space().cost(&parent_state, &a);
+            debug_assert!(c != C::zero());
+
+            path.append((parent_state, a), c);
+            debug_assert!(s != parent_state);
+            s = parent_state;
+        }
+
+        path.reverse();
+        path
     }
 
     /// Checks if a state is an undiscovered goal.
@@ -299,8 +317,8 @@ where
     #[inline(always)]
     #[must_use]
     fn is_closed(&self, s: &St) -> bool {
-        match self.node_map.get(s) {
-            Some(node_index) => node_index.is_closed(),
+        match self.nodes.get(s) {
+            Some(node_index) => node_index.is_closed,
             None => false,
         }
     }
@@ -308,10 +326,10 @@ where
     /// Marks a Search Node as Closed (expanded)
     #[inline(always)]
     fn mark_closed(&mut self, s: &St) {
-        match self.node_map.get_mut(s) {
+        match self.nodes.get_mut(s) {
             Some(node_index) => {
-                if !node_index.is_closed() {
-                    node_index.set_closed();
+                if !node_index.is_closed {
+                    node_index.is_closed = true;
                 }
             }
             None => {
@@ -323,23 +341,23 @@ where
     /// Pops a node from the Heap, returning its SearchTree index.
     #[inline(always)]
     #[must_use]
-    fn pop(&mut self) -> Option<SearchTreeIndex> {
+    fn pop(&mut self) -> Option<DijkstraHeapNode<St, C>> {
         #[cfg(feature = "coz_profile")]
         coz::scope!("Pop");
 
         match self.open.len() {
-            0 | 1 => self.open.pop().map(|n| n.node_index),
+            0 | 1 => self.open.pop(),
             _ => {
                 self.verify_heap();
-                let node_index = self._unsafe_pop_non_trivial_heap();
+                let node = self._unsafe_pop_non_trivial_heap();
                 self.verify_heap();
-                Some(node_index)
+                Some(node)
             }
         }
     }
 
     #[inline(always)]
-    fn push_new(&mut self, s: &St, parent: Option<(SearchTreeIndex, A)>, g: C) {
+    fn push_new(&mut self, s: &St, parent: Option<St>, g: C) {
         self.verify_heap();
         debug_assert!(!self.is_closed(s));
 
@@ -347,22 +365,13 @@ where
         // Compute next heap index to allow creating SearchTreeNode
         let heap_index = self.open.len(); // Future heap_index
 
-        // 1. Add SearchTreeNode to search_tree
-        let node_index: SearchTreeIndex = self
-            .search_tree
-            .push(SearchTreeNode::<St, A, C>::new(heap_index, *s, parent, g));
-        let node = &mut self.search_tree[node_index];
-        debug_assert_eq!(node.heap_index, heap_index);
-        debug_assert_eq!(node.g, g);
-
-        // 2. Add entry to node_map
-        debug_assert!(!node_index.is_closed());
-        self.node_map.insert(*s, node_index);
+        // 1. Add Node to search forest.
+        self.nodes.insert(*s, Node::<St, C>::new(parent, g, heap_index));
 
         // 3. Add DijkstraHeapNode to open using it's SearchTreeIndex
         self.open.push(DijkstraHeapNode {
             rank: DijkstraRank::new(g),
-            node_index,
+            state: *s,
         });
         self._unsafe_sift_up(heap_index);
 
@@ -402,7 +411,7 @@ where
     /// Works by unfairly sifting down the top-node to the last level, where it can
     /// be swapped with the very last element of the array and popped
     /// Temporarily breaks invariants around the node sifting down unfairly.
-    fn _unsafe_pop_non_trivial_heap(&mut self) -> SearchTreeIndex {
+    fn _unsafe_pop_non_trivial_heap(&mut self) -> DijkstraHeapNode<St, C> {
         #[cfg(feature = "coz_profile")]
         coz::scope!("PopNonTrivial");
 
@@ -473,11 +482,11 @@ where
 
         let heap_node = self.open.pop().unwrap();
         debug_assert_eq!(
-            self.search_tree[heap_node.node_index].heap_index, 0,
+            self.nodes[&heap_node.state].heap_index.get(), 0,
             "Top node half-assed swapped down should still have it's 0 index"
         );
 
-        heap_node.node_index
+        heap_node
     }
 
     /// Raises a node
@@ -489,7 +498,7 @@ where
             "Node is way out of sync. Index out of bounds..."
         );
         debug_assert_eq!(
-            self.search_tree[self.open[index].node_index].heap_index, index,
+            self.nodes[&self.open[index].state].heap_index.get(), index,
             "Node is out of sync."
         );
 
@@ -529,8 +538,8 @@ where
         debug_assert!(l < len, "Left  swap index {l} is OUT OF BOUNDS({len})");
         debug_assert!(r < len, "Right swap index {r} is OUT OF BOUNDS({len})");
         self.open.swap(l, r);
-        self.search_tree[self.open[l].node_index].heap_index = l;
-        self.search_tree[self.open[r].node_index].heap_index = r;
+				self.nodes.get_mut(&self.open[l].state).unwrap().heap_index = NonMaxUsize::try_from(l).unwrap();
+				self.nodes.get_mut(&self.open[r].state).unwrap().heap_index = NonMaxUsize::try_from(r).unwrap();
         debug_assert!(
             self.open[l].rank <= self.open[r].rank,
             "Swaps must locally restore the heap invariant."
@@ -550,13 +559,13 @@ where
         debug_assert!(l < len, "Left  swap index {l} is OUT OF BOUNDS({len})");
         debug_assert!(r < len, "Right swap index {r} is OUT OF BOUNDS({len})");
         self.open.swap(l, r);
-        self.search_tree[self.open[l].node_index].heap_index = l;
+				self.nodes.get_mut(&self.open[l].state).unwrap().heap_index = NonMaxUsize::try_from(l).unwrap();
         debug_assert!(
             self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
             "Half-assed swap down must be unfairly pushing a node down."
         );
         debug_assert!(
-            self.search_tree[self.open[r].node_index].heap_index < r,
+            self.nodes.get(&self.open[r].state).unwrap().heap_index.get() < r,
             "Node half-assed swapped down should still point to it's original index."
         );
     }
@@ -567,16 +576,23 @@ where
         use thousands::Separable;
 
         writeln!(out, "DijkstraSearch Stats:")?;
-        let s = size_of::<SearchTreeNode<St, A, C>>();
-        let l = self.search_tree.len();
+        let s = size_of::<Node<St, C>>();
+        let l = self.nodes.len();
+        let c = self.nodes.capacity();
         writeln!(
             out,
             "  - |Nodes|:   {} ({})",
             l.separate_with_commas(),
             Size::from_bytes(l * s)
         )?;
+        writeln!(
+            out,
+            "  - |Nodes|*: {} ({})",
+            c.separate_with_commas(),
+            Size::from_bytes(c * s)
+        )?;
 
-        let s = size_of::<DijkstraHeapNode<C>>();
+        let s = size_of::<DijkstraHeapNode<St, C>>();
         let l = self.open.len();
         let c = self.open.capacity();
         writeln!(
@@ -592,23 +608,7 @@ where
             Size::from_bytes(c * s)
         )?;
 
-        let s = size_of::<(St, SearchTreeIndex)>();
-        let l = self.node_map.len();
-        let c = self.node_map.capacity();
-        writeln!(
-            out,
-            "  - |Index|:  {} ({})",
-            l.separate_with_commas(),
-            Size::from_bytes(l * s)
-        )?;
-        writeln!(
-            out,
-            "  - |Index|*: {} ({})",
-            c.separate_with_commas(),
-            Size::from_bytes(c * s)
-        )?;
-
-        let expanded_nodes = self.search_tree.len() - self.open.len();
+        let expanded_nodes = self.nodes.len() - self.open.len();
         writeln!(
             out,
             "  - Expanded nodes: {}",
