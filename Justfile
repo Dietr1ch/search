@@ -17,6 +17,7 @@ test:
 report:
 	cargo run \
 	  --bin 'report' \
+	  --profile 'release' \
 	  --features 'inspect'
 
 bench:
