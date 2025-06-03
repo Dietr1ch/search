@@ -2,8 +2,8 @@ use std::fmt::Debug;
 
 use typed_arena::Arena;
 
+use crate::cost::Cost;
 use crate::space::Action;
-use crate::space::Cost;
 use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;

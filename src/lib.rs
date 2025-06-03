@@ -19,6 +19,8 @@ pub mod renderer;
 
 // Search space and problems
 // -------------------------
+pub mod cost;
+pub mod float_cost;
 pub mod problem;
 pub mod search;
 pub mod space;

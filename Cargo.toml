@@ -22,6 +22,7 @@ coz_profile = ["dep:coz"]
 # Add support for reverse search
 partial_reverse = []
 renderer = ["dep:bevy", "dep:bevy_args", "dep:bevy_ecs_tilemap", "dep:bevy_pancam", "dep:ldtk_rust", "dep:serde", "dep:serde_json"]
+osm= ["dep:osm_graph", "dep:osmio"]
 
 
 # Profiles
@@ -110,6 +111,9 @@ typed-arena = "2.0.2"
 dhat = { version = "0.3.3", optional = true }
 coz = { version = "0.1.3", optional = true }
 thousands = "0.2.0"
+osm_graph = { version = "0.1.1", optional = true }
+ordered-float = "5.0.0"
+osmio = { version = "0.14.0", optional = true }
 
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 tikv-jemallocator = { version = "0.6", features = ["stats"] }
