@@ -1,6 +1,7 @@
 #![allow(internal_features)]
 #![feature(cmp_minmax)]
 #![feature(core_intrinsics)]
+#![feature(path_add_extension)]
 
 use shadow_rs::shadow;
 
@@ -18,6 +19,8 @@ pub mod renderer;
 
 // Search space and problems
 // -------------------------
+pub mod cost;
+pub mod float_cost;
 pub mod problem;
 pub mod search;
 pub mod space;

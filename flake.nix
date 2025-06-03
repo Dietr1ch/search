@@ -47,11 +47,15 @@
         {
           default = pkgs.mkShell rec {
             nativeBuildInputs = with pkgs; [
+              duckdb
+
               # Bevy (https://github.com/bevyengine/bevy/blob/main/docs/linux_dependencies.md#nix)
               pkg-config
             ];
 
             buildInputs = with pkgs; [
+							openssl
+
               rustToolchain
 
               llvmPackages.bintools
