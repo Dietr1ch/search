@@ -8,13 +8,13 @@ use std::marker::PhantomData;
 use rustc_hash::FxHashMap;
 use rustc_hash::FxHashSet;
 
+use crate::cost::Cost;
 use crate::derank::derank;
 use crate::problem::ObjectiveProblem;
 use crate::search::SearchTree;
 use crate::search::SearchTreeIndex;
 use crate::search::SearchTreeNode;
 use crate::space::Action;
-use crate::space::Cost;
 use crate::space::Path;
 use crate::space::Space;
 use crate::space::State;
@@ -25,7 +25,7 @@ use crate::space::State;
 ///
 // ```
 // use search::algorithms::dijkstra::DijkstraRank;
-// use search::space::Cost;
+// use search::cost::Cost;
 //
 // let l0 = LittleCost::new(0);
 // let l1 = LittleCost::new(1);
