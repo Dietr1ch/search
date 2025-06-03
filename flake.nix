@@ -56,6 +56,8 @@
             buildInputs = with pkgs; [
               openssl
 
+              openssl
+
               rustToolchain
 
               llvmPackages.bintools

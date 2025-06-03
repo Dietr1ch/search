@@ -3,30 +3,11 @@ use std::fmt::Display;
 use std::hash::Hash;
 
 use itertools::Itertools;
-use num_traits::SaturatingAdd;
-use num_traits::sign::Unsigned;
+
+use crate::cost::Cost;
 
 pub trait Action: Copy + Clone + Debug + Display + PartialEq + Eq {}
 pub trait State: Copy + Clone + Debug + Display + PartialEq + Eq + Hash {}
-pub trait Cost:
-    Copy
-    + Clone
-    + Debug
-    + Display
-    + PartialEq
-    + Eq
-    + PartialOrd
-    + Ord
-    + SaturatingAdd
-    + Unsigned
-    + num_traits::bounds::UpperBounded
-    + std::ops::Add
-    + std::ops::AddAssign
-{
-    fn valid(&self) -> bool {
-        *self != Self::max_value()
-    }
-}
 
 #[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "inspect", derive(Clone))]

@@ -9,6 +9,14 @@ run:
 	  -- \
 	  data/problems/Maze2D/*.png
 
+run_osm:
+	cargo run \
+	  --release \
+	  --bin 'osm' \
+	  --features 'osm' \
+	  -- \
+	  ~/Downloads/Maps/south-america-latest.osm.pbf
+
 test:
 	cargo test \
 	  --all-targets \

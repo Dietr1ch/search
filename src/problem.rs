@@ -1,5 +1,5 @@
+use crate::cost::Cost;
 use crate::space::Action;
-use crate::space::Cost;
 use crate::space::Space;
 use crate::space::State;
 

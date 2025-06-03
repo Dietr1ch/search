@@ -5,3 +5,5 @@
 //! take us to new states.
 
 pub mod maze_2d;
+#[cfg(feature = "osm")]
+pub mod osm;

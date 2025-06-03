@@ -8,10 +8,10 @@ use std::hash::Hash;
 use derive_more::Display;
 use nonmax::NonMaxU32;
 
+use crate::cost::Cost;
 use crate::problem::BaseProblem;
 use crate::problem::ObjectiveProblem;
 use crate::space::Action;
-use crate::space::Cost;
 use crate::space::ObjectiveHeuristic;
 use crate::space::Space;
 use crate::space::State;
