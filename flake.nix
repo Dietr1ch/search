@@ -77,6 +77,7 @@
               hunspellDicts.en_GB-large
 
               cargo-audit
+              cargo-benchcmp
               cargo-criterion
               cargo-deny
               cargo-edit
@@ -85,6 +86,8 @@
               cargo-fuzz
               cargo-outdated
               cargo-pgo
+              cargo-public-api
+              cargo-semver-checks
               cargo-show-asm
               cargo-spellcheck
               cargo-valgrind
@@ -102,7 +105,7 @@
 
               gnuplot_qt
 
-							ldtk
+              ldtk
             ];
 
             env = {
@@ -114,6 +117,7 @@
               DICPATH = "${pkgs.hunspell}/bin/hunspell";
 
               # Rust
+              # RUSTFLAGS = "-C target-cpu=native";  # NOTE: This ruins reproducibility
               ## Required by rust-analyzer
               RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
             };
