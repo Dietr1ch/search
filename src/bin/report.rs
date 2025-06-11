@@ -1,4 +1,3 @@
-#![feature(non_null_from_ref)]
 /// Report tool
 ///
 /// Generates `docs/type_report.org`
