@@ -135,10 +135,10 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    // search_tree: Arena<SearchTreeNode>
+    // `search_tree: Arena<SearchTreeNode>`
     let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
-    // heap: Vec<(Rank, SearchTreeIndex)>
+    // `heap: Vec<(Rank, SearchTreeIndex)>`
     print_size(
         out,
         AStarHeapNode {
@@ -146,7 +146,7 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    // node_map: HashMap<State, SearchTreeIndex>
+    // `node_map: HashMap<State, SearchTreeIndex>`
     print_size(out, SearchTreeIndex::fake_new())?;
     print_size(out, (s0, SearchTreeIndex::fake_new()))?;
     let mut search = AStarSearch::<
@@ -167,10 +167,10 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
         "| {:60} | {:10} | {:10} |",
         "Struct", "Size", "Items/64B"
     )?;
-    // search_tree: Arena<SearchTreeNode>
+    // `search_tree: Arena<SearchTreeNode>`
     let node = SearchTreeNode::<Maze2DState, Maze2DAction, Maze2DCost>::new(0usize, s0, None, 0);
     print_size(out, node)?;
-    // heap: Vec<(Rank, SearchTreeIndex)>
+    // `heap: Vec<(Rank, SearchTreeIndex)>`
     print_size(
         out,
         DijkstraHeapNode {
@@ -178,7 +178,7 @@ fn write_report<W: std::io::Write>(out: &mut BufWriter<W>) -> std::io::Result<()
             node_index: SearchTreeIndex::fake_new(),
         },
     )?;
-    // node_map: HashMap<State, SearchTreeIndex>
+    // `node_map: HashMap<State, SearchTreeIndex>`
     print_size(out, SearchTreeIndex::fake_new())?;
     print_size(out, (s0, SearchTreeIndex::fake_new()))?;
     let mut search =

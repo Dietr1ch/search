@@ -150,7 +150,7 @@ where
     fn cost(&self, _s: &St, _a: &A) -> C;
 
     /// Expands a State
-    // TODO: Check that (St, A) does not incurr in a lot of padding.
+    // TODO: Check that (St, A) does not incur in a lot of padding.
     #[must_use]
     fn neighbours(&self, s: &St) -> Vec<(St, A)>;
     /// Verify is a State is valid.

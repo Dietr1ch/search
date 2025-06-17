@@ -6,18 +6,20 @@
 // This is often implemented with an array that's traversed in a non-linear way.
 // These are the indices we assign to each node.
 //
+// ```text
 //                           0
 //              1                         2
 //       3            4            5             6
 //   7      8      9     10    11     12     13     14
 // 15 16  17 18  19 20  21 22 23 24  25
+// ```
 //
 // The last level will often be incomplete
 //
 // You can easily go up, down-left, and down-right from any index with,
-//   - Up: (i-1)//2
-//   - DL: (2*i) + 1
-//   - DR: 2(i+1)
+//   - Up:         `(i-1)//2`
+//   - Down-left:  `(2*i) + 1`
+//   - Down-right: `2(i+1)`
 
 /// The parent node
 ///
@@ -67,22 +69,6 @@ pub fn index_first_children<const A: usize>(i: usize) -> usize {
 pub fn index_last_children<const A: usize>(i: usize) -> usize {
     A * (i + 1)
 }
-
-// TODO: Implement heap_primitives::index_children<A>(usize)
-// /// The children nodes
-// ///
-// /// ```
-// /// use search::heap_primitives::index_children;
-// /// assert_eq!(index_children::<2>(0), 1..=2);
-// /// assert_eq!(index_children::<2>(1), 3..=4);
-// /// assert_eq!(index_children::<2>(3), 7..=8);
-// /// assert_eq!(index_children::<2>(11), 23..=24);
-// /// ```
-// #[inline(always)]
-// #[must_use]
-// pub fn index_children<const A: usize>(i: usize) -> std::range::RangeInclusive<usize> {
-//     index_first_children::<A>(i)..=index_last_children::<A>(i)
-// }
 
 pub fn size_of_cacheline_arity<T: Sized>() -> usize {
     let s = std::mem::size_of::<T>();

@@ -1,14 +1,15 @@
-// https://github.com/StarArawn/bevy_ecs_tilemap/blob/main/examples/helpers/ldtk.rs
+// Stolen from
+// `https://github.com/StarArawn/bevy_ecs_tilemap/blob/main/examples/helpers/ldtk.rs`
 
 //! This example is capable of spawning tilemaps from [LDtk](https://ldtk.io) files.
 //!
-//! It can load the AutoTile and Tile layers of simple LDtk levels.
+//! It can load the `AutoTile` and Tile layers of simple LDtk levels.
 //! However, it does have limitations.
 //! Some edge cases around tileset definitions and layer definitions haven't been considered here.
 //! Furthermore, since this example is primarily concerned with the tilemap functionality,
-//! there's no solution built in for Entity or Intgrid layers.
+//! there's no solution built in for `Entity` or `Intgrid` layers.
 //!
-//! For a more comprehensive LDtk solution, consider [bevy_ecs_ldtk](https://github.com/Trouv/bevy_ecs_ldtk), which uses bevy_ecs_tilemap internally.
+//! For a more comprehensive LDtk solution, consider [`bevy_ecs_ldtk`](https://github.com/Trouv/bevy_ecs_ldtk), which uses `bevy_ecs_tilemap` internally.
 
 use bevy::asset::{AssetPath, LoadContext};
 use bevy::prelude::*;
@@ -22,51 +23,51 @@ use rustc_hash::FxHashMap;
 use thiserror::Error;
 
 #[derive(Default)]
-pub struct LdtkPlugin;
+pub struct LDtkPlugin;
 
-impl Plugin for LdtkPlugin {
+impl Plugin for LDtkPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<LdtkMap>()
-            .register_asset_loader(LdtkLoader)
+        app.init_asset::<LDtkMap>()
+            .register_asset_loader(LDtkLoader)
             .add_systems(Update, process_loaded_tile_maps);
     }
 }
 
 #[derive(bevy::reflect::TypePath, Asset)]
-pub struct LdtkMap {
+pub struct LDtkMap {
     pub project: ldtk_rust::Project,
     pub tilesets: FxHashMap<i64, Handle<Image>>,
 }
 
 #[derive(Default, Component)]
-pub struct LdtkMapConfig {
+pub struct LDtkMapConfig {
     pub selected_level: usize,
 }
 
 #[derive(Default, Component)]
-pub struct LdtkMapHandle(pub Handle<LdtkMap>);
+pub struct LDtkMapHandle(pub Handle<LDtkMap>);
 
 #[derive(Default, Bundle)]
-pub struct LdtkMapBundle {
-    pub ldtk_map: LdtkMapHandle,
-    pub ldtk_map_config: LdtkMapConfig,
+pub struct LDtkMapBundle {
+    pub ldtk_map: LDtkMapHandle,
+    pub ldtk_map_config: LDtkMapConfig,
     pub transform: Transform,
     pub global_transform: GlobalTransform,
 }
 
-pub struct LdtkLoader;
+pub struct LDtkLoader;
 
 #[derive(Debug, Error)]
-pub enum LdtkAssetLoaderError {
+pub enum LDtkAssetLoaderError {
     /// An [IO](std::io) Error
     #[error("Could not load LDTk file: {0}")]
     Io(#[from] std::io::Error),
 }
 
-impl bevy::asset::AssetLoader for LdtkLoader {
-    type Asset = LdtkMap;
+impl bevy::asset::AssetLoader for LDtkLoader {
+    type Asset = LDtkMap;
     type Settings = ();
-    type Error = LdtkAssetLoaderError;
+    type Error = LDtkAssetLoaderError;
 
     async fn load(
         &self,
@@ -78,7 +79,7 @@ impl bevy::asset::AssetLoader for LdtkLoader {
         reader.read_to_end(&mut bytes).await?;
 
         let project: ldtk_rust::Project = serde_json::from_slice(&bytes).map_err(|e| {
-            std::io::Error::other(format!("Could not read contents of Ldtk map: {e}"))
+            std::io::Error::other(format!("Could not read contents of LDtk map: {e}"))
         })?;
         let dependencies: Vec<(i64, AssetPath)> = project
             .defs
@@ -94,7 +95,7 @@ impl bevy::asset::AssetLoader for LdtkLoader {
             })
             .collect();
 
-        let ldtk_map = LdtkMap {
+        let ldtk_map = LDtkMap {
             project,
             tilesets: dependencies
                 .iter()
@@ -112,12 +113,12 @@ impl bevy::asset::AssetLoader for LdtkLoader {
 
 pub fn process_loaded_tile_maps(
     mut commands: Commands,
-    mut map_events: EventReader<AssetEvent<LdtkMap>>,
-    maps: Res<Assets<LdtkMap>>,
-    mut query: Query<(Entity, &LdtkMapHandle, &LdtkMapConfig)>,
-    new_maps: Query<&LdtkMapHandle, Added<LdtkMapHandle>>,
+    mut map_events: EventReader<AssetEvent<LDtkMap>>,
+    maps: Res<Assets<LDtkMap>>,
+    mut query: Query<(Entity, &LDtkMapHandle, &LDtkMapConfig)>,
+    new_maps: Query<&LDtkMapHandle, Added<LDtkMapHandle>>,
 ) {
-    let mut changed_maps = Vec::<AssetId<LdtkMap>>::default();
+    let mut changed_maps = Vec::<AssetId<LDtkMap>>::default();
     for event in map_events.read() {
         match event {
             AssetEvent::Added { id } => {
@@ -131,14 +132,14 @@ pub fn process_loaded_tile_maps(
             AssetEvent::Removed { id } => {
                 log::info!("Map removed!");
                 // if mesh was modified and removed in the same update, ignore the modification
-                // events are ordered so future modification events are ok
+                // events are ordered so future modification events are OK
                 changed_maps.retain(|changed_handle| changed_handle == id);
             }
             _ => continue,
         }
     }
 
-    // If we have new map entities, add them to the changed_maps list
+    // If we have new map entities, add them to the `changed_maps` list
     for new_map_handle in new_maps.iter() {
         changed_maps.push(new_map_handle.0.id());
     }
@@ -150,7 +151,7 @@ pub fn process_loaded_tile_maps(
                 continue;
             }
             if let Some(ldtk_map) = maps.get(&map_handle.0) {
-                // Despawn all existing tilemaps for this LdtkMap
+                // Despawn all existing tilemaps for this LDtkMap
                 commands.entity(entity).despawn_related::<Children>();
 
                 // Pull out tilesets and their definitions into a new hashmap
@@ -197,7 +198,7 @@ pub fn process_loaded_tile_maps(
                         // Pre-emptively create a map entity for tile creation
                         let map_entity = commands.spawn_empty().id();
 
-                        // Create tiles for this layer from LDtk's grid_tiles and auto_layer_tiles
+                        // Create tiles for this layer from LDtk's `grid_tiles` and `auto_layer_tiles`
                         let mut storage = TileStorage::empty(size);
 
                         for tile in layer.grid_tiles.iter().chain(layer.auto_layer_tiles.iter()) {

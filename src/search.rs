@@ -23,7 +23,7 @@ const IS_CLOSED_BIT: usize = LEAST_SIGNIFICANT_BIT;
 /// It's more like a `(&SearchTreeNode<St, A, C>, bool)` underneath to help track
 /// whether the node is closed.
 ///
-/// `ointers` generalises using the unnecessary bits in a pointer, but offers
+/// `ointers` generalizes using the unnecessary bits in a pointer, but offers
 /// them in a buffer and is still the same native pointer width, so
 /// `(ointers::Ptr<T>, bool)` still uses more bits than `ointers::Ptr<T>`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

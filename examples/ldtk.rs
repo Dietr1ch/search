@@ -19,8 +19,8 @@ use search::renderer::ldtk;
 #[cfg(feature = "renderer")]
 fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // Map
-    let map = ldtk::LdtkMapHandle(asset_server.load("map.ldtk")); // ://assets/map.ldtk
-    commands.spawn(ldtk::LdtkMapBundle {
+    let map = ldtk::LDtkMapHandle(asset_server.load("map.ldtk")); // ://assets/map.ldtk
+    commands.spawn(ldtk::LDtkMapBundle {
         ldtk_map: map,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..Default::default()
@@ -33,7 +33,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
             grab_buttons: vec![MouseButton::Left, MouseButton::Middle], // which buttons should drag the camera
             move_keys: bevy_pancam::DirectionKeys {
                 // the keyboard buttons used to move the camera
-                up: vec![KeyCode::KeyW], // initalize the struct like this or use the provided methods for
+                up: vec![KeyCode::KeyW], // initialize the struct like this or use the provided methods for
                 down: vec![KeyCode::KeyS], // common key combinations
                 left: vec![KeyCode::KeyA],
                 right: vec![KeyCode::KeyD],
@@ -75,7 +75,7 @@ fn ldtk_demo() {
                 })
                 .set(ImagePlugin::default_nearest()),
             bevy_ecs_tilemap::TilemapPlugin,
-            ldtk::LdtkPlugin,
+            ldtk::LDtkPlugin,
             bevy_pancam::PanCamPlugin,
             search::renderer::plugins::VersionInfo,
         ))

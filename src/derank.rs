@@ -3,7 +3,7 @@
 // This naturally lends to a recursive problem, but in practice we eventually
 // want to run the tournament left-to-right once we hit the cache-line size, so
 // it'll look more like a fold with the best candidate, and the tournament slice
-// that maximices IPC. I haven't digged into this and it gets tricky if the
+// that maximizes IPC. I haven't dug into this and it gets tricky if the
 // comparison function isn't trivial as the CPU may run better on smaller
 // tournaments than what could be fetched.
 
@@ -14,38 +14,46 @@ fn fight<T: PartialOrd>(a: &[T], l: usize, r: usize) -> usize {
     if a[l] <= a[r] { l } else { r }
 }
 
+// ```text
 // 0   1
 // *   *
 //  \ /
 //   *
+// ```
 
 #[inline(always)]
 #[must_use]
 pub fn derank_2<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 2);
+    // ```rust
     // fight(
     //     a, //
     //     derank_1(a[0..1]),
     //     derank_1(a[1..2]) + 1,
     // )
+    // ```
     fight(a, 0, 1)
 }
 
+// ```text
 // 0   1   2
 // *   *   *
 //  \ /    |
 //   *     *
 //    \   /
 //      *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_3<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 3);
+    // ```rust
     // fight(
     //     a, //
     //     derank_2(a[0..2]),
     //     2,
     // )
+    // ```
     fight(
         a,              //
         fight(a, 0, 1), //
@@ -53,21 +61,25 @@ pub fn derank_3<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1   2   3
 // *   *   *   *
 //  \ /     \ /
 //   *       *
 //    \     /
 //       *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_4<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 4);
+    // ```rust
     // fight(
     //     a, //
     //     derank_2(a[0..2]),
     //     derank_2(a[2..4]) + 2,
     // )
+    // ```
     fight(
         a, //
         fight(a, 0, 1),
@@ -75,6 +87,7 @@ pub fn derank_4<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1 2   3   4
 // *   * *   *   *
 //  \ /   \ /   /
@@ -83,15 +96,18 @@ pub fn derank_4<T: PartialOrd>(a: &[T]) -> usize {
 //      *    /
 //       \  /
 //         *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_5<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 5);
+    // ```rust
     // fight(
     //     a, //
     //     derank_4(a[0..4]),
     //     4,
     // )
+    // ```
     fight(
         a,
         fight(
@@ -103,6 +119,7 @@ pub fn derank_5<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1 2   3 4   5
 // *   * *   * *   *
 //  \ /   \ /   \ /
@@ -111,15 +128,18 @@ pub fn derank_5<T: PartialOrd>(a: &[T]) -> usize {
 //      *      /
 //       \    /
 //         *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_6<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 6);
+    // ```rust
     // fight(
     //     a, //
     //     derank_4(a[0..4]),
     //     derank_2(a[4..6]) + 4,
     // )
+    // ```
     fight(
         a,
         fight(
@@ -131,6 +151,7 @@ pub fn derank_6<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1 2   3 4   5   6
 // *   * *   * *   *   *
 //  \ /   \ /   \ /   /
@@ -139,15 +160,18 @@ pub fn derank_6<T: PartialOrd>(a: &[T]) -> usize {
 //      *          *
 //        \       /
 //            *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_7<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 7);
+    // ```rust
     // fight(
     //     a, //
     //     derank_4(a[0..4]),
     //     derank_3(a[4..7]) + 4,
     // )
+    // ```
     fight(
         a,
         fight(
@@ -163,6 +187,7 @@ pub fn derank_7<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1 2   3 4   5 6   7
 // *   * *   * *   * *   *
 //  \ /   \ /   \ /   \ /
@@ -171,15 +196,18 @@ pub fn derank_7<T: PartialOrd>(a: &[T]) -> usize {
 //      *           *
 //        \        /
 //            *
+// ```
 #[inline(always)]
 #[must_use]
 pub fn derank_8<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 8);
+    // ```rust
     // fight(
     //     a, //
     //     derank_4(a[0..4]),
     //     derank_4(a[4..8]) + 4,
     // )
+    // ```
     fight(
         a,
         fight(
@@ -195,6 +223,7 @@ pub fn derank_8<T: PartialOrd>(a: &[T]) -> usize {
     )
 }
 
+// ```text
 // 0   1 2   3 4   5 6   7 8   9 10 11 12 13 14  15
 // *   * *   * *   * *   * *   * *   * *   * *   *
 //  \ /   \ /   \ /   \ /   \ /   \ /   \ /   \ /
@@ -205,15 +234,18 @@ pub fn derank_8<T: PartialOrd>(a: &[T]) -> usize {
 //            *                       *
 //              \                    /
 //                        *
+// ```
 #[inline(always)]
 #[must_use]
 fn derank_16<T: PartialOrd>(a: &[T]) -> usize {
     debug_assert!(a.len() == 16);
+    // ```rust
     // fight(
     //     a, //
     //     derank_8(a[0..8]),
     //     derank_8(a[8..16]) + 8,
     // )
+    // ```
     fight(
         a,
         fight(

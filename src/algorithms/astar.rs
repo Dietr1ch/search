@@ -108,25 +108,25 @@ where
     pub node_index: SearchTreeIndex,
 }
 
-/// PartialEq is forwarded to self.rank's PartialEq
+/// `PartialEq`` is forwarded to `self.rank`
 impl<C: Cost> PartialEq for AStarHeapNode<C> {
     #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.rank.eq(&other.rank)
     }
 }
-/// Eq just says our PartialEq is also reflexive (∀a. a==a).
+/// `Eq` just says our `PartialEq` is also reflexive (`∀a. a==a`).
 /// `https://doc.rust-lang.org/std/cmp/trait.Eq.html`
 impl<C: Cost> Eq for AStarHeapNode<C> {}
 
-/// PartialOrd is forwarded to Ord::cmp
+/// `PartialOrd` is forwarded to `Ord::cmp`
 impl<C: Cost> PartialOrd for AStarHeapNode<C> {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.rank.cmp(&other.rank))
     }
 }
-/// Ord is forwarded to self.rank's Ord
+/// `Ord` is forwarded to `self.rank`
 impl<C: Cost> Ord for AStarHeapNode<C> {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
@@ -136,7 +136,7 @@ impl<C: Cost> Ord for AStarHeapNode<C> {
 
 /// A* search implementation for Objective Problems.
 ///
-/// This initialises the search and offers an Iterator that goes around
+/// This initializes the search and offers an Iterator that goes around
 /// different solutions.
 ///
 /// Having a list of objectives allows to drop the ones already reached when
@@ -203,7 +203,7 @@ where
     A: Action,
     C: Cost,
 {
-    /// Initialises the Search
+    /// Initializes the Search
     #[must_use]
     pub fn new(op: OP) -> Self {
         let starts = op.starts().to_vec();
@@ -247,8 +247,8 @@ where
         }
 
         // Check remaining un-explored nodes
-        // NOTE: We could avoid a Heap::pop() by peeking and doing the goal-check.
-        // TODO: See if pop_node() would be the same or faster that pop()
+        // NOTE: We could avoid a `Heap::pop()` by peeking and doing the goal-check.
+        // TODO: See if `pop_node()` would be the same or faster that `pop()`
         while let Some(node_index) = self.pop() {
             #[cfg(feature = "coz_profile")]
             coz::scope!("NodeExpansion");
@@ -263,12 +263,12 @@ where
             // Mark as closed
             self.mark_closed(&state);
 
-            // Expand state
+            // Expand `State`
             for (s, a) in self.problem.space().neighbours(&state) {
                 #[cfg(feature = "coz_profile")]
                 coz::scope!("ReachNode");
 
-                // Have we seen this State?
+                // Have we seen this `State`?
                 match self.node_map.get(&s) {
                     Some(neigh_index) => {
                         #[cfg(feature = "coz_profile")]
@@ -282,7 +282,7 @@ where
                         }
 
                         // Yes, but it's still unexplored. Update the existing
-                        // Node if needed.
+                        // `Node` if needed.
                         let neigh = &mut self.search_tree[*neigh_index];
                         let neigh_heap_index = neigh.heap_index;
                         let c: C = self.problem.space().cost(&s, &a);
@@ -345,9 +345,9 @@ where
                 .unwrap(),
         );
 
-        // TODO: ConditionProblems need something different.
-        // NOTE: We know the problem is a ObjectiveProblem, but it may also be a
-        //       ConditionProblem.
+        // TODO: `ConditionProblem`s need something different.
+        // NOTE: We know the problem is a `ObjectiveProblem`, but it may also be a
+        //       `ConditionProblem`.
         if self.remaining_goals_list.is_empty() {
             self.open.clear();
             return;
@@ -361,7 +361,7 @@ where
             let state = *node.state();
 
             // `self.h` inlined to avoid overlapping self borrows
-            // TODO: ConditionProblems need something different
+            // TODO: `ConditionProblem`s need something different
             let mut h = C::max_value();
             for g in &self.remaining_goals_list {
                 h = min(h, OH::h(&state, g))
@@ -415,7 +415,7 @@ where
         }
     }
 
-    /// Pops a node from the Heap, returning its SearchTree index.
+    /// Pops a node from the Heap, returning its `SearchTree` index.
     #[inline(always)]
     #[must_use]
     fn pop(&mut self) -> Option<SearchTreeIndex> {
@@ -438,11 +438,11 @@ where
         self.verify_heap();
         debug_assert!(!self.is_closed(s));
 
-        // NOTE: search_tree and open have indices to each other.
-        // Compute next heap index to allow creating SearchTreeNode
-        let heap_index = self.open.len(); // Future heap_index
+        // NOTE: `search_tree` and open have indices to each other.
+        // Compute next heap index to allow creating `SearchTreeNode`
+        let heap_index = self.open.len(); // Future `heap_index`
 
-        // 1. Add SearchTreeNode to search_tree
+        // 1. Add `SearchTreeNode` to `search_tree`
         let node_index: SearchTreeIndex = self
             .search_tree
             .push(SearchTreeNode::<St, A, C>::new(heap_index, *s, parent, g));
@@ -450,11 +450,11 @@ where
         debug_assert_eq!(node.heap_index, heap_index);
         debug_assert_eq!(node.g, g);
 
-        // 2. Add entry to node_map
+        // 2. Add entry to `node_map`
         debug_assert!(!node_index.is_closed());
         self.node_map.insert(*s, node_index);
 
-        // 3. Add AStarHeapNode to open using it's SearchTreeIndex
+        // 3. Add `AStarHeapNode` to open using it's `SearchTreeIndex`
         self.open.push(AStarHeapNode {
             rank: AStarRank::new(g, h),
             node_index,
@@ -507,21 +507,7 @@ where
             "It doesn't get easier. Why are you calling this?"
         );
 
-        // Heap 101
-        //
-        //                            0
-        //              1                           2
-        //       3            4              5             6
-        //   7      8      9     10      11     12     13     14
-        // 15 16  17 18  19 20  21 22  23  24  25 !   *  *   *  *
-        //
-        // The last level WILL OFTEN be incomplete
-        //
-        //   - Up: (i-1)//2
-        //   - DL: (2*i) + 1
-        //   - DR: 2(i+1)
-
-        // There's at least 2 nodes before we remove the best.
+        // Note that there's at least 2 nodes before we remove the best.
         // 1. We pretend there's a hole at the root, and bubble elements up till the hole reaches the bottom.
         // 2. If the hole is not the last element, we swap it for the last one.
         // 3. Now the last element is the one that was at the top of the heap, we pop it.
@@ -683,7 +669,7 @@ where
         self.open.swap(l, r);
         self.search_tree[self.open[l].node_index].heap_index = l;
         debug_assert!(
-            self.open[l].rank >= self.open[r].rank, // (=? What if there's only one value? We still push node at the top down)
+            self.open[l].rank >= self.open[r].rank, // (Q: What if there's only one value? We still push node at the top down)
             "Half-assed swap down must be unfairly pushing a node down."
         );
         debug_assert!(
@@ -803,7 +789,7 @@ mod tests {
         use crate::problems::maze_2d::Maze2DHeuristicDiagonalDistance;
         use crate::problems::maze_2d::Maze2DProblem;
 
-        // Solve two-paths.png (://data/problems/Maze2D/two-paths.png)
+        // Solve `two-paths.png` (`://data/problems/Maze2D/two-paths.png`)
         let problem =
             Maze2DProblem::try_from(PathBuf::from("data/problems/Maze2D/two-paths.png").as_path())
                 .unwrap();

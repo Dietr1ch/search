@@ -19,10 +19,10 @@ use crate::space::State;
 const MAX_ELEMENTS_DISPLAYED: usize = 20;
 const RANDOM_STATE_MAX_TRIES: usize = 10_000;
 
-// Simple colours
+// Simple colors
 const WHITE: [u8; 3] = [u8::MAX, u8::MAX, u8::MAX];
 const BLACK: [u8; 3] = [u8::MIN, u8::MIN, u8::MIN];
-// const RED: [u8; 3] = [u8::MAX, u8::MIN, u8::MIN];
+const RED: [u8; 3] = [u8::MAX, u8::MIN, u8::MIN];
 const GREEN: [u8; 3] = [u8::MIN, u8::MAX, u8::MIN];
 const BLUE: [u8; 3] = [u8::MIN, u8::MIN, u8::MAX];
 
@@ -81,21 +81,21 @@ impl Default for Maze2DState {
 #[derive(Copy, Clone, Debug, Display, PartialEq, Eq, PartialOrd)]
 pub enum Maze2DAction {
     #[display("↑")]
-    Up = 0, // y++
+    Up = 0,
     #[display("↓")]
-    Down = 1, // y--
+    Down = 1,
     #[display("←")]
-    Left = 2, // x--
+    Left = 2,
     #[display("→")]
-    Right = 3, // x++
+    Right = 3,
     #[display("↖")]
-    LeftUp = 4, // x--, y++
+    LeftUp = 4,
     #[display("↗")]
-    RightUp = 5, // x++, y++
+    RightUp = 5,
     #[display("↙")]
-    LeftDown = 6, // x--, y--
+    LeftDown = 6,
     #[display("↘")]
-    RightDown = 7, // x++, y--
+    RightDown = 7,
 }
 impl Action for Maze2DAction {}
 
@@ -231,7 +231,7 @@ impl Space<Maze2DState, Maze2DAction, Maze2DCost> for Maze2DSpace {
         }
     }
 
-    /// Gets the neighbours of a given position.
+    /// Gets the neighbors of a given position.
     ///
     /// NOTE: These states can only be used with the current Maze
     fn neighbours(&self, state: &Maze2DState) -> Vec<(Maze2DState, Maze2DAction)> {
@@ -580,6 +580,20 @@ impl std::convert::TryFrom<&std::path::Path> for Maze2DProblem {
                         });
                         Maze2DCell::Empty
                     }
+                    RED => {
+                        // RED (start & goal)
+
+                        p.starts.push(Maze2DState {
+                            x: Coord::new(x).unwrap(),
+                            y: Coord::new(y).unwrap(),
+                        });
+                        p.goals.push(Maze2DState {
+                            x: Coord::new(x).unwrap(),
+                            y: Coord::new(y).unwrap(),
+                        });
+
+                        Maze2DCell::Empty
+                    }
                     _ => {
                         log::warn!("Unexpected colour {px:?} at ({x},{y})");
                         Maze2DCell::Empty
@@ -658,7 +672,7 @@ pub struct Maze2DHeuristicDiagonalDistance;
 impl ObjectiveHeuristic<Maze2DSpace, Maze2DState, Maze2DAction, Maze2DCost>
     for Maze2DHeuristicDiagonalDistance
 {
-    /// The distance of maximising useful diagonals
+    /// The distance of maximizing useful diagonals
     #[inline(always)]
     fn h(a: &Maze2DState, b: &Maze2DState) -> Maze2DCost {
         let [min_x, max_x] = std::cmp::minmax(a.x.get(), b.x.get());

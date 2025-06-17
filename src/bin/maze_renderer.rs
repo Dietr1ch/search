@@ -35,7 +35,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
             grab_buttons: vec![MouseButton::Left, MouseButton::Middle], // which buttons should drag the camera
             move_keys: bevy_pancam::DirectionKeys {
                 // the keyboard buttons used to move the camera
-                up: vec![KeyCode::KeyQ], // initalize the struct like this or use the provided methods for
+                up: vec![KeyCode::KeyQ], // initialize the struct like this or use the provided methods for
                 down: vec![KeyCode::KeyW], // common key combinations
                 left: vec![KeyCode::KeyE],
                 right: vec![KeyCode::KeyR],
@@ -78,7 +78,7 @@ fn setup(mut commands: Commands, args: Res<Args>) {
     let custom_size = Some(Vec2::new(spacing, spacing));
     let half_size = Some(Vec2::new(spacing / 2., spacing / 2.));
 
-    // Colours
+    // Colors
     let wall_colour = Color::hsl(0., 0.0, 0.2);
     let empty_colour = Color::hsl(0., 0.0, 0.8);
     // Sprites

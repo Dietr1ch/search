@@ -19,7 +19,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
             grab_buttons: vec![MouseButton::Left, MouseButton::Middle], // which buttons should drag the camera
             move_keys: DirectionKeys {
                 // the keyboard buttons used to move the camera
-                up: vec![KeyCode::KeyW], // initalize the struct like this or use the provided methods for
+                up: vec![KeyCode::KeyW], // initialize the struct like this or use the provided methods for
                 down: vec![KeyCode::KeyS], // common key combinations
                 left: vec![KeyCode::KeyA],
                 right: vec![KeyCode::KeyD],

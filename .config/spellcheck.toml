@@ -1,3 +1,11 @@
+# https://github.com/drahnr/cargo-spellcheck/blob/master/docs/configuration.md
+
+dev_comments = true
+skip_readme = false
+
+[Spellbook]
+lang = "en_GB"
+
 [Hunspell]
 lang = "en_GB"
 skip_os_lookups = true

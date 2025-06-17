@@ -1,6 +1,9 @@
 # Git
 .gitignore
 
+# Project
+.spelling/*.dic
+
 # Nix
 .direnv
 flake.lock
