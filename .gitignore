@@ -3,8 +3,7 @@
 
 # Git
 !.ignore
-!.gitignore
-!.gitattributes
+!.git*
 
 # Rust
 !.cargo
