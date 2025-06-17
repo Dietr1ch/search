@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
 cargo-toml-lint Cargo.toml
+nixfmt flake.nix
