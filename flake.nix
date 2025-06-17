@@ -90,6 +90,7 @@
               cargo-semver-checks
               cargo-show-asm
               cargo-spellcheck
+              cargo-toml-lint
               cargo-valgrind
               cargo-watch
 
