@@ -23,6 +23,8 @@ coz_profile = ["dep:coz"]
 partial_reverse = []
 renderer = ["dep:bevy", "dep:bevy_args", "dep:bevy_ecs_tilemap", "dep:bevy_pancam", "dep:ldtk_rust", "dep:serde", "dep:serde_json"]
 
+[package.metadata.spellcheck]
+config = ".config/spellcheck.toml"
 
 # Profiles
 # ========

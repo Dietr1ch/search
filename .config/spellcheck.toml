@@ -3,4 +3,7 @@ lang = "en_GB"
 skip_os_lookups = true
 use_builtin = true
 
-extra_dictionaries = ["lingo.dic"]
+search_dirs = [".."]
+extra_dictionaries = [
+  ".spelling/dictionary.dic"  # ://.spelling/dictionary.dic
+]

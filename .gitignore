@@ -17,5 +17,7 @@ perf.data.old
 profile.coz
 
 # Project
+!.config
+!.spelling
 /logs
 TODOs.org

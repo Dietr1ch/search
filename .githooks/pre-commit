@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 
-cargo-toml-lint Cargo.toml
-nixfmt flake.nix
+# Nix
+nixfmt flake.nix || exit 1
+
+# Rust
+cargo-toml-lint Cargo.toml || exit 1
+cargo fmt || exit 1
+cargo spellcheck || exit 1
+cargo clippy --fix --allow-dirty || exit 1
