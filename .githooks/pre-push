@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Rust
+cargo spellcheck || exit 1
+cargo check --release --all-targets --all-features --jobs '2' || exit 1
+cargo clippy --fix --allow-dirty || exit 1
+cargo test --tests --examples --bins --all-features --jobs '2' || exit 
