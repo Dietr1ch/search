@@ -1,7 +1,36 @@
 #!/usr/bin/env bash
 
 # Rust
-cargo spellcheck || exit 1
-cargo check --release --all-targets --all-features --jobs '2' || exit 1
-cargo clippy --fix --allow-dirty || exit 1
-cargo test --tests --examples --bins --all-features --jobs '2' || exit 
+echo ""
+echo "Running spellcheck..."
+cargo spellcheck \
+  || exit 1
+
+echo ""
+echo "Running check..."
+cargo check \
+        --release \
+        --all-targets \
+        --all-features \
+        --jobs '2' \
+  || exit 1
+
+echo ""
+echo "Running clippy..."
+cargo clippy \
+        --all-targets \
+        --all-features \
+        --fix \
+        --allow-dirty \
+  || exit 1
+
+echo ""
+echo "Running tests..."
+cargo test \
+        --profile 'release' \
+        --tests \
+        --examples \
+        --bins \
+        --all-features \
+        --jobs '2' \
+  || exit 

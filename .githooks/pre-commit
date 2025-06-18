@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
 
 # Nix
-nixfmt flake.nix || exit 1
+echo "Running Nix checks"
+
+echo ""
+echo "Running nix fmt..."
+nixfmt flake.nix \
+  || exit 1
 
 # Rust
-cargo-toml-lint Cargo.toml || exit 1
-cargo fmt || exit 1
+echo "Running Rust checks"
+
+echo ""
+echo "Running Cargo.toml lint..."
+cargo-toml-lint \
+    Cargo.toml \
+  || exit 1
+
+echo ""
+echo "Running cargo fmt..."
+cargo fmt \
+  || exit 1
