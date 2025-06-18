@@ -9,6 +9,7 @@ cargo spellcheck \
 echo ""
 echo "Running check..."
 cargo check \
+  --jobs $CARGO_BUILD_JOBS \
   --release \
   --all-targets \
   --all-features \
@@ -17,6 +18,7 @@ cargo check \
 echo ""
 echo "Running clippy..."
 cargo clippy \
+  --jobs $CARGO_BUILD_JOBS \
   --release \
   --all-targets \
   --all-features \
@@ -27,6 +29,7 @@ cargo clippy \
 echo ""
 echo "Running tests..."
 cargo test \
+  --jobs $CARGO_BUILD_JOBS \
   --release \
   --bins \
   --examples \
