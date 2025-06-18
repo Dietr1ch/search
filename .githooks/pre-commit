@@ -5,7 +5,8 @@ echo "Running Nix checks"
 
 echo ""
 echo "Running nix fmt..."
-nixfmt flake.nix \
+nixfmt \
+  flake.nix \
   || exit 1
 
 # Rust
@@ -14,7 +15,7 @@ echo "Running Rust checks"
 echo ""
 echo "Running Cargo.toml lint..."
 cargo-toml-lint \
-    Cargo.toml \
+  Cargo.toml \
   || exit 1
 
 echo ""

@@ -9,28 +9,27 @@ cargo spellcheck \
 echo ""
 echo "Running check..."
 cargo check \
-        --release \
-        --all-targets \
-        --all-features \
-        --jobs '2' \
+  --release \
+  --all-targets \
+  --all-features \
   || exit 1
 
 echo ""
 echo "Running clippy..."
 cargo clippy \
-        --all-targets \
-        --all-features \
-        --fix \
-        --allow-dirty \
+  --release \
+  --all-targets \
+  --all-features \
+  --fix \
+  --allow-dirty \
   || exit 1
 
 echo ""
 echo "Running tests..."
 cargo test \
-        --profile 'release' \
-        --tests \
-        --examples \
-        --bins \
-        --all-features \
-        --jobs '2' \
-  || exit 
+  --release \
+  --bins \
+  --examples \
+  --tests \
+  --all-features \
+  || exit 1
