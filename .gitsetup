@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [[ $(realpath $PWD) != $(realpath $(git rev-parse --show-toplevel)) ]]; then
+  echo 'Not running from the top-level. Refusing to act.'
+  return
+fi
+
+if git config --get include.path | grep '^\.\./\.gitconfig$'; then
+  echo 'git config already includes .gitconfig'
+else
+  echo 'Adding ://.gitconfig to git config'
+  git config --add include.path '../.gitconfig'
+  echo 'New git config include.path:'
+  git config --get include.path
+fi
+
