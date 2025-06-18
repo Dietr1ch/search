@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export SOURCE_DATE_EPOCH=$(git show --no-patch --format=%ct HEAD)
+
 # Rust
 echo ""
 echo "Running spellcheck..."

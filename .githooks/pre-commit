@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export SOURCE_DATE_EPOCH=$(git show --no-patch --format=%ct HEAD)
+
 # Nix
 echo "Running Nix checks"
 
